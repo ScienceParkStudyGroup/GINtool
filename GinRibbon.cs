@@ -220,9 +220,7 @@ namespace GINtool
         private List<BsuRegulons> QueryResultTable(Excel.Range theCells)
         {            
 
-            int nrRows = theCells.Rows.Count;
-            
-         
+            int nrRows = theCells.Rows.Count;                     
             List<BsuRegulons> lList = new List<BsuRegulons>();
 
             foreach (Excel.Range c in theCells.Rows)
@@ -291,157 +289,6 @@ namespace GINtool
             return lList;
 
         }
-
-        private List<FC_BSU> GenerateDenseOutput()
-        {
-            Excel.Range thisCell = GetActiveCell();
-            Excel.Worksheet theSheet = GetActiveShet();
-
-            List<FC_BSU> lTable = new List<FC_BSU>();
-
-            int nrRows = thisCell.Rows.Count;            
-            int startC = thisCell.Column;
-            int startR = thisCell.Row;
-            int offsetColumn = startC + 2;
-            int maxnrCols = 16384;
-            int maxnrRows = 1048576;
-
-            if ((nrRows +1 ) > maxnrRows)
-                nrRows -= 1;
-
-            if (thisCell.Columns.Count != 2)
-            {
-                MessageBox.Show("Please select 2 columns, first FC, second BSU");
-                return null;
-            }            
-
-            Excel.Range tmpRange_ = null;
-            if (gDenseOutput==false)
-                tmpRange_ = (Excel.Range)theSheet.Range[theSheet.Cells[startR, offsetColumn], theSheet.Cells[startR + nrRows, maxnrCols-offsetColumn]];
-            else
-                tmpRange_ = (Excel.Range)theSheet.Range[theSheet.Cells[startR, offsetColumn], theSheet.Cells[startR + nrRows+1, maxnrCols - offsetColumn]];
-            tmpRange_.Clear();
-
-
-            int rnr = 0;
-            int[] nrRegs = new int[nrRows];
-            int[] nrUp = new int[nrRows];
-            int[] nrDown = new int[nrRows];
-            int[] nrTot = new int[nrRows];
-
-
-            QueryResultTable(thisCell);
-
-            foreach (Excel.Range c in thisCell.Rows)
-            {
-
-                object[,] value = c.Value2;
-                FC_BSU myItem = new FC_BSU((double)value[1,1], value[1,2].ToString());
-                
-                //int iC1 = c.Column;
-                int locOffset = offsetColumn + (gUpDown ? 2 : 0) + (gOverallCol ? 1 : 0) + 1;
-
-                
-                int iR1 = c.Row;
-                int rc = 0;
-                int nUp = 0;
-                int nDown = 0;
-
-                if (value != null) // && value.Length > 0)
-                {
-                    SysData.DataRow[] results = Lookup(myItem.BSU);
-
-                    if (results.Length > 0)
-                    {
-                        for (int r = 0; r < results.Length; r++)
-                        {
-                            string item = results[r][Properties.Settings.Default.referenceRegulon].ToString();
-                            string direction = results[r][Properties.Settings.Default.referenceDIR].ToString();
-
-                            Excel.Range lRange = theSheet.Cells[iR1, locOffset + r];
-
-                            if (item.Length > 0) // loop over found regulons
-                            {
-                                FC_BSU lItem = new FC_BSU(myItem.FC, item.ToString());
-                                lTable.Add(lItem);
-
-
-                                lRange.Value = item;
-                                //lAllRegulators.Add(item);
-                                //lRange.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.White);
-
-                                rc += 1;
-                                if (gUpItems.Contains(direction))
-                                {
-                                    nUp += 1;                                    
-                                    if(gColorCells)
-                                        lRange.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGreen);
-                                }
-
-                                if (gDownItems.Contains(direction))
-                                {
-                                    nDown += 1;
-                                    if (gColorCells)
-                                        lRange.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightSalmon);                                    
-                                }
-                            }
-                        }
-                    }
-                    nrUp[rnr] = nUp;
-                    nrDown[rnr] = nDown;
-                    nrTot[rnr] = nUp - nDown;
-                    nrRegs[rnr++] = rc;
-                }
-                else
-                {
-                    nrUp[rnr] = 0;
-                    nrDown[rnr] = 0;
-                    nrRegs[rnr++] = 0;
-                }
-
-            }
-
-            int nrOverallCol = -1;
-
-            for (int r = 0; r < nrRows; r++)
-            {                
-                theSheet.Cells[startR + r, offsetColumn] = nrRegs[r]; // tot number of regulons found                
-                if (gUpDown)
-                {
-                    theSheet.Cells[startR + r, offsetColumn + 1] = nrUp[r]; // tot number of up found
-                    theSheet.Cells[startR + r, offsetColumn + 2] = nrDown[r]; // tot number of down found
-                    if (gOverallCol)
-                    {
-                        theSheet.Cells[startR + r, offsetColumn + 3] = nrTot[r];
-                        nrOverallCol = offsetColumn + 3;
-
-                    }
-
-                }
-                else
-                {
-                    if (gOverallCol)
-                    {
-                        theSheet.Cells[startR + r, offsetColumn + 1] = nrTot[r];
-                        nrOverallCol = offsetColumn + 1;
-                    }
-
-                 }
-                
-            }
-
-           
-            if (gOverallCol && gColorCells)
-            {
-                Excel.Range columnRange = (Excel.Range)theSheet.Range[theSheet.Cells[startR, nrOverallCol], theSheet.Cells[startR + nrRows, nrOverallCol]];
-                ConditionFormatRange(columnRange);                
-            }
-
-
-            return lTable;
-
-        }
-
         private void ClearRange(Excel.Range range)
         {
             range.Clear();
@@ -451,216 +298,202 @@ namespace GINtool
             range.Interior.PatternTintAndShade = 0;
         }
 
-        private List<FC_BSU> GenerateSparseOutput()
+        private void ClearOutputRange(Excel.Range theCells)
         {
-
-            Excel.Range thisCell = GetActiveCell();
             Excel.Worksheet theSheet = GetActiveShet();
-
-            List<FC_BSU> lTable = new List<FC_BSU>();
-
-            int nrRows = thisCell.Rows.Count;
-            int startC = thisCell.Column;
-            int startR = thisCell.Row;
-
-            int offsetColumn = startC + 1;
+            int nrRows = theCells.Rows.Count;
+            int startC = theCells.Column;
+            int startR = theCells.Row;
+            int offsetColumn = startC + 2;
             int maxnrCols = 16384;
+            int maxnrRows = 1048576;
 
-
-            if (thisCell.Columns.Count != 2)
-            {
-                MessageBox.Show("Please select 2 columns, first FC, second BSU");
-                return null;
-            }
-
+            if ((nrRows + 1) > maxnrRows)
+                nrRows -= 1;          
 
             Excel.Range tmpRange_ = null;
             if (gDenseOutput == false)
                 tmpRange_ = (Excel.Range)theSheet.Range[theSheet.Cells[startR, offsetColumn], theSheet.Cells[startR + nrRows, maxnrCols - offsetColumn]];
             else
                 tmpRange_ = (Excel.Range)theSheet.Range[theSheet.Cells[startR, offsetColumn], theSheet.Cells[startR + nrRows + 1, maxnrCols - offsetColumn]];
-
+            tmpRange_.Clear();
 
             ClearRange(tmpRange_);
-           
+        }
 
+
+        SysData.DataTable PrepareResultTable(List<BsuRegulons> lResults, bool bDense)
+        {
             SysData.DataTable myTable = new System.Data.DataTable("mytable");
-            SysData.DataTable dirTable = new System.Data.DataTable("dirtable");
-
-            foreach (Excel.Range c in thisCell.Cells) // first create and fill DataTable
+           
+            if (bDense)
             {
-                string value = c.Value2.ToString();                
+                int maxcol = lResults[0].REGULONS.Count;
 
-                if (value != null && value.Length > 0)
+                // count max number of columns neccesary
+                for (int r = 1; r < lResults.Count; r++)
+                    if (maxcol < lResults[r].REGULONS.Count)
+                        maxcol = lResults[r].REGULONS.Count;
+
+                // add count column
+                SysData.DataColumn countCol = new SysData.DataColumn("count_col",Type.GetType("System.Int16"));
+                myTable.Columns.Add(countCol);
+
+                // add variable columns
+                for (int c = 0; c < maxcol; c++)
                 {
-                    SysData.DataRow[] results = Lookup(value);
+                    SysData.DataColumn newCol = new SysData.DataColumn(string.Format("col_{0}", c+1));
+                    myTable.Columns.Add(newCol);
+                }
 
-                    if (results.Length > 0)
+                // fill data
+                for (int r=0;r<lResults.Count;r++)
+                {
+                    SysData.DataRow newRow = myTable.Rows.Add();
+                    newRow["count_col"]= lResults[r].TOT;
+                    for (int c = 0; c < lResults[r].REGULONS.Count; c++)
+                        newRow[string.Format("col_{0}",c+1)] = lResults[r].REGULONS[c];
+                }
+
+            }
+            else // generate sparse output
+            {
+                List<string> allRegs = new List<string>();
+                for (int r = 0; r < lResults.Count; r++)
+                    allRegs.AddRange(lResults[r].REGULONS);
+
+                List<string> uRegs = allRegs.Distinct().ToList();
+                
+                // add count column
+                SysData.DataColumn countCol = new SysData.DataColumn("count_col", Type.GetType("System.Int16"));
+                myTable.Columns.Add(countCol);
+
+                // add variable columns
+                for (int c = 0; c < uRegs.Count; c++)
+                {
+                    SysData.DataColumn newCol = new SysData.DataColumn(string.Format(uRegs[c]));
+                    myTable.Columns.Add(newCol);
+                }
+
+                // fill data
+                for (int r = 0; r < lResults.Count; r++)
+                {
+                    SysData.DataRow newRow = myTable.Rows.Add();
+                    newRow["count_col"] = lResults[r].TOT;
+                    for (int c = 0; c < lResults[r].REGULONS.Count; c++)
+                        newRow[lResults[r].REGULONS[c]] = lResults[r].REGULONS[c];
+                }
+
+                // now reorder the output
+                int[] nrTypes = new int[myTable.Columns.Count-1];
+
+                for (int c = 1; c < myTable.Columns.Count; c++)
+                {
+                    int cc = 0;
+                    for (int r = 0; r < myTable.Rows.Count; r++)
                     {
-                        for (int r = 0; r < results.Length; r++)
-                        {
-                            string item = results[r][Properties.Settings.Default.referenceRegulon].ToString();
-
-                            if (item.Length > 0)
-                            {
-                                if (!myTable.Columns.Contains(item))
-                                {
-                                    myTable.Columns.Add(item, typeof(string));
-                                    dirTable.Columns.Add(item, typeof(int));
-                                }
-                            }                            
-                        }
-
-                        SysData.DataRow dr = myTable.Rows.Add();
-                        SysData.DataRow dr_dir = dirTable.Rows.Add();
-                        
-                        for (int r = 0; r < results.Length; r++)
-                        {
-                            string item = results[r][Properties.Settings.Default.referenceRegulon].ToString();
-                            string direction = results[r][Properties.Settings.Default.referenceDIR].ToString();
-
-                            if (item.Length > 0)
-                            {
-                                dr[item] = item;
-                                dr_dir[item] = 0;
-
-                                if (gUpItems.Contains(direction))                                                                 
-                                    dr_dir[item] = 1;                                
-
-                                if (gDownItems.Contains(direction))                                                
-                                    dr_dir[item] = -1;                                
-                            }
-                        }
-
+                        string item = myTable.Rows[r].ItemArray[c].ToString();
+                        if (item.Length > 0)
+                            cc += 1;
                     }
-                    else // if an empty cell was seleceted
-                    {
-                        myTable.Rows.Add();
-                        dirTable.Rows.Add();
-                    }
-                }                
+                    nrTypes[c-1] = cc;
+                }
+
+                string[] keys = uRegs.ToArray();
+
+                // Sort with keys only works in ascending order
+                Array.Sort(nrTypes, keys);
+                Array.Reverse(nrTypes);
+                Array.Reverse(keys);
+                
+                for (int c = 0; c < myTable.Columns.Count-1; c++)
+                    myTable.Columns[keys[c]].SetOrdinal(c+1);
+                
+                SysData.DataRow _newRow = myTable.Rows.Add();
+                for (int c = 0; c < myTable.Columns.Count - 1; c++)
+                    _newRow[c + 1] = nrTypes[c];
+
+            }
+            return myTable;
+        }
+
+        private List<FC_BSU> GenerateDenseOutput()
+        {
+            Excel.Range theInputCells = GetActiveCell();
+            Excel.Worksheet theSheet = GetActiveShet();
+           
+            int nrRows = theInputCells.Rows.Count;            
+            int startC = theInputCells.Column;
+            int startR = theInputCells.Row;
+            int offsetColumn = startC + 2;            
+                      
+            if (theInputCells.Columns.Count != 2)
+            {
+                MessageBox.Show("Please select 2 columns, first FC, second BSU");
+                return null;
             }
 
-            int[] nrRegs = new int[myTable.Rows.Count];
-            int[] nrTypes = new int[myTable.Columns.Count];
-            int[] nrUp = new int[myTable.Rows.Count];
-            int[] nrDown = new int[myTable.Rows.Count];
-            int[] nrTot = new int[myTable.Rows.Count];
+            ClearOutputRange(theInputCells);          
+
+            // generate the results for outputting the data and summary
+            List<BsuRegulons> lResults=QueryResultTable(theInputCells);
+            // output the data
+            SysData.DataTable lOut = PrepareResultTable(lResults, true);
+            FastDtToExcel(lOut,theSheet,startR,offsetColumn,startR+nrRows-1, offsetColumn+lOut.Columns.Count-1);
 
 
-            for (int r = 0; r < myTable.Rows.Count; r++)
-            {
-                int rc = 0;
-                int nUp = 0;
-                int nDown = 0;
+            List<FC_BSU> lTable = new List<FC_BSU>();
 
-                for (int c = 0; c < myTable.Columns.Count; c++)
-                {
-                    string item = myTable.Rows[r].ItemArray[c].ToString();
-                    if (item.Length > 0)
-                    {
-                        //lAllRegulators.Add(item);
-                        rc += 1;
+            for (int r = 0; r < nrRows; r++)
+                for (int c = 0; c < lResults[r].REGULONS.Count; c++)
+                    lTable.Add(new FC_BSU(lResults[r].FC, lResults[r].REGULONS[c]));             
+                                              
+            return lTable;
+        }
 
-                        int dir = (int)dirTable.Rows[r].ItemArray[c];
-                        if (dir == 1)
-                            nUp += 1;
-                        if (dir == -1)
-                            nDown += 1;
-                    }
-                }
+        private void FastDtToExcel(System.Data.DataTable dt, Excel.Worksheet sheet, int firstRow, int firstCol, int lastRow, int lastCol)
+        {
+            Excel.Range top = sheet.Cells[firstRow, firstCol];
+            Excel.Range bottom = sheet.Cells[lastRow, lastCol];
+            Excel.Range all = (Excel.Range)sheet.get_Range(top, bottom);
+            object[,] arrayDT = new object[dt.Rows.Count, dt.Columns.Count];
+            for (int i = 0; i < dt.Rows.Count; i++)
+                for (int j = 0; j < dt.Columns.Count; j++)
+                    arrayDT[i, j] = dt.Rows[i][j]; //.ToString();
+            all.Value2 = arrayDT;
+        }
 
-                nrRegs[r] = rc;
-                nrUp[r] = nUp;
-                nrDown[r] = nDown;
-                nrTot[r] = nUp - nDown;
-            }
+        private List<FC_BSU> GenerateSparseOutput()
+        {
 
-            for (int c = 0; c < myTable.Columns.Count; c++)
-            {
-                int cc = 0;
-                for (int r = 0; r < myTable.Rows.Count; r++)
-                {
-                    string item = myTable.Rows[r].ItemArray[c].ToString();
-                    if (item.Length > 0)
-                        cc += 1;
-                }
-                nrTypes[c] = cc;
-            }
-
-            int[] keys = new int[nrTypes.Length];
-            for (int i = 0; i < nrTypes.Length; i++)
-                keys[i] = i;
-
-            // Sort with keys only works in ascending order
-            Array.Sort(nrTypes, keys);
-            Array.Reverse(nrTypes);
-            Array.Reverse(keys);
-
-
-            // Use reordered columns from here
-
-
-            int locOffset = offsetColumn + (gUpDown ? 2 : 0) + (gOverallCol ? 1 : 0) + 1;
-
-            for (int r = 0; r < myTable.Rows.Count; r++)
-            {
-                for (int c = 0; c < myTable.Columns.Count; c++)
-                {                   
-                    string item = myTable.Rows[r].ItemArray[keys[c]].ToString();
-
-                    if (item.Length > 0)
-                    {
-                        int dir = (int)dirTable.Rows[r].ItemArray[keys[c]];
-                        Excel.Range lRange = theSheet.Cells[r + startR, locOffset + c];
-                        lRange.Value = item; //   theSheet.Cells[r + startR, locOffset + c] = item;
-
-                        if (gColorCells)
-                        {
-                            if (dir==1)
-                                lRange.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGreen);
-                            if (dir==-1)
-                                lRange.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightSalmon);
-                        }                       
-                    }
-                }
-            }
-
-
-            for (int c = 0; c < myTable.Columns.Count; c++) // display the columncounts 
-                theSheet.Cells[startR + nrRows, locOffset + c] = nrTypes[c];
-
-
-            int nrOverallCol = -1;
-            for (int r = 0; r < myTable.Rows.Count; r++)
-            {
-                theSheet.Cells[startR + r, offsetColumn ] = nrRegs[r];
-                if (gUpDown)
-                {
-                    theSheet.Cells[startR + r, offsetColumn + 1] = nrUp[r];
-                    theSheet.Cells[startR + r, offsetColumn + 2] = nrDown[r];
-                    if (gOverallCol)
-                    {
-                        theSheet.Cells[startR + r, offsetColumn + 3] = nrTot[r];
-                        nrOverallCol = offsetColumn + 3;
-                    }
-                }
-                else
-                {
-                    if (gOverallCol)
-                    {
-                        theSheet.Cells[startR + r, offsetColumn + 1] = nrTot[r];
-                        nrOverallCol = offsetColumn + 1;
-                    }
-                }
-
-                if(gColorCells && gOverallCol)
-                {
-                    Excel.Range columnRange = (Excel.Range)theSheet.Range[theSheet.Cells[startR, nrOverallCol], theSheet.Cells[startR + nrRows, nrOverallCol]];
-                    ConditionFormatRange(columnRange);
-                }
-            }
+            Excel.Range theInputCells = GetActiveCell();
+            Excel.Worksheet theSheet = GetActiveShet();
             
+            int nrRows = theInputCells.Rows.Count;
+            int startC = theInputCells.Column;
+            int startR = theInputCells.Row;
+
+            int offsetColumn = startC + 2;
+
+
+            if (theInputCells.Columns.Count != 2)
+            {
+                MessageBox.Show("Please select 2 columns, first FC, second BSU");
+                return null;
+            }
+
+            ClearOutputRange(theInputCells);
+            // generate the results for outputting the data and summary
+            List<BsuRegulons> lResults = QueryResultTable(theInputCells);
+            // output the data 
+            SysData.DataTable lOut = PrepareResultTable(lResults, false);                        
+            FastDtToExcel(lOut, theSheet, startR, offsetColumn, startR + nrRows, offsetColumn + lOut.Columns.Count - 1);
+
+            List<FC_BSU> lTable = new List<FC_BSU>();
+            for (int r = 0; r < nrRows; r++)
+                for (int c = 0; c < lResults[r].REGULONS.Count; c++)
+                    lTable.Add(new FC_BSU(lResults[r].FC, lResults[r].REGULONS[c]));
+
             return lTable;
         }
 
@@ -668,7 +501,9 @@ namespace GINtool
         private void btApply_Click(object sender, RibbonControlEventArgs e)
         {
             gApplication.EnableEvents = false;
-            List<FC_BSU> lTable= null;
+            gApplication.DisplayAlerts = false;
+            
+            List<FC_BSU> lTable= null;            
 
             if (gDenseOutput)
                 lTable = GenerateDenseOutput();
@@ -678,6 +513,7 @@ namespace GINtool
             //CreateStatisticsSheet(lAllItems);
 
             gApplication.EnableEvents = true;
+            gApplication.DisplayAlerts = true;
         }
 
         private void CreateStatisticsSheet(List<string> aAllItems)
