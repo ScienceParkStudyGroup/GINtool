@@ -9,64 +9,13 @@ using SysData = System.Data;
 
 namespace GINtool
 {
-
-    public struct FC_BSU
-    {
-        public FC_BSU(double a, string b)
-        {
-            FC = a;
-            BSU = b;
-        }        
-        public double FC { get; }
-        public string BSU { get; }               
-    }
-
-    internal class Boundaries
-    {
-        struct low_high
-        {
-            public double low { get; set; }
-            public double high { get; set; }
-            public override string ToString()
-            {
-                return string.Format("{0},{1}", low, high);
-            }
-        }
-
-        List<low_high> mLH = new List<low_high>();
-
-        public Boundaries(string value)
-        {
-            
-            mLH.Clear();
-            if (value.Length > 0)
-            {
-                double[] arr = value.Split(',').Select(s => Double.Parse(s)).ToArray();
-                for (int i = 0; i < arr.Length; i += 2)
-                {
-                    low_high lh = new low_high();
-                    lh.low = arr[i];
-                    lh.high = arr[i + 1];
-                    mLH.Add(lh);
-                }
-            }
-        }
-
-        public string Store()
-        {
-            string value = String.Join(",", mLH.Select(i => i.ToString()).ToArray());
-            return value;
-        }
-    }
-
-    
-
+  
     public partial class GinRibbon
     {
 
-        bool gUpDown = false;
-        bool gColorCells = false;
-        bool gOverallCol = false;
+        //bool gUpDown = false;
+        //bool gColorCells = false;
+        //bool gOverallCol = false;
 
         bool gDenseOutput = true;
         SysData.DataTable gRefWB = null;
@@ -186,11 +135,11 @@ namespace GINtool
             ddDir.Enabled = false;
             EnableOutputOptions(false);
 
-            gBoundaries = new Boundaries(Properties.Settings.Default.fcBoundaries);
+            gBoundaries = new Boundaries(Properties.Settings.Default.fcLOW);
 
             btLoad.Enabled = System.IO.File.Exists(Properties.Settings.Default.referenceFile);
 
-
+            
         }
 
         private Excel.Range GetActiveCell()
@@ -204,9 +153,9 @@ namespace GINtool
 
         private void EnableOutputOptions(bool enable)
         {
-            //cbOverall.Enabled = enable;
-            //cbUpDown.Enabled = enable;
-            //cbColor.Enabled = enable;
+            ebLow.Enabled = enable;
+            ebMid.Enabled = enable;
+            ebHigh.Enabled = enable;
             tglDense.Enabled = enable;
         }
 
@@ -759,6 +708,35 @@ namespace GINtool
         {
             //gDenseOutput = cbDense.Checked == false;
         }
-       
+
+        
+        private void ebLow_TextChanged(object sender, RibbonControlEventArgs e)
+        {
+            double cons_low;
+            if (Double.TryParse(ebLow.Text, out cons_low))
+            {
+
+            }
+
+            else
+            {
+                MessageBox.Show("Error parsing double");
+
+            }
+        }
     }
+
+
+    public struct FC_BSU
+    {
+        public FC_BSU(double a, string b)
+        {
+            FC = a;
+            BSU = b;
+        }
+        public double FC { get; }
+        public string BSU { get; }
+    }
+    
+
 }

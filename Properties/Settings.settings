@@ -26,8 +26,14 @@
     <Setting Name="directionMapDown" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="fcBoundaries" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+    <Setting Name="fcLOW" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">1.5</Value>
+    </Setting>
+    <Setting Name="fcMID" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="fcHIGH" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">4</Value>
     </Setting>
   </Settings>
 </SettingsFile>

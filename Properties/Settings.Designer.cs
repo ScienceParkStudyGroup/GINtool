@@ -118,13 +118,37 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string fcBoundaries {
+        [global::System.Configuration.DefaultSettingValueAttribute("1.5")]
+        public float fcLOW {
             get {
-                return ((string)(this["fcBoundaries"]));
+                return ((float)(this["fcLOW"]));
             }
             set {
-                this["fcBoundaries"] = value;
+                this["fcLOW"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("2")]
+        public float fcMID {
+            get {
+                return ((float)(this["fcMID"]));
+            }
+            set {
+                this["fcMID"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("4")]
+        public float fcHIGH {
+            get {
+                return ((float)(this["fcHIGH"]));
+            }
+            set {
+                this["fcHIGH"] = value;
             }
         }
     }

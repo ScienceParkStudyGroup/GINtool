@@ -180,12 +180,6 @@
   -->
   <ItemGroup>
     <Compile Include="BsuRegulons.cs" />
-    <Compile Include="dlgBoundaries.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="dlgBoundaries.Designer.cs">
-      <DependentUpon>dlgBoundaries.cs</DependentUpon>
-    </Compile>
     <Compile Include="dlgUpDown.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -266,6 +260,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\DownloadLog_16x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BoundBreakpoint_16x.png" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

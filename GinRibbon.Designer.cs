@@ -48,8 +48,12 @@
             this.ddBSU = this.Factory.CreateRibbonDropDown();
             this.ddDir = this.Factory.CreateRibbonDropDown();
             this.group2 = this.Factory.CreateRibbonGroup();
+            this.ebLow = this.Factory.CreateRibbonEditBox();
+            this.ebMid = this.Factory.CreateRibbonEditBox();
+            this.ebHigh = this.Factory.CreateRibbonEditBox();
             this.TabGINtool.SuspendLayout();
             this.group1.SuspendLayout();
+            this.group2.SuspendLayout();
             this.SuspendLayout();
             // 
             // TabGINtool
@@ -168,8 +172,30 @@
             // 
             // group2
             // 
-            this.group2.Label = "output options";
+            this.group2.Items.Add(this.ebLow);
+            this.group2.Items.Add(this.ebMid);
+            this.group2.Items.Add(this.ebHigh);
+            this.group2.Label = "fc ranges";
             this.group2.Name = "group2";
+            // 
+            // ebLow
+            // 
+            this.ebLow.Label = "low";
+            this.ebLow.Name = "ebLow";
+            this.ebLow.Text = null;
+            this.ebLow.TextChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ebLow_TextChanged);
+            // 
+            // ebMid
+            // 
+            this.ebMid.Label = "mid";
+            this.ebMid.Name = "ebMid";
+            this.ebMid.Text = null;
+            // 
+            // ebHigh
+            // 
+            this.ebHigh.Label = "high";
+            this.ebHigh.Name = "ebHigh";
+            this.ebHigh.Text = null;
             // 
             // GinRibbon
             // 
@@ -181,6 +207,8 @@
             this.TabGINtool.PerformLayout();
             this.group1.ResumeLayout(false);
             this.group1.PerformLayout();
+            this.group2.ResumeLayout(false);
+            this.group2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -201,6 +229,9 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btRegDirMap;
         internal Microsoft.Office.Tools.Ribbon.RibbonDropDown ddDir;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup group2;
+        internal Microsoft.Office.Tools.Ribbon.RibbonEditBox ebLow;
+        internal Microsoft.Office.Tools.Ribbon.RibbonEditBox ebMid;
+        internal Microsoft.Office.Tools.Ribbon.RibbonEditBox ebHigh;
     }
 
     partial class ThisRibbonCollection
