@@ -1,0 +1,30 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="GINtool.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="referenceFile" Type="System.String" Scope="User">
+      <Value Profile="(Default)">not defined yet</Value>
+    </Setting>
+    <Setting Name="referenceSheetName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Sheet1</Value>
+    </Setting>
+    <Setting Name="referenceBSU" Type="System.String" Scope="User">
+      <Value Profile="(Default)">locus_tag</Value>
+    </Setting>
+    <Setting Name="referenceRegulon" Type="System.String" Scope="User">
+      <Value Profile="(Default)">regulon</Value>
+    </Setting>
+    <Setting Name="referenceDIR" Type="System.String" Scope="User">
+      <Value Profile="(Default)">mode</Value>
+    </Setting>
+    <Setting Name="directionMapUnassigned" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="directionMapUp" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="directionMapDown" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+  </Settings>
+</SettingsFile>
