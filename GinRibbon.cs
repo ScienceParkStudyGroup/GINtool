@@ -16,12 +16,14 @@ namespace GINtool
         {
             FC = a;
             BSU = b;
-        }
-        
+        }        
         public double FC { get; }
-        public string BSU { get; }
-        
+        public string BSU { get; }        
     }
+
+    
+
+    
 
     public partial class GinRibbon
     {
@@ -215,6 +217,81 @@ namespace GINtool
             formatCondition.NegativeBarFormat.BorderColor.TintAndShade = 0;
         }
 
+        private List<BsuRegulons> QueryResultTable(Excel.Range theCells)
+        {            
+
+            int nrRows = theCells.Rows.Count;
+            
+         
+            List<BsuRegulons> lList = new List<BsuRegulons>();
+
+            foreach (Excel.Range c in theCells.Rows)
+            {
+                object[,] value = null;
+                BsuRegulons lMap = null;
+                if (c.Columns.Count == 2)
+                {
+                    value = c.Value2;
+                    lMap = new BsuRegulons((double)value[1, 1], value[1, 2].ToString());                    
+                }
+
+                else // only 1 column is selected                
+                {
+                    value = c.Value2;
+                    lMap = new BsuRegulons(value[1, 1].ToString());
+                }
+
+
+                int rnr = 0;
+                //int iR1 = c.Row;
+                int rc = 0;
+                int nUp = 0;
+                int nDown = 0;
+
+                if (value != null) 
+                {
+                    SysData.DataRow[] results = Lookup(lMap.BSU);
+
+                    if (results.Length > 0)
+                    {
+                        for (int r = 0; r < results.Length; r++)
+                        {
+                            string item = results[r][Properties.Settings.Default.referenceRegulon].ToString();
+                            string direction = results[r][Properties.Settings.Default.referenceDIR].ToString();
+
+                            if (item.Length > 0) // loop over found regulons
+                            {
+                                lMap.REGULONS.Add(item);
+                                rc += 1;
+                                if (gUpItems.Contains(direction))
+                                    nUp += 1;
+                                if (gDownItems.Contains(direction))
+                                    nDown += 1;
+
+                            }
+                        }
+                    }
+
+                    lMap.NRUP = nUp;
+                    lMap.NRDOWN = nDown;
+                    lMap.NET = nUp - nDown;
+                    lMap.TOT = rc;               
+                }
+                else
+                {                
+                    lMap.NRUP = 0;
+                    lMap.NRDOWN = 0;
+                    lMap.NET = 0;
+                    lMap.TOT = 0;
+                }                
+
+                lList.Add(lMap);
+            }
+
+            return lList;
+
+        }
+
         private List<FC_BSU> GenerateDenseOutput()
         {
             Excel.Range thisCell = GetActiveCell();
@@ -236,12 +313,7 @@ namespace GINtool
             {
                 MessageBox.Show("Please select 2 columns, first FC, second BSU");
                 return null;
-            }
-
-            //SysData.DataColumn lCol = new SysData.DataColumn("Regulator", Type.GetType("System.String"));
-            //lTable.Columns.Add(lCol);
-            //lCol = new SysData.DataColumn("FC", Type.GetType("System.Double"));
-            //lTable.Columns.Add(lCol);
+            }            
 
             Excel.Range tmpRange_ = null;
             if (gDenseOutput==false)
@@ -257,8 +329,9 @@ namespace GINtool
             int[] nrDown = new int[nrRows];
             int[] nrTot = new int[nrRows];
 
-         
-         
+
+            QueryResultTable(thisCell);
+
             foreach (Excel.Range c in thisCell.Rows)
             {
 
