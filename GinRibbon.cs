@@ -18,10 +18,46 @@ namespace GINtool
             BSU = b;
         }        
         public double FC { get; }
-        public string BSU { get; }        
+        public string BSU { get; }               
     }
 
-    
+    internal class Boundaries
+    {
+        struct low_high
+        {
+            public double low { get; set; }
+            public double high { get; set; }
+            public override string ToString()
+            {
+                return string.Format("{0},{1}", low, high);
+            }
+        }
+
+        List<low_high> mLH = new List<low_high>();
+
+        public Boundaries(string value)
+        {
+            
+            mLH.Clear();
+            if (value.Length > 0)
+            {
+                double[] arr = value.Split(',').Select(s => Double.Parse(s)).ToArray();
+                for (int i = 0; i < arr.Length; i += 2)
+                {
+                    low_high lh = new low_high();
+                    lh.low = arr[i];
+                    lh.high = arr[i + 1];
+                    mLH.Add(lh);
+                }
+            }
+        }
+
+        public string Store()
+        {
+            string value = String.Join(",", mLH.Select(i => i.ToString()).ToArray());
+            return value;
+        }
+    }
 
     
 
@@ -41,7 +77,8 @@ namespace GINtool
         static List<string> gAvailItems = null;
         static List<string> gUpItems = null;
         static List<string> gDownItems = null;
-        
+
+        Boundaries gBoundaries = null;
 
         private List<string> propertyItems(string property)
         {
@@ -147,8 +184,10 @@ namespace GINtool
             ddBSU.Enabled = false;
             ddRegulon.Enabled = false;
             ddDir.Enabled = false;
-            EnableOutputOptions(false);           
-           
+            EnableOutputOptions(false);
+
+            gBoundaries = new Boundaries(Properties.Settings.Default.fcBoundaries);
+
             btLoad.Enabled = System.IO.File.Exists(Properties.Settings.Default.referenceFile);
 
 
@@ -265,7 +304,6 @@ namespace GINtool
                                     nUp += 1;
                                 if (gDownItems.Contains(direction))
                                     nDown += 1;
-
                             }
                         }
                     }
@@ -320,7 +358,6 @@ namespace GINtool
 
             ClearRange(tmpRange_);
         }
-
 
         SysData.DataTable PrepareResultTable(List<BsuRegulons> lResults, bool bDense)
         {
@@ -417,7 +454,7 @@ namespace GINtool
             return myTable;
         }
 
-        private List<FC_BSU> GenerateDenseOutput()
+        private List<FC_BSU> GenerateOutput(bool bDense)
         {
             Excel.Range theInputCells = GetActiveCell();
             Excel.Worksheet theSheet = GetActiveShet();
@@ -438,8 +475,8 @@ namespace GINtool
             // generate the results for outputting the data and summary
             List<BsuRegulons> lResults=QueryResultTable(theInputCells);
             // output the data
-            SysData.DataTable lOut = PrepareResultTable(lResults, true);
-            FastDtToExcel(lOut,theSheet,startR,offsetColumn,startR+nrRows-1, offsetColumn+lOut.Columns.Count-1);
+            SysData.DataTable lOut = PrepareResultTable(lResults, bDense);
+            FastDtToExcel(lOut,theSheet,startR,offsetColumn,startR+nrRows-(bDense?1:0), offsetColumn+lOut.Columns.Count-1);
 
 
             List<FC_BSU> lTable = new List<FC_BSU>();
@@ -463,54 +500,15 @@ namespace GINtool
             all.Value2 = arrayDT;
         }
 
-        private List<FC_BSU> GenerateSparseOutput()
-        {
-
-            Excel.Range theInputCells = GetActiveCell();
-            Excel.Worksheet theSheet = GetActiveShet();
-            
-            int nrRows = theInputCells.Rows.Count;
-            int startC = theInputCells.Column;
-            int startR = theInputCells.Row;
-
-            int offsetColumn = startC + 2;
-
-
-            if (theInputCells.Columns.Count != 2)
-            {
-                MessageBox.Show("Please select 2 columns, first FC, second BSU");
-                return null;
-            }
-
-            ClearOutputRange(theInputCells);
-            // generate the results for outputting the data and summary
-            List<BsuRegulons> lResults = QueryResultTable(theInputCells);
-            // output the data 
-            SysData.DataTable lOut = PrepareResultTable(lResults, false);                        
-            FastDtToExcel(lOut, theSheet, startR, offsetColumn, startR + nrRows, offsetColumn + lOut.Columns.Count - 1);
-
-            List<FC_BSU> lTable = new List<FC_BSU>();
-            for (int r = 0; r < nrRows; r++)
-                for (int c = 0; c < lResults[r].REGULONS.Count; c++)
-                    lTable.Add(new FC_BSU(lResults[r].FC, lResults[r].REGULONS[c]));
-
-            return lTable;
-        }
-
-
+       
         private void btApply_Click(object sender, RibbonControlEventArgs e)
         {
             gApplication.EnableEvents = false;
             gApplication.DisplayAlerts = false;
             
-            List<FC_BSU> lTable= null;            
+            List<FC_BSU> lOutput= GenerateOutput(gDenseOutput);
 
-            if (gDenseOutput)
-                lTable = GenerateDenseOutput();
-            else
-                lTable = GenerateSparseOutput();
-
-            //CreateStatisticsSheet(lAllItems);
+            //CreateStatisticsSheet(lOutput);
 
             gApplication.EnableEvents = true;
             gApplication.DisplayAlerts = true;
@@ -518,7 +516,7 @@ namespace GINtool
 
         private void CreateStatisticsSheet(List<string> aAllItems)
         {
-            //SysData.DataTable table = new SysData.DataTable();
+            SysData.DataTable table = new SysData.DataTable();
             //using (var reader = FM.ObjectReader.Create(aAllItems))
             //{
             //    table.Load(reader);

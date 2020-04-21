@@ -115,5 +115,17 @@ namespace GINtool.Properties {
                 this["directionMapDown"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string fcBoundaries {
+            get {
+                return ((string)(this["fcBoundaries"]));
+            }
+            set {
+                this["fcBoundaries"] = value;
+            }
+        }
     }
 }
