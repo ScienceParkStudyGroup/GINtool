@@ -554,12 +554,12 @@ namespace GINtool
             // add the columns per defined FC range
             SysData.DataColumn regColumn = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
             SysData.DataColumn countColumn = new SysData.DataColumn("Count", Type.GetType("System.Int16"));
-            SysData.DataColumn avgColumn = new SysData.DataColumn("Average", Type.GetType("System.Double"));
+            //SysData.DataColumn avgColumn = new SysData.DataColumn("Average", Type.GetType("System.Double"));
 
             SysData.DataColumn count1Column = new SysData.DataColumn("CountData", Type.GetType("System.Int16"));
-            SysData.DataColumn avg1Column = new SysData.DataColumn("AverageData", Type.GetType("System.Double"));
+            //SysData.DataColumn avg1Column = new SysData.DataColumn("AverageData", Type.GetType("System.Double"));
 
-            SysData.DataColumn enrColumn = new SysData.DataColumn("Enrichment", Type.GetType("System.Double"));
+            //SysData.DataColumn enrColumn = new SysData.DataColumn("Enrichment", Type.GetType("System.Double"));
 
 
             SysData.DataColumn high1Column = new SysData.DataColumn("up1", Type.GetType("System.Double"));
@@ -573,10 +573,10 @@ namespace GINtool
             
             lTable.Columns.Add(regColumn);
             lTable.Columns.Add(countColumn);            
-            lTable.Columns.Add(avgColumn);
+            //lTable.Columns.Add(avgColumn);
             lTable.Columns.Add(count1Column);
-            lTable.Columns.Add(avg1Column);
-            lTable.Columns.Add(enrColumn);
+            //lTable.Columns.Add(avg1Column);
+            //lTable.Columns.Add(enrColumn);
             lTable.Columns.Add(high4Column);
             lTable.Columns.Add(high3Column);
             lTable.Columns.Add(high2Column);
