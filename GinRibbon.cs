@@ -562,14 +562,14 @@ namespace GINtool
             SysData.DataColumn enrColumn = new SysData.DataColumn("Enrichment", Type.GetType("System.Double"));
 
 
-            SysData.DataColumn low1Column = new SysData.DataColumn("up1", Type.GetType("System.Double"));
-            SysData.DataColumn low2Column = new SysData.DataColumn("up2", Type.GetType("System.Double"));
-            SysData.DataColumn low3Column = new SysData.DataColumn("up3", Type.GetType("System.Double"));
-            SysData.DataColumn low4Column = new SysData.DataColumn("up4", Type.GetType("System.Double"));
-            SysData.DataColumn high1Column = new SysData.DataColumn("down1", Type.GetType("System.Double"));
-            SysData.DataColumn high2Column = new SysData.DataColumn("down2", Type.GetType("System.Double"));
-            SysData.DataColumn high3Column = new SysData.DataColumn("down3", Type.GetType("System.Double"));
-            SysData.DataColumn high4Column = new SysData.DataColumn("down4", Type.GetType("System.Double"));
+            SysData.DataColumn high1Column = new SysData.DataColumn("up1", Type.GetType("System.Double"));
+            SysData.DataColumn high2Column = new SysData.DataColumn("up2", Type.GetType("System.Double"));
+            SysData.DataColumn high3Column = new SysData.DataColumn("up3", Type.GetType("System.Double"));
+            SysData.DataColumn high4Column = new SysData.DataColumn("up4", Type.GetType("System.Double"));
+            SysData.DataColumn low1Column = new SysData.DataColumn("down1", Type.GetType("System.Double"));
+            SysData.DataColumn low2Column = new SysData.DataColumn("down2", Type.GetType("System.Double"));
+            SysData.DataColumn low3Column = new SysData.DataColumn("down3", Type.GetType("System.Double"));
+            SysData.DataColumn low4Column = new SysData.DataColumn("down4", Type.GetType("System.Double"));
             
             lTable.Columns.Add(regColumn);
             lTable.Columns.Add(countColumn);            
@@ -758,7 +758,6 @@ namespace GINtool
 
         private void btLoad_Click(object sender, RibbonControlEventArgs e)
         {
-            gApplication.Visible = false;
             gApplication.EnableEvents = false;
             if (LoadData())
             {                
@@ -769,8 +768,7 @@ namespace GINtool
                 LoadFCDefaults();
                 EnableOutputOptions(true);                
             }
-            gApplication.EnableEvents = true;
-            gApplication.Visible = true;
+            gApplication.EnableEvents = true;            
         }
 
         private void LoadFCDefaults()

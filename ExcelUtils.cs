@@ -17,7 +17,7 @@ namespace GINtool
             if (theApp != null)
                 theApp.EnableEvents = false;
             else
-                return null;
+                return null;            
 
             DataTable dataTable = new DataTable();
             Excel.Application excel;
@@ -28,10 +28,12 @@ namespace GINtool
             {
                 // Get Application object.
                 excel = theApp;
-                //  excel.Visible = false;
+                excel.ScreenUpdating = false;
+                //excel.Visible = false;
                 excel.DisplayAlerts = false;
                 // Creation a new Workbook                
                 excelworkBook = excel.Workbooks.Open(saveAsLocation);
+                excel.ActiveWindow.Visible = false;
                 // Work sheet                
                 excelSheet = (Excel.Worksheet)excelworkBook.Worksheets.Item[worksheetName];
                 range = excelSheet.UsedRange;
@@ -57,10 +59,13 @@ namespace GINtool
                     dataTable.Rows.InsertAt(dr, dataTable.Rows.Count + 1);
                 }
 
-                //now close the workbook and make the function return the data table                                
+                //now close the workbook and make the function return the data table        
+                excel.ScreenUpdating = true;
+                excelworkBook.Activate();
+                excel.ActiveWindow.Visible = true;
                 excelworkBook.Close();
                 theApp.EnableEvents = true;
-
+                theApp.Visible = true;
                 excelSheet = null;
                 range = null;
                 excelworkBook = null;
@@ -77,7 +82,7 @@ namespace GINtool
                 excelSheet = null;
                 range = null;
                 excelworkBook = null;
-                theApp.EnableEvents = true;
+                theApp.EnableEvents = true;                
             }
         }
     }
