@@ -190,12 +190,14 @@
             this.ebMid.Label = "mid";
             this.ebMid.Name = "ebMid";
             this.ebMid.Text = null;
+            this.ebMid.TextChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ebMid_TextChanged);
             // 
             // ebHigh
             // 
             this.ebHigh.Label = "high";
             this.ebHigh.Name = "ebHigh";
             this.ebHigh.Text = null;
+            this.ebHigh.TextChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ebHigh_TextChanged);
             // 
             // GinRibbon
             // 
