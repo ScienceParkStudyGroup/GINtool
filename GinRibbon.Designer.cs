@@ -36,12 +36,12 @@
         {
             this.TabGINtool = this.Factory.CreateRibbonTab();
             this.group1 = this.Factory.CreateRibbonGroup();
-            this.btLoad = this.Factory.CreateRibbonButton();
             this.splBtApply = this.Factory.CreateRibbonSplitButton();
             this.tglDense = this.Factory.CreateRibbonToggleButton();
             this.tglSparse = this.Factory.CreateRibbonToggleButton();
             this.separator3 = this.Factory.CreateRibbonSeparator();
             this.tglReport = this.Factory.CreateRibbonToggleButton();
+            this.btLoad = this.Factory.CreateRibbonButton();
             this.separator1 = this.Factory.CreateRibbonSeparator();
             this.btSelectFile = this.Factory.CreateRibbonButton();
             this.lbRefFileName = this.Factory.CreateRibbonLabel();
@@ -54,6 +54,7 @@
             this.ebLow = this.Factory.CreateRibbonEditBox();
             this.ebMid = this.Factory.CreateRibbonEditBox();
             this.ebHigh = this.Factory.CreateRibbonEditBox();
+            this.btClear = this.Factory.CreateRibbonButton();
             this.TabGINtool.SuspendLayout();
             this.group1.SuspendLayout();
             this.group2.SuspendLayout();
@@ -70,6 +71,7 @@
             // 
             this.group1.Items.Add(this.splBtApply);
             this.group1.Items.Add(this.btLoad);
+            this.group1.Items.Add(this.btClear);
             this.group1.Items.Add(this.separator1);
             this.group1.Items.Add(this.btSelectFile);
             this.group1.Items.Add(this.lbRefFileName);
@@ -80,16 +82,6 @@
             this.group1.Items.Add(this.ddDir);
             this.group1.Label = "GIN tool";
             this.group1.Name = "group1";
-            // 
-            // btLoad
-            // 
-            this.btLoad.Enabled = false;
-            this.btLoad.Image = global::GINtool.Properties.Resources.Refetch_16x;
-            this.btLoad.Label = "load reference data";
-            this.btLoad.Name = "btLoad";
-            this.btLoad.ScreenTip = "load reference data into memory";
-            this.btLoad.ShowImage = true;
-            this.btLoad.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btLoad_Click);
             // 
             // splBtApply
             // 
@@ -126,6 +118,16 @@
             this.tglReport.Name = "tglReport";
             this.tglReport.ShowImage = true;
             this.tglReport.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.tglReport_Click);
+            // 
+            // btLoad
+            // 
+            this.btLoad.Enabled = false;
+            this.btLoad.Image = global::GINtool.Properties.Resources.Refetch_16x;
+            this.btLoad.Label = "load reference data";
+            this.btLoad.Name = "btLoad";
+            this.btLoad.ScreenTip = "load reference data into memory";
+            this.btLoad.ShowImage = true;
+            this.btLoad.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btLoad_Click);
             // 
             // separator1
             // 
@@ -217,6 +219,12 @@
             this.ebHigh.Text = null;
             this.ebHigh.TextChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ebHigh_TextChanged);
             // 
+            // btClear
+            // 
+            this.btClear.Label = "clear";
+            this.btClear.Name = "btClear";
+            this.btClear.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btClear_Click);
+            // 
             // GinRibbon
             // 
             this.Name = "GinRibbon";
@@ -255,6 +263,7 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton tglSparse;
         internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator3;
         internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton tglReport;
+        internal Microsoft.Office.Tools.Ribbon.RibbonButton btClear;
     }
 
     partial class ThisRibbonCollection

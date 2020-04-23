@@ -493,11 +493,26 @@ namespace GINtool
             Excel.Range top = sheet.Cells[firstRow, firstCol];
             Excel.Range bottom = sheet.Cells[lastRow, lastCol];
             Excel.Range all = (Excel.Range)sheet.get_Range(top, bottom);
+
+            for (int r = 0; r < dt.Rows.Count; r++)
+            {
+                SysData.DataRow clrRow = dt.Rows[r];
+                for (int c = 0; c < clrRow.ItemArray.Length; c++)
+                {
+                    Excel.Range lR = all.Cells[r + 1, c + 1];
+                    lR.Value = clrRow[c];
+                }
+            }
+
+            /*
+            
             object[,] arrayDT = new object[dt.Rows.Count, dt.Columns.Count];
             for (int i = 0; i < dt.Rows.Count; i++)
                 for (int j = 0; j < dt.Columns.Count; j++)
                     arrayDT[i, j] = dt.Rows[i][j];
-            all.Value2 = arrayDT;
+            all.Value = arrayDT;
+
+            */
         }
 
         private void ColorCells(System.Data.DataTable dt, Excel.Worksheet sheet, int firstRow, int firstCol, int lastRow, int lastCol)
@@ -1021,11 +1036,11 @@ namespace GINtool
 
             List<FC_BSU> lOutput = GenerateOutput(gDenseOutput);
 
-            if (lOutput != null & gGenReport)
+            /*if (lOutput != null & gGenReport)
             {
                 SysData.DataTable lSummary = CreateUsageTable(lOutput);
                 CreateSummarySheet(lSummary);
-            }
+            }*/
 
             gApplication.EnableEvents = true;
             gApplication.DisplayAlerts = true;
@@ -1040,6 +1055,14 @@ namespace GINtool
         private void tglReport_Click(object sender, RibbonControlEventArgs e)
         {
             gGenReport = tglReport.Checked;
+        }
+
+        private void btClear_Click(object sender, RibbonControlEventArgs e)
+        {
+            gRefStats.Clear();
+            gRefWB.Clear();
+            splBtApply.Enabled = false;
+            EnableItems(false);
         }
     }
 
