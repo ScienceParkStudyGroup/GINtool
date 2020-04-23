@@ -14,9 +14,9 @@ namespace GINtool
     public partial class dlgUpDown : Form
     {
 
-        List<string> pAvailItems = null;
-        List<string> pUpItems = null;
-        List<string> pDownItems = null;
+        readonly List<string> pAvailItems = null;
+        readonly List<string> pUpItems = null;
+        readonly List<string> pDownItems = null;
 
         public dlgUpDown()
         {
@@ -43,7 +43,7 @@ namespace GINtool
 
         }
 
-        private void copy_from_to(ListBox lbFrom, ListBox lbTo)
+        private void CopyFromTo(ListBox lbFrom, ListBox lbTo)
         {
             ArrayList moves = new ArrayList();
 
@@ -77,22 +77,22 @@ namespace GINtool
 
         private void btToUP_Click(object sender, EventArgs e)
         {
-            copy_from_to(lbAvail, lbUp);
+            CopyFromTo(lbAvail, lbUp);
         }
 
         private void btFromUp_Click(object sender, EventArgs e)
         {
-            copy_from_to(lbUp, lbAvail);
+            CopyFromTo(lbUp, lbAvail);
         }
 
         private void btToDown_Click(object sender, EventArgs e)
         {
-            copy_from_to(lbAvail, lbDown);
+            CopyFromTo(lbAvail, lbDown);
         }
 
         private void btFromDown_Click(object sender, EventArgs e)
         {
-            copy_from_to(lbDown,lbAvail);
+            CopyFromTo(lbDown,lbAvail);
         }
     }
 }

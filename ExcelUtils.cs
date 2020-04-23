@@ -78,10 +78,7 @@ namespace GINtool
                 return null;
             }
             finally
-            {
-                excelSheet = null;
-                range = null;
-                excelworkBook = null;
+            {                                
                 theApp.EnableEvents = true;                
             }
         }
