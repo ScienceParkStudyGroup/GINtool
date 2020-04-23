@@ -209,7 +209,9 @@ namespace GINtool
         }
 
         private List<BsuRegulons> QueryResultTable(Excel.Range theCells)
-        {            
+        {
+
+            double lowVal = Properties.Settings.Default.fcLOW;
 
             int nrRows = theCells.Rows.Count;                     
             List<BsuRegulons> lList = new List<BsuRegulons>();
@@ -217,12 +219,16 @@ namespace GINtool
             foreach (Excel.Range c in theCells.Rows)
             {
                 string lBSU = null;
+                bool hasFC = false;
+                double lFC = 0;
                 BsuRegulons lMap = null;
                 if (c.Columns.Count == 2)
                 {
                     object[,] value = c.Value2;
-                    lMap = new BsuRegulons((double)value[1, 1], value[1, 2].ToString());
-                    lBSU = value[1,2].ToString();
+                    lFC = (double)value[1, 1];
+                    lBSU = value[1, 2].ToString();                    
+                    lMap = new BsuRegulons(lFC, lBSU);
+                
                 }
 
                 else // only 1 column is selected                
@@ -233,11 +239,11 @@ namespace GINtool
                 }
 
 
-                int rnr = 0;
-                //int iR1 = c.Row;
-                int rc = 0;
-                int nUp = 0;
-                int nDown = 0;
+                //int rnr = 0;
+                ////int iR1 = c.Row;
+                //int rc = 0;
+                //int nUp = 0;
+                //int nDown = 0;
 
                 if (lBSU.Length>0) 
                 {
@@ -253,26 +259,37 @@ namespace GINtool
                             if (item.Length > 0) // loop over found regulons
                             {
                                 lMap.REGULONS.Add(item);
-                                rc += 1;
+
+                                //rc += 1;
                                 if (gUpItems.Contains(direction))
-                                    nUp += 1;
+                                {                                    
+                                    lMap.UP.Add(r);
+                                    if (hasFC)
+                                        if (lFC < -lowVal)
+                                            lMap.fpUP.Add(r);
+                                }
                                 if (gDownItems.Contains(direction))
-                                    nDown += 1;
+                                {
+                                    lMap.DOWN.Add(r);
+                                    if (hasFC)
+                                        if (lFC > lowVal)
+                                            lMap.fpDOWN.Add(r);
+                                }                                
                             }
                         }
                     }
 
-                    lMap.NRUP = nUp;
-                    lMap.NRDOWN = nDown;
-                    lMap.NET = nUp - nDown;
-                    lMap.TOT = rc;               
+                    //lMap.NRUP = nUp;
+                    //lMap.NRDOWN = nDown;
+                    //lMap.NET = nUp - nDown;
+                    //lMap.TOT = rc;               
                 }
                 else
                 {                
-                    lMap.NRUP = 0;
-                    lMap.NRDOWN = 0;
-                    lMap.NET = 0;
-                    lMap.TOT = 0;
+                    //lMap.NRUP = 0;
+                    //lMap.NRDOWN = 0;
+                    //lMap.NET = 0;
+                    //lMap.TOT = 0;
                 }                
 
                 lList.Add(lMap);
@@ -313,10 +330,11 @@ namespace GINtool
             ClearRange(tmpRange_);
         }
 
-        SysData.DataTable PrepareResultTable(List<BsuRegulons> lResults, bool bDense)
+        (SysData.DataTable, SysData.DataTable) PrepareResultTable(List<BsuRegulons> lResults, bool bDense)
         {
             SysData.DataTable myTable = new System.Data.DataTable("mytable");
-           
+            SysData.DataTable clrTable = new System.Data.DataTable("colortable");
+
             if (bDense)
             {
                 int maxcol = lResults[0].REGULONS.Count;
@@ -328,23 +346,36 @@ namespace GINtool
 
                 // add count column
                 SysData.DataColumn countCol = new SysData.DataColumn("count_col",Type.GetType("System.Int16"));
-                myTable.Columns.Add(countCol);
+                myTable.Columns.Add(countCol);                
 
                 // add variable columns
                 for (int c = 0; c < maxcol; c++)
                 {
-                    SysData.DataColumn newCol = new SysData.DataColumn(string.Format("col_{0}", c+1));
+                    SysData.DataColumn newCol = new SysData.DataColumn(string.Format("col_{0}", c+1));                    
                     myTable.Columns.Add(newCol);
+                    SysData.DataColumn clrCol = new SysData.DataColumn(string.Format("col_{0}", c + 1),Type.GetType("System.Int16"));
+                    clrTable.Columns.Add(clrCol);
                 }
 
                 // fill data
                 for (int r=0;r<lResults.Count;r++)
                 {
-                    SysData.DataRow newRow = myTable.Rows.Add();
+                    SysData.DataRow newRow = myTable.Rows.Add();                    
                     newRow["count_col"]= lResults[r].TOT;
-                    for (int c = 0; c < lResults[r].REGULONS.Count; c++)
-                        newRow[string.Format("col_{0}",c+1)] = lResults[r].REGULONS[c];
+                    SysData.DataRow clrRow = clrTable.Rows.Add();
+
+                    for (int c = 0; c < lResults[r].REGULONS.Count; c++)                    
+                        newRow[string.Format("col_{0}", c + 1)] = lResults[r].REGULONS[c];
+
+                    for (int c = 0; c<lResults[r].UP.Count; c++)
+                        clrRow[lResults[r].UP[c]] = 1;
+                    
+                    for (int c = 0; c<lResults[r].DOWN.Count; c++)
+                        clrRow[lResults[r].DOWN[c]] = -1;
+
                 }
+
+                return (myTable, clrTable);
 
             }
             else // generate sparse output
@@ -404,8 +435,9 @@ namespace GINtool
                 for (int c = 0; c < myTable.Columns.Count - 1; c++)
                     _newRow[c + 1] = nrTypes[c];
 
-            }
-            return myTable;
+
+                return (myTable, null);
+            }            
         }
 
         private List<FC_BSU> GenerateOutput(bool bDense)
@@ -431,8 +463,20 @@ namespace GINtool
             // generate the results for outputting the data and summary
             List<BsuRegulons> lResults=QueryResultTable(theInputCells);
             // output the data
-            SysData.DataTable lOut = PrepareResultTable(lResults, bDense);
-            FastDtToExcel(lOut,theSheet,startR,offsetColumn,startR+nrRows-(bDense?1:0), offsetColumn+lOut.Columns.Count-1);
+            var lOut = PrepareResultTable(lResults, bDense);
+            SysData.DataTable lTable = lOut.Item1;
+            SysData.DataTable clrTbl = null;
+
+            
+            FastDtToExcel(lTable, theSheet,startR,offsetColumn,startR+nrRows-(bDense?1:0), offsetColumn+lTable.Columns.Count-1);
+
+            if (bDense)
+            {
+                clrTbl = lOut.Item2;
+                ColorCells(clrTbl, theSheet, startR, offsetColumn+1, startR + nrRows - (bDense ? 1 : 0), offsetColumn + lTable.Columns.Count - 1);
+            }
+
+
 
             if (genSummary)
             {
@@ -460,7 +504,42 @@ namespace GINtool
             all.Value2 = arrayDT;
         }
 
-       
+        private void ColorCells(System.Data.DataTable dt, Excel.Worksheet sheet, int firstRow, int firstCol, int lastRow, int lastCol)
+        {
+            gApplication.ScreenUpdating = false;            
+            gApplication.DisplayAlerts = false;
+            gApplication.EnableEvents = false;
+
+            Excel.Range top = sheet.Cells[firstRow, firstCol];
+            Excel.Range bottom = sheet.Cells[lastRow, lastCol];
+            Excel.Range all = (Excel.Range)sheet.get_Range(top, bottom);
+
+
+            for (int r = 0; r < dt.Rows.Count; r++)
+            {
+                SysData.DataRow clrRow = dt.Rows[r];
+                for (int c = 0; c < clrRow.ItemArray.Length; c++)
+                {
+                    Excel.Range lR = all.Cells[r+1, c+1];
+                    int val = 0;
+                    if (Int32.TryParse(clrRow[c].ToString(), out val))
+                    {
+                        if (val == 1)
+                            lR.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGreen);
+
+                        if (val == -1)
+                            lR.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightSalmon);
+                    }
+                }
+            }
+
+            gApplication.ScreenUpdating = true;
+            gApplication.DisplayAlerts = true;
+            gApplication.EnableEvents = true;
+
+        }
+
+
         private void btApply_Click(object sender, RibbonControlEventArgs e)
         {
             gApplication.EnableEvents = false;
@@ -631,14 +710,14 @@ namespace GINtool
                 SysData.DataRow lNewRow = lTable.Rows.Add();
                 double lAvg = (double)_tmp.Length / (double)aList.Count;
                 lNewRow["CountData"] = _tmp.Length;
-                lNewRow["AverageData"] = lAvg;
+                //lNewRow["AverageData"] = lAvg;
                 
                 // _tmp2[0]... it can only be a single hit..
                 lNewRow["Count"] = _tmp2[0]["Count"];
-                lNewRow["Average"] = _tmp2[0]["Average"];
+                //lNewRow["Average"] = _tmp2[0]["Average"];
 
 
-                lNewRow["Enrichment"] = lAvg/(double)_tmp2[0]["Average"];
+                //lNewRow["Enrichment"] = lAvg/(double)_tmp2[0]["Average"];
 
                 lNewRow["Regulon"] = reg;
                 lNewRow["down1"] = down1;
@@ -654,7 +733,7 @@ namespace GINtool
             }
 
             SysData.DataView dv = lTable.DefaultView;
-            dv.Sort = "Enrichment desc";
+            dv.Sort = "up4 desc";
             
             return dv.ToTable();
         }
