@@ -12,14 +12,11 @@ namespace GINtool
   
     public partial class GinRibbon
     {
-
-        //bool gUpDown = false;
-        //bool gColorCells = false;
-        //bool gOverallCol = false;
-
+        
+        bool gGenReport = false;
         bool gDenseOutput = true;
         SysData.DataTable gRefWB = null;
-        SysData.DataTable gRefMeans = null;
+        SysData.DataTable gRefStats = null;
         string[] gColNames = null;
         Excel.Application gApplication = null;
 
@@ -27,7 +24,6 @@ namespace GINtool
         static List<string> gUpItems = null;
         static List<string> gDownItems = null;
 
-        //Boundaries gBoundaries = null;
          
         private List<string> propertyItems(string property)
         {
@@ -101,22 +97,22 @@ namespace GINtool
 
             // initialize the global datatable
 
-            gRefMeans = new SysData.DataTable("tblstat");
+            gRefStats = new SysData.DataTable("tblstat");
 
             int totNrRows = gRefWB.Rows.Count;
 
             SysData.DataColumn regColumn = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
             SysData.DataColumn countColumn = new SysData.DataColumn("Count", Type.GetType("System.Int16"));
             SysData.DataColumn avgColumn = new SysData.DataColumn("Average", Type.GetType("System.Double"));
-            gRefMeans.Columns.Add(regColumn);
-            gRefMeans.Columns.Add(countColumn);
-            gRefMeans.Columns.Add(avgColumn);
+            gRefStats.Columns.Add(regColumn);
+            gRefStats.Columns.Add(countColumn);
+            gRefStats.Columns.Add(avgColumn);
 
             foreach (SysData.DataRow lRow in lUnique.Rows)
             {
                 string lVal = lRow[Properties.Settings.Default.referenceRegulon].ToString();
                 int cnt = gRefWB.Select(string.Format("{0}='{1}'", Properties.Settings.Default.referenceRegulon, lVal)).Length;
-                SysData.DataRow nRow = gRefMeans.Rows.Add();
+                SysData.DataRow nRow = gRefStats.Rows.Add();
                 nRow["Regulon"] = lVal;
                 nRow["Count"] = cnt;
                 nRow["Average"] = ((double)cnt)/totNrRows;
@@ -132,13 +128,16 @@ namespace GINtool
             gUpItems = propertyItems("directionMapUp");
             gDownItems = propertyItems("directionMapDown");
 
-            btApply.Enabled = false;
+            splBtApply.Enabled = false;
             ddBSU.Enabled = false;
             ddRegulon.Enabled = false;
             ddDir.Enabled = false;
             EnableOutputOptions(false);
 
-            //gBoundaries = new Boundaries(Properties.Settings.Default.fcLOW);
+            gDenseOutput = true;
+            tglDense.Checked = true;
+            tglSparse.Checked = false;
+            tglReport.Checked = false;
 
             btLoad.Enabled = System.IO.File.Exists(Properties.Settings.Default.referenceFile);
 
@@ -158,8 +157,7 @@ namespace GINtool
         {
             ebLow.Enabled = enable;
             ebMid.Enabled = enable;
-            ebHigh.Enabled = enable;
-            tglDense.Enabled = enable;
+            ebHigh.Enabled = enable;          
         }
 
 
@@ -228,6 +226,7 @@ namespace GINtool
                     lFC = (double)value[1, 1];
                     lBSU = value[1, 2].ToString();                    
                     lMap = new BsuRegulons(lFC, lBSU);
+                    hasFC = true;
                 
                 }
 
@@ -237,13 +236,6 @@ namespace GINtool
                     lMap = new BsuRegulons(value.ToString());
                     lBSU = value.ToString();
                 }
-
-
-                //int rnr = 0;
-                ////int iR1 = c.Row;
-                //int rc = 0;
-                //int nUp = 0;
-                //int nDown = 0;
 
                 if (lBSU.Length>0) 
                 {
@@ -278,19 +270,7 @@ namespace GINtool
                             }
                         }
                     }
-
-                    //lMap.NRUP = nUp;
-                    //lMap.NRDOWN = nDown;
-                    //lMap.NET = nUp - nDown;
-                    //lMap.TOT = rc;               
                 }
-                else
-                {                
-                    //lMap.NRUP = 0;
-                    //lMap.NRDOWN = 0;
-                    //lMap.NET = 0;
-                    //lMap.TOT = 0;
-                }                
 
                 lList.Add(lMap);
             }
@@ -452,11 +432,24 @@ namespace GINtool
             bool genSummary = theInputCells.Columns.Count == 2;
             int offsetColumn = startC + (genSummary?2:1);
 
-            if (theInputCells.Columns.Count > 2)
+
+            if (gGenReport)
             {
-                MessageBox.Show("Please select either 1 column (BSU) or 2 columns (first FC, second BSU)");
-                return null;
+                if (theInputCells.Columns.Count != 2)
+                {
+                    MessageBox.Show("Please select 2 columns (first FC, second BSU)");
+                    return null;
+                }
             }
+            else
+            {
+                if (theInputCells.Columns.Count != 1)
+                {
+                    MessageBox.Show("Please select 1 column with BSU entries");
+                    return null;
+                }
+            }
+
 
             ClearOutputRange(theInputCells);          
 
@@ -484,7 +477,16 @@ namespace GINtool
 
                 for (int r = 0; r < nrRows; r++)
                     for (int c = 0; c < lResults[r].REGULONS.Count; c++)
-                        lOutput.Add(new FC_BSU(lResults[r].FC, lResults[r].REGULONS[c]));
+                    {
+                        int val = 0;
+                        if (lResults[r].fpUP.Contains(c))
+                            val = 1;
+                        if (lResults[r].fpDOWN.Contains(c))
+                            val = -1;
+                        
+                        lOutput.Add(new FC_BSU(lResults[r].FC, lResults[r].REGULONS[c], val));
+                    }    
+                        
 
                 return lOutput;
             }
@@ -500,7 +502,7 @@ namespace GINtool
             object[,] arrayDT = new object[dt.Rows.Count, dt.Columns.Count];
             for (int i = 0; i < dt.Rows.Count; i++)
                 for (int j = 0; j < dt.Columns.Count; j++)
-                    arrayDT[i, j] = dt.Rows[i][j]; //.ToString();
+                    arrayDT[i, j] = dt.Rows[i][j]; 
             all.Value2 = arrayDT;
         }
 
@@ -538,52 +540,81 @@ namespace GINtool
             gApplication.EnableEvents = true;
 
         }
-
-
-        private void btApply_Click(object sender, RibbonControlEventArgs e)
-        {
-            gApplication.EnableEvents = false;
-            gApplication.DisplayAlerts = false;
-            
-            List<FC_BSU> lOutput= GenerateOutput(gDenseOutput);
-
-            if (lOutput != null)
-            {
-               SysData.DataTable lSummary =  CreateUsageTable(lOutput);
-               CreateSummarySheet(lSummary);
-            }
-
-            gApplication.EnableEvents = true;
-            gApplication.DisplayAlerts = true;
-        }
+      
 
         private void CreateSummarySheet(SysData.DataTable theTable)
         {
             Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
 
             int col = 1;
-            lNewSheet.Cells[1, col++] = "Regulon";
-            lNewSheet.Cells[1, col++] = "Total number in database";
-            lNewSheet.Cells[1, col++] = "Average in database";
-            
-            lNewSheet.Cells[1, col++] = "Total number in dataset";
-            lNewSheet.Cells[1, col++] = "Average in dataset";
 
-            lNewSheet.Cells[1, col++] = "Enrichment";
+            Excel.Range top = lNewSheet.Cells[1, 4];
+            Excel.Range bottom = lNewSheet.Cells[1, 11];
+            Excel.Range all = (Excel.Range)lNewSheet.get_Range(top, bottom);
+            all.Merge();
+            all.Value = "Counts";
+            all.HorizontalAlignment = Excel.Constants.xlCenter;
 
-            lNewSheet.Cells[1, col++] = string.Format("UP >{0}",Properties.Settings.Default.fcHIGH);
-            lNewSheet.Cells[1, col++] = string.Format("UP <={0} & >{1}", Properties.Settings.Default.fcHIGH, Properties.Settings.Default.fcMID);
-            lNewSheet.Cells[1, col++] = string.Format("UP <={0} & >{1}", Properties.Settings.Default.fcMID, Properties.Settings.Default.fcLOW);
-            lNewSheet.Cells[1, col++] = string.Format("UP <={0} & >0", Properties.Settings.Default.fcLOW);
+            top = lNewSheet.Cells[1, 12];
+            bottom = lNewSheet.Cells[1, 13];
+            all = (Excel.Range)lNewSheet.get_Range(top, bottom);
+            all.Merge();
+            all.Value = "FALSE POSTIVE";
+            all.HorizontalAlignment = Excel.Constants.xlCenter;
 
-            lNewSheet.Cells[1, col++] = string.Format("DOWN <0 & >=-{0}", Properties.Settings.Default.fcLOW);
-            lNewSheet.Cells[1, col++] = string.Format("DOWN <-{0} & >=-{1}", Properties.Settings.Default.fcMID, Properties.Settings.Default.fcLOW);
-            lNewSheet.Cells[1, col++] = string.Format("DOWN <=-{0} & >=-{1}", Properties.Settings.Default.fcHIGH, Properties.Settings.Default.fcMID);
-            lNewSheet.Cells[1, col++] = string.Format("DOWN <-{0}", Properties.Settings.Default.fcHIGH);
-            
+            top = lNewSheet.Cells[1, 14];
+            bottom = lNewSheet.Cells[1, 21];
+            all = (Excel.Range)lNewSheet.get_Range(top, bottom);
+            all.Merge();
+            all.Value = "Percentage";
+            all.HorizontalAlignment = Excel.Constants.xlCenter;
+
+            top = lNewSheet.Cells[1, 22];
+            bottom = lNewSheet.Cells[1, 23];
+            all = (Excel.Range)lNewSheet.get_Range(top, bottom);
+            all.Merge();
+            all.Value = "FALSE POSTIVE";
+            all.HorizontalAlignment = Excel.Constants.xlCenter;
+
+            lNewSheet.Cells[2, col++] = "Regulon";
+            lNewSheet.Cells[2, col++] = "Total number in database";          
+            lNewSheet.Cells[2, col++] = "Total number in dataset";
                         
-            FastDtToExcel(theTable, lNewSheet, 2, 1, theTable.Rows.Count+1, theTable.Columns.Count);
+            lNewSheet.Cells[2, col++] = string.Format("UP >{0}",Properties.Settings.Default.fcHIGH);
+            lNewSheet.Cells[2, col++] = string.Format("UP <={0} & >{1}", Properties.Settings.Default.fcHIGH, Properties.Settings.Default.fcMID);
+            lNewSheet.Cells[2, col++] = string.Format("UP <={0} & >{1}", Properties.Settings.Default.fcMID, Properties.Settings.Default.fcLOW);
+            lNewSheet.Cells[2, col++] = string.Format("UP <={0} & >0", Properties.Settings.Default.fcLOW);
+
+            lNewSheet.Cells[2, col++] = string.Format("DOWN <0 & >=-{0}", Properties.Settings.Default.fcLOW);
+            lNewSheet.Cells[2, col++] = string.Format("DOWN <-{0} & >=-{1}", Properties.Settings.Default.fcMID, Properties.Settings.Default.fcLOW);
+            lNewSheet.Cells[2, col++] = string.Format("DOWN <=-{0} & >=-{1}", Properties.Settings.Default.fcHIGH, Properties.Settings.Default.fcMID);
+            lNewSheet.Cells[2, col++] = string.Format("DOWN <-{0}", Properties.Settings.Default.fcHIGH);
+
+            lNewSheet.Cells[2, col++] = "UP";
+            lNewSheet.Cells[2, col++] = "DOWN";
+
+            lNewSheet.Cells[2, col++] = string.Format("UP >{0}", Properties.Settings.Default.fcHIGH);
+            lNewSheet.Cells[2, col++] = string.Format("UP <={0} & >{1}", Properties.Settings.Default.fcHIGH, Properties.Settings.Default.fcMID);
+            lNewSheet.Cells[2, col++] = string.Format("UP <={0} & >{1}", Properties.Settings.Default.fcMID, Properties.Settings.Default.fcLOW);
+            lNewSheet.Cells[2, col++] = string.Format("UP <={0} & >0", Properties.Settings.Default.fcLOW);
+
+            lNewSheet.Cells[2, col++] = string.Format("DOWN <0 & >=-{0}", Properties.Settings.Default.fcLOW);
+            lNewSheet.Cells[2, col++] = string.Format("DOWN <-{0} & >=-{1}", Properties.Settings.Default.fcMID, Properties.Settings.Default.fcLOW);
+            lNewSheet.Cells[2, col++] = string.Format("DOWN <=-{0} & >=-{1}", Properties.Settings.Default.fcHIGH, Properties.Settings.Default.fcMID);
+            lNewSheet.Cells[2, col++] = string.Format("DOWN <-{0}", Properties.Settings.Default.fcHIGH);
+
+            lNewSheet.Cells[2, col++] = "UP";
+            lNewSheet.Cells[2, col++] = "DOWN";
+            // starting from row 3
+          
+
+            FastDtToExcel(theTable, lNewSheet, 3, 1, theTable.Rows.Count+2, theTable.Columns.Count);
             
+            top = lNewSheet.Cells[3, 14];
+            bottom = lNewSheet.Cells[2+ theTable.Rows.Count, 23];
+            all = (Excel.Range)lNewSheet.get_Range(top, bottom);
+            all.NumberFormat = "###%";
+
         }
 
         private SysData.DataTable ReformatResults(List<FC_BSU> aList)
@@ -593,15 +624,19 @@ namespace GINtool
             SysData.DataTable lTable = new SysData.DataTable("FC_BSU");
             SysData.DataColumn regColumn = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
             SysData.DataColumn fcColumn = new SysData.DataColumn("FC", Type.GetType("System.Single"));            
+            SysData.DataColumn fpUPColumn = new SysData.DataColumn("FP", Type.GetType("System.Int32"));
+            
 
             lTable.Columns.Add(regColumn);
             lTable.Columns.Add(fcColumn);
-            
+            lTable.Columns.Add(fpUPColumn);
+
             for (int r = 0; r < aList.Count; r++)
             {
                 SysData.DataRow lRow = lTable.Rows.Add();
                 lRow["Regulon"] = aList[r].BSU;
                 lRow["FC"] = aList[r].FC;
+                lRow["FP"] = aList[r].FP;
             }
 
             return lTable;
@@ -613,7 +648,7 @@ namespace GINtool
         {
             SysData.DataTable _fc_BSU = ReformatResults(aList);
 
-            SysData.DataTable lTable  = new SysData.DataTable();
+            SysData.DataTable lTable = new SysData.DataTable();
             int totNrRows = aList.Count;
 
             float lFClow = Properties.Settings.Default.fcLOW;
@@ -628,44 +663,50 @@ namespace GINtool
             HashSet<string> lUnique = new HashSet<string>();
 
             for (int r = 0; r < aList.Count; r++)
-                lUnique.Add(aList[r].BSU);            
+                lUnique.Add(aList[r].BSU);
 
             // add the columns per defined FC range
-            SysData.DataColumn regColumn = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
-            SysData.DataColumn countColumn = new SysData.DataColumn("Count", Type.GetType("System.Int16"));
-            //SysData.DataColumn avgColumn = new SysData.DataColumn("Average", Type.GetType("System.Double"));
-
-            SysData.DataColumn count1Column = new SysData.DataColumn("CountData", Type.GetType("System.Int16"));
-            //SysData.DataColumn avg1Column = new SysData.DataColumn("AverageData", Type.GetType("System.Double"));
-
-            //SysData.DataColumn enrColumn = new SysData.DataColumn("Enrichment", Type.GetType("System.Double"));
+            SysData.DataColumn col = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
+            lTable.Columns.Add(col);
+            col = new SysData.DataColumn("Count", Type.GetType("System.Int16"));
+            lTable.Columns.Add(col);
+            col = new SysData.DataColumn("CountData", Type.GetType("System.Int16"));
+            lTable.Columns.Add(col);
 
 
-            SysData.DataColumn high1Column = new SysData.DataColumn("up1", Type.GetType("System.Double"));
-            SysData.DataColumn high2Column = new SysData.DataColumn("up2", Type.GetType("System.Double"));
-            SysData.DataColumn high3Column = new SysData.DataColumn("up3", Type.GetType("System.Double"));
-            SysData.DataColumn high4Column = new SysData.DataColumn("up4", Type.GetType("System.Double"));
-            SysData.DataColumn low1Column = new SysData.DataColumn("down1", Type.GetType("System.Double"));
-            SysData.DataColumn low2Column = new SysData.DataColumn("down2", Type.GetType("System.Double"));
-            SysData.DataColumn low3Column = new SysData.DataColumn("down3", Type.GetType("System.Double"));
-            SysData.DataColumn low4Column = new SysData.DataColumn("down4", Type.GetType("System.Double"));
-            
-            lTable.Columns.Add(regColumn);
-            lTable.Columns.Add(countColumn);            
-            //lTable.Columns.Add(avgColumn);
-            lTable.Columns.Add(count1Column);
-            //lTable.Columns.Add(avg1Column);
-            //lTable.Columns.Add(enrColumn);
-            lTable.Columns.Add(high4Column);
-            lTable.Columns.Add(high3Column);
-            lTable.Columns.Add(high2Column);
-            lTable.Columns.Add(high1Column);                                    
 
-            lTable.Columns.Add(low1Column);
-            lTable.Columns.Add(low2Column);
-            lTable.Columns.Add(low3Column);
-            lTable.Columns.Add(low4Column);
-            
+            for (int i = 3; i >= 0; i--)
+            {
+                col = new SysData.DataColumn(string.Format("up{0}", i+1), Type.GetType("System.Double"));
+                lTable.Columns.Add(col);               
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                col = new SysData.DataColumn(string.Format("down{0}", i+1), Type.GetType("System.Double"));
+                lTable.Columns.Add(col);
+            }
+
+            col = new SysData.DataColumn("fpUP", Type.GetType("System.Int16"));
+            lTable.Columns.Add(col);
+            col = new SysData.DataColumn("fpDOWN", Type.GetType("System.Int16"));
+            lTable.Columns.Add(col);
+
+            for (int i = 3; i >= 0; i--)
+            { col = new SysData.DataColumn(string.Format("perc_up{0}", i+1), Type.GetType("System.Double"));
+                lTable.Columns.Add(col);
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                col = new SysData.DataColumn(string.Format("perc_down{0}", i+1), Type.GetType("System.Double"));
+                lTable.Columns.Add(col);
+            }
+
+            col = new SysData.DataColumn("perc_fpUP", Type.GetType("System.Double"));
+            lTable.Columns.Add(col);
+            col = new SysData.DataColumn("perc_fpDOWN", Type.GetType("System.Double"));
+            lTable.Columns.Add(col);
 
             foreach (string reg in lUnique)
             {
@@ -678,9 +719,13 @@ namespace GINtool
                 int down3 = 0;
                 int down4 = 0;
 
-                // lookup regulon in global statistic table
-                SysData.DataRow[] _tmp2 = gRefMeans.Select(string.Format("Regulon='{0}'", reg));
+                int fpup = 0;
+                int fpdown = 0;
 
+                // lookup regulon in global statistic table
+                SysData.DataRow[] _tmp2 = gRefStats.Select(string.Format("Regulon='{0}'", reg));
+
+                // calculate usage statistics in dataset
                 SysData.DataRow[] _tmp = _fc_BSU.Select(string.Format("Regulon='{0}'", reg));
 
                 for(int _r=0;_r<_tmp.Length;_r++)
@@ -703,22 +748,19 @@ namespace GINtool
                         down3 += 1;
                     if (fc < -lFChigh)
                         down4 += 1;
+
+                    if ((int)_tmp[_r]["FP"] == 1)
+                        fpup += 1;
+                    if ((int)_tmp[_r]["FP"] == -1)
+                        fpdown += 1;
                 }
 
                
 
                 SysData.DataRow lNewRow = lTable.Rows.Add();
-                double lAvg = (double)_tmp.Length / (double)aList.Count;
-                lNewRow["CountData"] = _tmp.Length;
-                //lNewRow["AverageData"] = lAvg;
-                
-                // _tmp2[0]... it can only be a single hit..
+                lNewRow["CountData"] = _tmp.Length;                                                
                 lNewRow["Count"] = _tmp2[0]["Count"];
-                //lNewRow["Average"] = _tmp2[0]["Average"];
-
-
-                //lNewRow["Enrichment"] = lAvg/(double)_tmp2[0]["Average"];
-
+                
                 lNewRow["Regulon"] = reg;
                 lNewRow["down1"] = down1;
                 lNewRow["down2"] = down2;
@@ -728,7 +770,21 @@ namespace GINtool
                 lNewRow["up2"] = up2;
                 lNewRow["up3"] = up3;
                 lNewRow["up4"] = up4;
-                
+
+                lNewRow["perc_up1"] = (double) up1 / (double)_tmp.Length;
+                lNewRow["perc_up2"] = (double)up2 / (double)_tmp.Length;
+                lNewRow["perc_up3"] = (double)up3 / (double)_tmp.Length;
+                lNewRow["perc_up4"] = (double)up4 / (double)_tmp.Length;
+                lNewRow["perc_down1"] = (double)down1 / (double)_tmp.Length;
+                lNewRow["perc_down2"] = (double)down2 / (double)_tmp.Length;
+                lNewRow["perc_down3"] = (double)down3 / (double)_tmp.Length;
+                lNewRow["perc_down4"] = (double)down4 / (double)_tmp.Length;
+
+                lNewRow["fpUP"] = fpup;
+                lNewRow["fpDOWN"] = fpdown;
+
+                lNewRow["perc_fpUP"] = (double)fpup/ (double)_tmp.Length;
+                lNewRow["perc_fpDOWN"] = (double)fpdown/(double)_tmp.Length;
 
             }
 
@@ -742,7 +798,8 @@ namespace GINtool
 
         private void tglDense_Click(object sender, RibbonControlEventArgs e)
         {
-            gDenseOutput = tglDense.Checked == false;
+            gDenseOutput = tglDense.Checked == true;
+            tglSparse.Checked = !tglDense.Checked;
         }
 
         private RibbonDropDownItem getItemByValue(RibbonDropDown ctrl, string value)
@@ -843,7 +900,7 @@ namespace GINtool
                 Fill_DropDownBoxes();
                 if (gDownItems.Count == 0 && gUpItems.Count == 0 && gAvailItems.Count == 0)
                     LoadDirectionOptions();
-                btApply.Enabled = true;
+                splBtApply.Enabled = true;
                 LoadFCDefaults();
                 EnableOutputOptions(true);                
             }
@@ -972,18 +1029,48 @@ namespace GINtool
         {
             validateTextBoxData(ebHigh);
         }
+
+        private void splBtApply_Click(object sender, RibbonControlEventArgs e)
+        {
+            gApplication.EnableEvents = false;
+            gApplication.DisplayAlerts = false;
+
+            List<FC_BSU> lOutput = GenerateOutput(gDenseOutput);
+
+            if (lOutput != null & gGenReport)
+            {
+                SysData.DataTable lSummary = CreateUsageTable(lOutput);
+                CreateSummarySheet(lSummary);
+            }
+
+            gApplication.EnableEvents = true;
+            gApplication.DisplayAlerts = true;
+        }
+
+        private void tglSparse_Click(object sender, RibbonControlEventArgs e)
+        {            
+            tglDense.Checked = !tglSparse.Checked;
+            gDenseOutput = tglDense.Checked;
+        }
+
+        private void tglReport_Click(object sender, RibbonControlEventArgs e)
+        {
+            gGenReport = tglReport.Checked;
+        }
     }
 
 
     public struct FC_BSU
     {
-        public FC_BSU(double a, string b)
+        public FC_BSU(double a, string b, int fp)
         {
             FC = a;
             BSU = b;
+            FP = fp;
         }
         public double FC { get; }
         public string BSU { get; }
+        public double FP { get; }    
     }
     
 

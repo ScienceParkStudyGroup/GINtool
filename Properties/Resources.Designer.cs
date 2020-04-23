@@ -133,6 +133,16 @@ namespace GINtool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap Space_16x {
+            get {
+                object obj = ResourceManager.GetObject("Space_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap Span_16x {
             get {
                 object obj = ResourceManager.GetObject("Span_16x", resourceCulture);

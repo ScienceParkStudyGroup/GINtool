@@ -36,9 +36,12 @@
         {
             this.TabGINtool = this.Factory.CreateRibbonTab();
             this.group1 = this.Factory.CreateRibbonGroup();
-            this.btApply = this.Factory.CreateRibbonButton();
-            this.tglDense = this.Factory.CreateRibbonToggleButton();
             this.btLoad = this.Factory.CreateRibbonButton();
+            this.splBtApply = this.Factory.CreateRibbonSplitButton();
+            this.tglDense = this.Factory.CreateRibbonToggleButton();
+            this.tglSparse = this.Factory.CreateRibbonToggleButton();
+            this.separator3 = this.Factory.CreateRibbonSeparator();
+            this.tglReport = this.Factory.CreateRibbonToggleButton();
             this.separator1 = this.Factory.CreateRibbonSeparator();
             this.btSelectFile = this.Factory.CreateRibbonButton();
             this.lbRefFileName = this.Factory.CreateRibbonLabel();
@@ -65,8 +68,7 @@
             // 
             // group1
             // 
-            this.group1.Items.Add(this.btApply);
-            this.group1.Items.Add(this.tglDense);
+            this.group1.Items.Add(this.splBtApply);
             this.group1.Items.Add(this.btLoad);
             this.group1.Items.Add(this.separator1);
             this.group1.Items.Add(this.btSelectFile);
@@ -79,26 +81,6 @@
             this.group1.Label = "GIN tool";
             this.group1.Name = "group1";
             // 
-            // btApply
-            // 
-            this.btApply.Enabled = false;
-            this.btApply.Image = global::GINtool.Properties.Resources.ApplyCodeChanges_16x;
-            this.btApply.Label = "apply to range";
-            this.btApply.Name = "btApply";
-            this.btApply.ScreenTip = "apply the mapping to the selected range of cells";
-            this.btApply.ShowImage = true;
-            this.btApply.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btApply_Click);
-            // 
-            // tglDense
-            // 
-            this.tglDense.Enabled = false;
-            this.tglDense.Image = global::GINtool.Properties.Resources.Span_16x;
-            this.tglDense.Label = "dense/sparse output";
-            this.tglDense.Name = "tglDense";
-            this.tglDense.ScreenTip = "select the condensed (default) or sparse output mode";
-            this.tglDense.ShowImage = true;
-            this.tglDense.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.tglDense_Click);
-            // 
             // btLoad
             // 
             this.btLoad.Enabled = false;
@@ -108,6 +90,42 @@
             this.btLoad.ScreenTip = "load reference data into memory";
             this.btLoad.ShowImage = true;
             this.btLoad.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btLoad_Click);
+            // 
+            // splBtApply
+            // 
+            this.splBtApply.Image = global::GINtool.Properties.Resources.ApplyCodeChanges_16x;
+            this.splBtApply.Items.Add(this.tglDense);
+            this.splBtApply.Items.Add(this.tglSparse);
+            this.splBtApply.Items.Add(this.separator3);
+            this.splBtApply.Items.Add(this.tglReport);
+            this.splBtApply.Label = "apply to range";
+            this.splBtApply.Name = "splBtApply";
+            this.splBtApply.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.splBtApply_Click);
+            // 
+            // tglDense
+            // 
+            this.tglDense.Label = "dense";
+            this.tglDense.Name = "tglDense";
+            this.tglDense.ShowImage = true;
+            this.tglDense.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.tglDense_Click);
+            // 
+            // tglSparse
+            // 
+            this.tglSparse.Label = "sparse";
+            this.tglSparse.Name = "tglSparse";
+            this.tglSparse.ShowImage = true;
+            this.tglSparse.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.tglSparse_Click);
+            // 
+            // separator3
+            // 
+            this.separator3.Name = "separator3";
+            // 
+            // tglReport
+            // 
+            this.tglReport.Label = "usage summary ";
+            this.tglReport.Name = "tglReport";
+            this.tglReport.ShowImage = true;
+            this.tglReport.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.tglReport_Click);
             // 
             // separator1
             // 
@@ -219,8 +237,6 @@
 
         internal Microsoft.Office.Tools.Ribbon.RibbonTab TabGINtool;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup group1;
-        internal Microsoft.Office.Tools.Ribbon.RibbonButton btApply;
-        internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton tglDense;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btLoad;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btSelectFile;
         internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator1;
@@ -234,6 +250,11 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonEditBox ebLow;
         internal Microsoft.Office.Tools.Ribbon.RibbonEditBox ebMid;
         internal Microsoft.Office.Tools.Ribbon.RibbonEditBox ebHigh;
+        internal Microsoft.Office.Tools.Ribbon.RibbonSplitButton splBtApply;
+        internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton tglDense;
+        internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton tglSparse;
+        internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator3;
+        internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton tglReport;
     }
 
     partial class ThisRibbonCollection
