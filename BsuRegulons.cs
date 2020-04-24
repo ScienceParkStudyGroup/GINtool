@@ -16,8 +16,8 @@ namespace GINtool
         //public int fpDOWN = 0;
         public List<int> UP = new List<int>();
         public List<int> DOWN = new List<int>();
-        public List<int> fpUP = new List<int>();
-        public List<int> fpDOWN = new List<int>();
+        //public List<int> fpUP = new List<int>();
+        //public List<int> fpDOWN = new List<int>();
 
 
         public int NRDOWN { get { return DOWN.Count; } }

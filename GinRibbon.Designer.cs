@@ -54,7 +54,7 @@
             this.ebLow = this.Factory.CreateRibbonEditBox();
             this.ebMid = this.Factory.CreateRibbonEditBox();
             this.ebHigh = this.Factory.CreateRibbonEditBox();
-            this.btClear = this.Factory.CreateRibbonButton();
+            this.bxPlaceHolder = this.Factory.CreateRibbonBox();
             this.TabGINtool.SuspendLayout();
             this.group1.SuspendLayout();
             this.group2.SuspendLayout();
@@ -71,7 +71,7 @@
             // 
             this.group1.Items.Add(this.splBtApply);
             this.group1.Items.Add(this.btLoad);
-            this.group1.Items.Add(this.btClear);
+            this.group1.Items.Add(this.bxPlaceHolder);
             this.group1.Items.Add(this.separator1);
             this.group1.Items.Add(this.btSelectFile);
             this.group1.Items.Add(this.lbRefFileName);
@@ -219,11 +219,10 @@
             this.ebHigh.Text = null;
             this.ebHigh.TextChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ebHigh_TextChanged);
             // 
-            // btClear
+            // bxPlaceHolder
             // 
-            this.btClear.Label = "clear";
-            this.btClear.Name = "btClear";
-            this.btClear.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btClear_Click);
+            this.bxPlaceHolder.Name = "bxPlaceHolder";
+            this.bxPlaceHolder.Visible = false;
             // 
             // GinRibbon
             // 
@@ -263,7 +262,7 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton tglSparse;
         internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator3;
         internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton tglReport;
-        internal Microsoft.Office.Tools.Ribbon.RibbonButton btClear;
+        internal Microsoft.Office.Tools.Ribbon.RibbonBox bxPlaceHolder;
     }
 
     partial class ThisRibbonCollection

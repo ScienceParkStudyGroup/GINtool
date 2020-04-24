@@ -246,22 +246,12 @@ namespace GINtool
                             if (item.Length > 0) // loop over found regulons
                             {
                                 lMap.REGULONS.Add(item);
-
-                                //rc += 1;
-                                if (gUpItems.Contains(direction))
-                                {
-                                    lMap.UP.Add(r);
-                                    if (hasFC)
-                                        if (lFC < -lowVal)
-                                            lMap.fpUP.Add(r);
-                                }
-                                if (gDownItems.Contains(direction))
-                                {
-                                    lMap.DOWN.Add(r);
-                                    if (hasFC)
-                                        if (lFC > lowVal)
-                                            lMap.fpDOWN.Add(r);
-                                }
+                                
+                                if (gUpItems.Contains(direction))                                
+                                    lMap.UP.Add(r);                                    
+                                
+                                if (gDownItems.Contains(direction))                                
+                                    lMap.DOWN.Add(r);                                                                    
                             }
                         }
                     }
@@ -274,12 +264,11 @@ namespace GINtool
 
         }
         private void ClearRange(Excel.Range range)
-        {
-            range.Clear();
-
+        {            
             range.Interior.Pattern = Excel.Constants.xlNone;
             range.Interior.TintAndShade = 0;
             range.Interior.PatternTintAndShade = 0;
+            range.Clear();
         }
 
         private void ClearOutputRange(Excel.Range theCells)
@@ -456,13 +445,12 @@ namespace GINtool
 
 
             FastDtToExcel(lTable, theSheet, startR, offsetColumn, startR + nrRows - (bDense ? 1 : 0), offsetColumn + lTable.Columns.Count - 1);
-
+            
             if (bDense)
             {
                 clrTbl = lOut.Item2;
                 ColorCells(clrTbl, theSheet, startR, offsetColumn + 1, startR + nrRows - (bDense ? 1 : 0), offsetColumn + lTable.Columns.Count - 1);
             }
-
 
 
             if (genSummary)
@@ -473,9 +461,9 @@ namespace GINtool
                     for (int c = 0; c < lResults[r].REGULONS.Count; c++)
                     {
                         int val = 0;
-                        if (lResults[r].fpUP.Contains(c))
+                        if (lResults[r].UP.Contains(c))
                             val = 1;
-                        if (lResults[r].fpDOWN.Contains(c))
+                        if (lResults[r].DOWN.Contains(c))
                             val = -1;
 
                         lOutput.Add(new FC_BSU(lResults[r].FC, lResults[r].REGULONS[c], val));
@@ -492,27 +480,14 @@ namespace GINtool
         {
             Excel.Range top = sheet.Cells[firstRow, firstCol];
             Excel.Range bottom = sheet.Cells[lastRow, lastCol];
-            Excel.Range all = (Excel.Range)sheet.get_Range(top, bottom);
-
-            for (int r = 0; r < dt.Rows.Count; r++)
-            {
-                SysData.DataRow clrRow = dt.Rows[r];
-                for (int c = 0; c < clrRow.ItemArray.Length; c++)
-                {
-                    Excel.Range lR = all.Cells[r + 1, c + 1];
-                    lR.Value = clrRow[c];
-                }
-            }
-
-            /*
+            Excel.Range all = (Excel.Range)sheet.get_Range(top, bottom);                                  
             
             object[,] arrayDT = new object[dt.Rows.Count, dt.Columns.Count];
             for (int i = 0; i < dt.Rows.Count; i++)
                 for (int j = 0; j < dt.Columns.Count; j++)
                     arrayDT[i, j] = dt.Rows[i][j];
             all.Value = arrayDT;
-
-            */
+            
         }
 
         private void ColorCells(System.Data.DataTable dt, Excel.Worksheet sheet, int firstRow, int firstCol, int lastRow, int lastCol)
@@ -563,25 +538,18 @@ namespace GINtool
             all.Value = "Counts";
             all.HorizontalAlignment = Excel.Constants.xlCenter;
 
-            top = lNewSheet.Cells[1, 12];
-            bottom = lNewSheet.Cells[1, 13];
-            all = (Excel.Range)lNewSheet.get_Range(top, bottom);
-            all.Merge();
-            all.Value = "FALSE POSITIVE";
-            all.HorizontalAlignment = Excel.Constants.xlCenter;
-
-            top = lNewSheet.Cells[1, 14];
-            bottom = lNewSheet.Cells[1, 21];
+            top = lNewSheet.Cells[1, 13];
+            bottom = lNewSheet.Cells[1, 20];
             all = (Excel.Range)lNewSheet.get_Range(top, bottom);
             all.Merge();
             all.Value = "Percentage";
             all.HorizontalAlignment = Excel.Constants.xlCenter;
 
-            top = lNewSheet.Cells[1, 22];
-            bottom = lNewSheet.Cells[1, 23];
+            top = lNewSheet.Cells[1, 21];
+            bottom = lNewSheet.Cells[1, 22];
             all = (Excel.Range)lNewSheet.get_Range(top, bottom);
             all.Merge();
-            all.Value = "FALSE POSITIVE";
+            all.Value = "REGULATIONS";
             all.HorizontalAlignment = Excel.Constants.xlCenter;
 
             lNewSheet.Cells[2, col++] = "Regulon";
@@ -598,8 +566,7 @@ namespace GINtool
             lNewSheet.Cells[2, col++] = string.Format("DOWN <=-{0} & >=-{1}", Properties.Settings.Default.fcHIGH, Properties.Settings.Default.fcMID);
             lNewSheet.Cells[2, col++] = string.Format("DOWN <-{0}", Properties.Settings.Default.fcHIGH);
 
-            lNewSheet.Cells[2, col++] = "UP";
-            lNewSheet.Cells[2, col++] = "DOWN";
+            lNewSheet.Cells[2, col++] = "Total Relevant";            
 
             lNewSheet.Cells[2, col++] = string.Format("UP >{0}", Properties.Settings.Default.fcHIGH);
             lNewSheet.Cells[2, col++] = string.Format("UP <={0} & >{1}", Properties.Settings.Default.fcHIGH, Properties.Settings.Default.fcMID);
@@ -611,15 +578,15 @@ namespace GINtool
             lNewSheet.Cells[2, col++] = string.Format("DOWN <=-{0} & >=-{1}", Properties.Settings.Default.fcHIGH, Properties.Settings.Default.fcMID);
             lNewSheet.Cells[2, col++] = string.Format("DOWN <-{0}", Properties.Settings.Default.fcHIGH);
 
-            lNewSheet.Cells[2, col++] = "UP";
             lNewSheet.Cells[2, col++] = "DOWN";
+            lNewSheet.Cells[2, col++] = "UP";
             // starting from row 3
 
 
             FastDtToExcel(theTable, lNewSheet, 3, 1, theTable.Rows.Count + 2, theTable.Columns.Count);
 
-            top = lNewSheet.Cells[3, 14];
-            bottom = lNewSheet.Cells[2 + theTable.Rows.Count, 23];
+            top = lNewSheet.Cells[3, 13];
+            bottom = lNewSheet.Cells[2 + theTable.Rows.Count, 22];
             all = (Excel.Range)lNewSheet.get_Range(top, bottom);
             all.NumberFormat = "###%";
 
@@ -632,25 +599,84 @@ namespace GINtool
             SysData.DataTable lTable = new SysData.DataTable("FC_BSU");
             SysData.DataColumn regColumn = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
             SysData.DataColumn fcColumn = new SysData.DataColumn("FC", Type.GetType("System.Single"));
-            SysData.DataColumn fpUPColumn = new SysData.DataColumn("FP", Type.GetType("System.Int32"));
+            SysData.DataColumn dirColumn = new SysData.DataColumn("DIR", Type.GetType("System.Int32"));
 
 
             lTable.Columns.Add(regColumn);
             lTable.Columns.Add(fcColumn);
-            lTable.Columns.Add(fpUPColumn);
+            lTable.Columns.Add(dirColumn);
 
             for (int r = 0; r < aList.Count; r++)
             {
                 SysData.DataRow lRow = lTable.Rows.Add();
                 lRow["Regulon"] = aList[r].BSU;
                 lRow["FC"] = aList[r].FC;
-                lRow["FP"] = aList[r].FP;
+                lRow["DIR"] = aList[r].DIR;
             }
 
             return lTable;
 
         }
 
+
+        private (int,int, int) CalculateFPRatio(SysData.DataRow[] aRow)
+        {
+            int countUPfalse = 0, countDOWNfalse = 0, countDOWNtrue=0,countUPtrue=0,nrUP=0, nrDOWN = 0, nrTot=0;
+
+            // aRow from an FC_BSU table
+            for (int i = 0; i < aRow.Length; i++)
+            {
+                
+                float fcGene = (float)aRow[i]["FC"];
+                int dirBSU = (int)aRow[i]["DIR"];
+                float lowValue = Properties.Settings.Default.fcLOW;
+
+                // if upregulated
+                if (dirBSU < 0)
+                {
+                    if (fcGene < -lowValue)
+                    {
+                        nrUP += 1;
+                        nrTot += 1;
+                    }
+                    
+                }
+
+                if (dirBSU > 0)
+                {
+                    if (fcGene > lowValue)
+                    {
+                        nrUP += 1;
+                        nrTot += 1;
+                    }
+                }
+
+                // if downregulated
+                if (dirBSU > 0)
+                {
+                    if (fcGene < -lowValue)
+                    {
+                        nrDOWN += 1;
+                        nrTot += 1;
+                    }
+
+                }
+
+                if (dirBSU < 0)
+                {
+                    if (fcGene > lowValue)
+                    {
+                        nrDOWN += 1;
+                        nrTot += 1;
+                    }
+                }
+
+            }
+
+
+
+            return (nrUP, nrDOWN, nrTot);
+        }
 
         private SysData.DataTable CreateUsageTable(List<FC_BSU> aList)
         {
@@ -690,10 +716,9 @@ namespace GINtool
                 lTable.Columns.Add(col);
             }
 
-            col = new SysData.DataColumn("fpUP", Type.GetType("System.Int16"));
+            col = new SysData.DataColumn("totrel", Type.GetType("System.Int16"));
             lTable.Columns.Add(col);
-            col = new SysData.DataColumn("fpDOWN", Type.GetType("System.Int16"));
-            lTable.Columns.Add(col);
+           
 
             for (int i = 3; i >= 0; i--)
             {
@@ -707,9 +732,9 @@ namespace GINtool
                 lTable.Columns.Add(col);
             }
 
-            col = new SysData.DataColumn("perc_fpUP", Type.GetType("System.Double"));
+            col = new SysData.DataColumn("perc_DOWN", Type.GetType("System.Double"));
             lTable.Columns.Add(col);
-            col = new SysData.DataColumn("perc_fpDOWN", Type.GetType("System.Double"));
+            col = new SysData.DataColumn("perc_UP", Type.GetType("System.Double"));
             lTable.Columns.Add(col);
 
             foreach (string reg in lUnique)
@@ -732,6 +757,8 @@ namespace GINtool
                 // calculate usage statistics in dataset
                 SysData.DataRow[] _tmp = _fc_BSU.Select(string.Format("Regulon='{0}'", reg));
 
+                (int nrUP, int nrDOWN, int nrTOT) = CalculateFPRatio(_tmp);
+
                 for (int _r = 0; _r < _tmp.Length; _r++)
                 {
                     float fc = (float)_tmp[_r]["FC"];
@@ -753,13 +780,7 @@ namespace GINtool
                     if (fc < -lFChigh)
                         down4 += 1;
 
-                    if ((int)_tmp[_r]["FP"] == 1)
-                        fpup += 1;
-                    if ((int)_tmp[_r]["FP"] == -1)
-                        fpdown += 1;
                 }
-
-
 
                 SysData.DataRow lNewRow = lTable.Rows.Add();
                 lNewRow["CountData"] = _tmp.Length;
@@ -784,11 +805,14 @@ namespace GINtool
                 lNewRow["perc_down3"] = (double)down3 / (double)_tmp.Length;
                 lNewRow["perc_down4"] = (double)down4 / (double)_tmp.Length;
 
-                lNewRow["fpUP"] = fpup;
-                lNewRow["fpDOWN"] = fpdown;
+                lNewRow["totrel"] = nrTOT;
 
-                lNewRow["perc_fpUP"] = (double)fpup / (double)_tmp.Length;
-                lNewRow["perc_fpDOWN"] = (double)fpdown / (double)_tmp.Length;
+                if (nrTOT > 0)
+                {
+                    lNewRow["perc_DOWN"] = (double)nrDOWN / (double)(nrTOT);
+                    lNewRow["perc_UP"] = (double)nrUP / (double)(nrTOT);
+                }
+               
 
             }
 
@@ -1036,11 +1060,11 @@ namespace GINtool
 
             List<FC_BSU> lOutput = GenerateOutput(gDenseOutput);
 
-            /*if (lOutput != null & gGenReport)
+            if (lOutput != null & gGenReport)
             {
                 SysData.DataTable lSummary = CreateUsageTable(lOutput);
                 CreateSummarySheet(lSummary);
-            }*/
+            }
 
             gApplication.EnableEvents = true;
             gApplication.DisplayAlerts = true;
@@ -1056,28 +1080,21 @@ namespace GINtool
         {
             gGenReport = tglReport.Checked;
         }
-
-        private void btClear_Click(object sender, RibbonControlEventArgs e)
-        {
-            gRefStats.Clear();
-            gRefWB.Clear();
-            splBtApply.Enabled = false;
-            EnableItems(false);
-        }
+       
     }
 
 
     public struct FC_BSU
     {
-        public FC_BSU(double a, string b, int fp)
+        public FC_BSU(double a, string b, int dir)
         {
             FC = a;
             BSU = b;
-            FP = fp;
+            DIR = dir;
         }
         public double FC { get; }
         public string BSU { get; }
-        public double FP { get; }
+        public double DIR { get; }
     }
 
 
