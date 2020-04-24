@@ -123,16 +123,14 @@ namespace GINtool
             gUpItems = propertyItems("directionMapUp");
             gDownItems = propertyItems("directionMapDown");
 
-            splBtApply.Enabled = false;
+            btApply.Enabled = false;
             ddBSU.Enabled = false;
             ddRegulon.Enabled = false;
             ddDir.Enabled = false;
             EnableOutputOptions(false);
 
             gDenseOutput = true;
-            tglDense.Checked = true;
-            tglSparse.Checked = false;
-            tglReport.Checked = false;
+            cbReport.Checked = false;            
 
             btLoad.Enabled = System.IO.File.Exists(Properties.Settings.Default.referenceFile);
 
@@ -153,6 +151,7 @@ namespace GINtool
             ebLow.Enabled = enable;
             ebMid.Enabled = enable;
             ebHigh.Enabled = enable;
+            cbReport.Enabled = enable;
         }
 
 
@@ -621,7 +620,7 @@ namespace GINtool
 
         private (int,int, int) CalculateFPRatio(SysData.DataRow[] aRow)
         {
-            int countUPfalse = 0, countDOWNfalse = 0, countDOWNtrue=0,countUPtrue=0,nrUP=0, nrDOWN = 0, nrTot=0;
+            int nrUP=0, nrDOWN = 0, nrTot=0;
 
             // aRow from an FC_BSU table
             for (int i = 0; i < aRow.Length; i++)
@@ -747,10 +746,7 @@ namespace GINtool
                 int down2 = 0;
                 int down3 = 0;
                 int down4 = 0;
-
-                int fpup = 0;
-                int fpdown = 0;
-
+             
                 // lookup regulon in global statistic table
                 SysData.DataRow[] _tmp2 = gRefStats.Select(string.Format("Regulon='{0}'", reg));
 
@@ -817,17 +813,9 @@ namespace GINtool
             }
 
             SysData.DataView dv = lTable.DefaultView;
-            dv.Sort = "up4 desc";
+            dv.Sort = "totrel desc";
 
             return dv.ToTable();
-        }
-
-
-
-        private void tglDense_Click(object sender, RibbonControlEventArgs e)
-        {
-            gDenseOutput = tglDense.Checked == true;
-            tglSparse.Checked = !tglDense.Checked;
         }
 
         private RibbonDropDownItem getItemByValue(RibbonDropDown ctrl, string value)
@@ -927,7 +915,7 @@ namespace GINtool
                 Fill_DropDownBoxes();
                 if (gDownItems.Count == 0 && gUpItems.Count == 0 && gAvailItems.Count == 0)
                     LoadDirectionOptions();
-                splBtApply.Enabled = true;
+                btApply.Enabled = true;
                 LoadFCDefaults();
                 EnableOutputOptions(true);
             }
@@ -1052,8 +1040,14 @@ namespace GINtool
         {
             validateTextBoxData(ebHigh);
         }
+    
 
-        private void splBtApply_Click(object sender, RibbonControlEventArgs e)
+        private void cbReport_Click(object sender, RibbonControlEventArgs e)
+        {
+            gGenReport = cbReport.Checked;
+        }
+
+        private void btApply_Click(object sender, RibbonControlEventArgs e)
         {
             gApplication.EnableEvents = false;
             gApplication.DisplayAlerts = false;
@@ -1069,18 +1063,6 @@ namespace GINtool
             gApplication.EnableEvents = true;
             gApplication.DisplayAlerts = true;
         }
-
-        private void tglSparse_Click(object sender, RibbonControlEventArgs e)
-        {
-            tglDense.Checked = !tglSparse.Checked;
-            gDenseOutput = tglDense.Checked;
-        }
-
-        private void tglReport_Click(object sender, RibbonControlEventArgs e)
-        {
-            gGenReport = tglReport.Checked;
-        }
-       
     }
 
 
