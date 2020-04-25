@@ -579,6 +579,9 @@ namespace GINtool
 
             lNewSheet.Cells[2, col++] = "DOWN";
             lNewSheet.Cells[2, col++] = "UP";
+
+            lNewSheet.Cells[2, col++] = "NRDOWN";
+            lNewSheet.Cells[2, col++] = "NRUP";
             // starting from row 3
 
 
@@ -736,6 +739,11 @@ namespace GINtool
             col = new SysData.DataColumn("perc_UP", Type.GetType("System.Double"));
             lTable.Columns.Add(col);
 
+            col = new SysData.DataColumn("nr_DOWN", Type.GetType("System.Double"));
+            lTable.Columns.Add(col);
+            col = new SysData.DataColumn("nr_UP", Type.GetType("System.Double"));
+            lTable.Columns.Add(col);
+
             foreach (string reg in lUnique)
             {
                 int up1 = 0;
@@ -808,7 +816,10 @@ namespace GINtool
                     lNewRow["perc_DOWN"] = (double)nrDOWN / (double)(nrTOT);
                     lNewRow["perc_UP"] = (double)nrUP / (double)(nrTOT);
                 }
-               
+
+                lNewRow["nr_DOWN"] = (double)nrDOWN ;
+                lNewRow["nr_UP"] = (double)nrUP;
+
 
             }
 
