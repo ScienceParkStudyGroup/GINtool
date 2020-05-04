@@ -402,7 +402,7 @@ namespace GINtool
             }
         }
 
-        private List<FC_BSU> GenerateOutput(bool bDense)
+        private (List<FC_BSU>, List<BsuRegulons>) GenerateOutput(bool bDense)
         {
             Excel.Range theInputCells = GetActiveCell();
             Excel.Worksheet theSheet = GetActiveShet();
@@ -420,7 +420,7 @@ namespace GINtool
                 if (theInputCells.Columns.Count != 2)
                 {
                     MessageBox.Show("Please select 2 columns (first FC, second BSU)");
-                    return null;
+                    return (null,null);
                 }
             }
             else
@@ -428,7 +428,7 @@ namespace GINtool
                 if (theInputCells.Columns.Count != 1)
                 {
                     MessageBox.Show("Please select 1 column with BSU entries");
-                    return null;
+                    return (null,null);
                 }
             }
 
@@ -469,10 +469,10 @@ namespace GINtool
                     }
 
 
-                return lOutput;
+                return (lOutput, lResults);
             }
             else
-                return null;
+                return (null,null);
         }
 
         private void FastDtToExcel(System.Data.DataTable dt, Excel.Worksheet sheet, int firstRow, int firstCol, int lastRow, int lastCol)
@@ -579,9 +579,7 @@ namespace GINtool
 
             lNewSheet.Cells[2, col++] = "DOWN";
             lNewSheet.Cells[2, col++] = "UP";
-
-            lNewSheet.Cells[2, col++] = "NRDOWN";
-            lNewSheet.Cells[2, col++] = "NRUP";
+           
             // starting from row 3
 
 
@@ -680,11 +678,146 @@ namespace GINtool
             return (nrUP, nrDOWN, nrTot);
         }
 
-        private SysData.DataTable CreateUsageTable(List<FC_BSU> aList)
+
+        private void CreateCombinedSheet(SysData.DataTable aTable)
+        {
+            Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
+
+           
+            gApplication.ScreenUpdating = false;
+            gApplication.DisplayAlerts = false;
+            gApplication.EnableEvents = false;
+
+            int firstRow = 1;
+            int firstCol = 1;
+            int lastCol = aTable.Columns.Count + firstCol;
+            int lastRow = aTable.Rows.Count + firstRow;
+
+            Excel.Range top = lNewSheet.Cells[firstRow, firstCol];
+            Excel.Range bottom = lNewSheet.Cells[lastRow, lastCol];
+            Excel.Range all = (Excel.Range)lNewSheet.get_Range(top, bottom);
+
+            int col = 1;
+
+            lNewSheet.Cells[1, col++] = "FC";
+            lNewSheet.Cells[1, col++] = "BSU";
+            
+            for(int c=0;c<(aTable.Columns.Count-2);c++)            
+                lNewSheet.Cells[1, col++] = string.Format("Regulon_{0}",c+1);
+            
+
+
+            for (int r = 0; r < aTable.Rows.Count; r++)
+            {
+                SysData.DataRow clrRow = aTable.Rows[r];
+                for (int c = 0; c < clrRow.ItemArray.Length; c++)
+                {
+                    Excel.Range lR = all.Cells[r + 2, c + 1];
+                    int UpPos = clrRow[c].ToString().IndexOf("#");
+                    int DownPos = clrRow[c].ToString().IndexOf("@");
+
+                    lR.Value = clrRow[c];
+
+                    if (UpPos == -1 && DownPos == -1)
+                        continue;
+
+                    if (UpPos > 0)
+                    {
+                        Excel.Characters lChar = lR.Characters[UpPos+1, 1];
+                        lChar.Text = "á"; // the arrow up
+                        lChar.Font.Name = "Wingdings";
+                        lR.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGreen);
+                    }
+                    else
+                    {
+
+                        Excel.Characters lChar = lR.Characters[DownPos + 1, 1];
+                        lChar.Text = "â"; // the arrow down
+                        lChar.Font.Name = "Wingdings";
+                        lR.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightSalmon);
+                    }                                            
+                }
+            }
+
+            all.Columns.AutoFit();
+
+            gApplication.ScreenUpdating = true;
+            gApplication.DisplayAlerts = true;
+            gApplication.EnableEvents = true;
+
+        }
+
+
+        private SysData.DataTable CreateCombinedTable(SysData.DataTable aUsageTbl, List <BsuRegulons> lLst)
+        {
+            SysData.DataTable lTable = new SysData.DataTable();
+
+            //col = new SysData.DataColumn("Gene", Type.GetType("System.String"));
+            //lTable.Columns.Add(col);
+            SysData.DataColumn  col = new SysData.DataColumn("FC", Type.GetType("System.Double"));
+            lTable.Columns.Add(col);
+            col = new SysData.DataColumn("BSU", Type.GetType("System.String"));
+            lTable.Columns.Add(col);
+
+
+            int maxRegulons = 0;
+            for (int i=0;i< lLst.Count; i++)
+            {
+                if (maxRegulons < lLst[i].REGULONS.Count)
+                    maxRegulons = lLst[i].REGULONS.Count;
+            }
+            
+            for(int i=0;i<maxRegulons;i++)
+            {
+                col = new SysData.DataColumn(string.Format("Regulon_{0}",i+1), Type.GetType("System.String"));
+                lTable.Columns.Add(col);
+
+            }
+
+            double lowVal = Properties.Settings.Default.fcLOW;
+
+            for (int r = 0; r < lLst.Count; r++)
+            {
+
+                if (Math.Abs(lLst[r].FC) > lowVal)
+                {
+                    SysData.DataRow lRow = lTable.Rows.Add();
+                    lRow["FC"] = lLst[r].FC;
+                    lRow["BSU"] = lLst[r].BSU;
+                    for (int i = 0; i < lLst[r].REGULONS.Count; i++)
+                    {
+
+                        double nrUP = 0, nrDOWN = 0, percUP = 0, percDOWN = 0;
+                        SysData.DataRow[] lHit = aUsageTbl.Select(string.Format("Regulon = '{0}'", lLst[r].REGULONS[i]));
+                        nrUP = Double.Parse(lHit[0]["nr_UP"].ToString());
+                        nrDOWN = Double.Parse(lHit[0]["nr_DOWN"].ToString());
+
+                        Double.TryParse(lHit[0]["perc_UP"].ToString(),out percUP);
+                        Double.TryParse(lHit[0]["perc_DOWN"].ToString(),out percDOWN);
+
+                        string lVal = "";
+                        if (nrUP>nrDOWN || nrUP==nrDOWN)
+                            lVal = percUP.ToString("P0") + "# " + nrUP.ToString("P0") + "-tot";
+                        else
+                            lVal = percDOWN.ToString("P0") + "@ " + nrDOWN.ToString("P0") + "-tot";                                                 
+
+                        lRow[string.Format("Regulon_{0}", i + 1)] = lLst[r].REGULONS[i] + " " + lVal;
+
+                    }
+                }
+            }
+
+
+            return lTable;
+        }
+
+        private (SysData.DataTable, SysData.DataTable) CreateUsageTable(List<FC_BSU> aList)
         {
             SysData.DataTable _fc_BSU = ReformatResults(aList);
 
             SysData.DataTable lTable = new SysData.DataTable();
+            SysData.DataTable lTableCombine = new SysData.DataTable();
+
 
             float lFClow = Properties.Settings.Default.fcLOW;
             float lFCmid = Properties.Settings.Default.fcMID;
@@ -739,10 +872,21 @@ namespace GINtool
             col = new SysData.DataColumn("perc_UP", Type.GetType("System.Double"));
             lTable.Columns.Add(col);
 
+
+            col = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
+            lTableCombine.Columns.Add(col);
+            
+            col = new SysData.DataColumn("perc_DOWN", Type.GetType("System.Double"));
+            lTableCombine.Columns.Add(col);
+            col = new SysData.DataColumn("perc_UP", Type.GetType("System.Double"));
+            lTableCombine.Columns.Add(col);
+
+
             col = new SysData.DataColumn("nr_DOWN", Type.GetType("System.Double"));
-            lTable.Columns.Add(col);
+            lTableCombine.Columns.Add(col);
             col = new SysData.DataColumn("nr_UP", Type.GetType("System.Double"));
-            lTable.Columns.Add(col);
+            lTableCombine.Columns.Add(col);
+
 
             foreach (string reg in lUnique)
             {
@@ -817,8 +961,21 @@ namespace GINtool
                     lNewRow["perc_UP"] = (double)nrUP / (double)(nrTOT);
                 }
 
-                lNewRow["nr_DOWN"] = (double)nrDOWN ;
-                lNewRow["nr_UP"] = (double)nrUP;
+
+                double lCount = (double)_tmp.Length;
+
+                lNewRow = lTableCombine.Rows.Add();
+                lNewRow["Regulon"] = reg;
+
+                
+                if (nrTOT > 0)
+                {
+                    lNewRow["perc_DOWN"] = (double)nrDOWN / (double)(nrTOT);
+                    lNewRow["perc_UP"] = (double)nrUP / (double)(nrTOT);
+                }
+
+                lNewRow["nr_DOWN"] = ((double)nrDOWN)/lCount;
+                lNewRow["nr_UP"] = ((double)nrUP)/lCount;
 
 
             }
@@ -826,7 +983,7 @@ namespace GINtool
             SysData.DataView dv = lTable.DefaultView;
             dv.Sort = "totrel desc";
 
-            return dv.ToTable();
+            return (dv.ToTable(),lTableCombine);
         }
 
         private RibbonDropDownItem getItemByValue(RibbonDropDown ctrl, string value)
@@ -1063,12 +1220,14 @@ namespace GINtool
             gApplication.EnableEvents = false;
             gApplication.DisplayAlerts = false;
 
-            List<FC_BSU> lOutput = GenerateOutput(gDenseOutput);
+            (List<FC_BSU> lOutput, List<BsuRegulons> lList) = GenerateOutput(gDenseOutput);
 
             if (lOutput != null & gGenReport)
             {
-                SysData.DataTable lSummary = CreateUsageTable(lOutput);
+                (SysData.DataTable lSummary, SysData.DataTable lCombineInfo) = CreateUsageTable(lOutput);
                 CreateSummarySheet(lSummary);
+                SysData.DataTable lCombined = CreateCombinedTable(lCombineInfo, lList);
+                CreateCombinedSheet(lCombined);
             }
 
             gApplication.EnableEvents = true;
