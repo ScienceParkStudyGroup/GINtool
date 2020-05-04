@@ -702,10 +702,8 @@ namespace GINtool
             lNewSheet.Cells[1, col++] = "FC";
             lNewSheet.Cells[1, col++] = "BSU";
             
-            for(int c=0;c<(aTable.Columns.Count-2);c++)            
-                lNewSheet.Cells[1, col++] = string.Format("Regulon_{0}",c+1);
-            
-
+          
+            int maxRegulons = 0;
 
             for (int r = 0; r < aTable.Rows.Count; r++)
             {
@@ -714,9 +712,15 @@ namespace GINtool
                 {
                     Excel.Range lR = all.Cells[r + 2, c + 1];
                     int UpPos = clrRow[c].ToString().IndexOf("#");
-                    int DownPos = clrRow[c].ToString().IndexOf("@");
+                    int DownPos = clrRow[c].ToString().IndexOf("@");                                        
 
                     lR.Value = clrRow[c];
+
+                    if (clrRow[c].ToString().Length == 0)
+                        continue;
+
+                    if (maxRegulons < c)
+                        maxRegulons = c;
 
                     if (UpPos == -1 && DownPos == -1)
                         continue;
@@ -738,6 +742,11 @@ namespace GINtool
                     }                                            
                 }
             }
+
+
+            for (int c = 0; c < (maxRegulons - 1); c++)
+                lNewSheet.Cells[1, col++] = string.Format("Regulon_{0}", c + 1);
+
 
             all.Columns.AutoFit();
 
@@ -773,7 +782,7 @@ namespace GINtool
                 lTable.Columns.Add(col);
 
             }
-
+            
             double lowVal = Properties.Settings.Default.fcLOW;
 
             for (int r = 0; r < lLst.Count; r++)
