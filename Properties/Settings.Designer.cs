@@ -151,5 +151,41 @@ namespace GINtool.Properties {
                 this["fcHIGH"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("gene")]
+        public string referenceGene {
+            get {
+                return ((string)(this["referenceGene"]));
+            }
+            set {
+                this["referenceGene"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("not defined yet")]
+        public string operonFile {
+            get {
+                return ((string)(this["operonFile"]));
+            }
+            set {
+                this["operonFile"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.05")]
+        public float pvalue_cutoff {
+            get {
+                return ((float)(this["pvalue_cutoff"]));
+            }
+            set {
+                this["pvalue_cutoff"] = value;
+            }
+        }
     }
 }

@@ -117,7 +117,7 @@ namespace GINtool
         private void GinRibbon_Load(object sender, RibbonUIEventArgs e)
         {
             gApplication = Globals.ThisAddIn.GetExcelApplication();
-            lbRefFileName.Label = Properties.Settings.Default.referenceFile;
+            btnRegulonFileName.Label = Properties.Settings.Default.referenceFile;
 
             gAvailItems = propertyItems("directionMapUnassigned");
             gUpItems = propertyItems("directionMapUp");
@@ -125,6 +125,7 @@ namespace GINtool
 
             btApply.Enabled = false;
             ddBSU.Enabled = false;
+            ddGene.Enabled = false;
             ddRegulon.Enabled = false;
             ddDir.Enabled = false;
             EnableOutputOptions(false);
@@ -1047,6 +1048,8 @@ namespace GINtool
 
             ddBSU.Items.Clear();
             ddRegulon.Items.Clear();
+            ddGene.Items.Clear();
+            ddDir.Items.Clear();
 
             foreach (string s in gColNames)
             {
@@ -1062,6 +1065,10 @@ namespace GINtool
                 ddItem1.Label = s;
                 ddDir.Items.Add(ddItem1);
 
+                ddItem1 = Factory.CreateRibbonDropDownItem();
+                ddItem1.Label = s;
+                ddGene.Items.Add(ddItem1);
+
             }
 
             RibbonDropDownItem ddItem = getItemByValue(ddBSU, Properties.Settings.Default.referenceBSU);
@@ -1076,9 +1083,14 @@ namespace GINtool
             if (ddItem != null)
                 ddDir.SelectedItem = ddItem;
 
+            ddItem = getItemByValue(ddGene, Properties.Settings.Default.referenceGene);
+            if (ddItem != null)
+                ddGene.SelectedItem = ddItem;
+
             ddBSU.Enabled = true;
             ddRegulon.Enabled = true;
             ddDir.Enabled = true;
+            ddGene.Enabled = true;
             btRegDirMap.Enabled = true;
             gApplication.EnableEvents = true;
 
@@ -1111,30 +1123,10 @@ namespace GINtool
             btLoad.Enabled = enable;
             ddBSU.Enabled = enable;
             ddRegulon.Enabled = enable;
+            ddGene.Enabled = enable;
 
         }
-
-        private void btSelectFile_Click(object sender, RibbonControlEventArgs e)
-        {
-            using (OpenFileDialog openFileDialog = new OpenFileDialog())
-            {
-                openFileDialog.InitialDirectory = "c:\\";
-                openFileDialog.Filter = "txt files (*.csv)|*.csv|Excel files (*.xlsx)|*.xlsx";
-                openFileDialog.FilterIndex = 2;
-                openFileDialog.RestoreDirectory = true;
-
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
-
-                    Properties.Settings.Default.referenceFile = openFileDialog.FileName;
-                    lbRefFileName.Label = Properties.Settings.Default.referenceFile;
-                    load_Worksheets();
-                    btLoad.Enabled = true;
-
-                }
-            }
-        }
-
+    
         private void ddBSU_SelectionChanged(object sender, RibbonControlEventArgs e)
         {
             Properties.Settings.Default.referenceBSU = ddBSU.SelectedItem.Label;
@@ -1241,6 +1233,69 @@ namespace GINtool
 
             gApplication.EnableEvents = true;
             gApplication.DisplayAlerts = true;
+        }
+
+        private void button1_Click(object sender, RibbonControlEventArgs e)
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.InitialDirectory = "c:\\";
+                openFileDialog.Filter = "txt files (*.csv)|*.csv|Excel files (*.xlsx)|*.xlsx";
+                openFileDialog.FilterIndex = 2;
+                openFileDialog.RestoreDirectory = true;
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    Properties.Settings.Default.referenceFile = openFileDialog.FileName;
+                    btnRegulonFileName.Label = Properties.Settings.Default.referenceFile;
+                    load_Worksheets();
+                    btLoad.Enabled = true;
+                }
+            }
+        }
+
+        private void btnSelectOperonFile_Click(object sender, RibbonControlEventArgs e)
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.InitialDirectory = "c:\\";
+                openFileDialog.Filter = "Excel files (*.xlsx)|*.xlsx|txt files (*.csv)|*.csv";
+                openFileDialog.FilterIndex = 2;
+                openFileDialog.RestoreDirectory = true;
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    Properties.Settings.Default.operonFile = openFileDialog.FileName;
+                    btnOperonFile.Label = Properties.Settings.Default.operonFile;
+                    //load_Worksheets();
+                    //btLoad.Enabled = true;
+                }
+            }
+        }
+
+        private void ddGene_SelectionChanged(object sender, RibbonControlEventArgs e)
+        {
+            Properties.Settings.Default.referenceGene = ddGene.SelectedItem.Label;
+
+        }
+
+        private void splitButton1_Click(object sender, RibbonControlEventArgs e)
+        {
+            //using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            //{
+            //    openFileDialog.InitialDirectory = "c:\\";
+            //    openFileDialog.Filter = "txt files (*.csv)|*.csv|Excel files (*.xlsx)|*.xlsx";
+            //    openFileDialog.FilterIndex = 2;
+            //    openFileDialog.RestoreDirectory = true;
+
+            //    if (openFileDialog.ShowDialog() == DialogResult.OK)
+            //    {
+            //        Properties.Settings.Default.referenceFile = openFileDialog.FileName;
+            //        btnRegulonFileName.Label = Properties.Settings.Default.referenceFile;
+            //        load_Worksheets();
+            //        btLoad.Enabled = true;
+            //    }
+            //}
         }
     }
 

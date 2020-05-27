@@ -35,5 +35,14 @@
     <Setting Name="fcHIGH" Type="System.Single" Scope="User">
       <Value Profile="(Default)">4</Value>
     </Setting>
+    <Setting Name="referenceGene" Type="System.String" Scope="User">
+      <Value Profile="(Default)">gene</Value>
+    </Setting>
+    <Setting Name="operonFile" Type="System.String" Scope="User">
+      <Value Profile="(Default)">not defined yet</Value>
+    </Setting>
+    <Setting Name="pvalue_cutoff" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">0.05</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

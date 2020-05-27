@@ -83,6 +83,16 @@ namespace GINtool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap DMAChannel_16x {
+            get {
+                object obj = ResourceManager.GetObject("DMAChannel_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap DownloadLog_16x {
             get {
                 object obj = ResourceManager.GetObject("DownloadLog_16x", resourceCulture);
@@ -113,9 +123,29 @@ namespace GINtool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap Network_16x {
+            get {
+                object obj = ResourceManager.GetObject("Network_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap Refetch_16x {
             get {
                 object obj = ResourceManager.GetObject("Refetch_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Select_16x {
+            get {
+                object obj = ResourceManager.GetObject("Select_16x", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

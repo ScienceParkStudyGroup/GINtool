@@ -33,7 +33,7 @@
     <PublishUrl>publish\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.14</ApplicationVersion>
+    <ApplicationVersion>1.0.0.15</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -266,6 +266,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Space_16x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Select_16x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Network_16x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DMAChannel_16x.png" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
