@@ -282,6 +282,7 @@
             // 
             this.editMinPval.Label = "p-value";
             this.editMinPval.Name = "editMinPval";
+            this.editMinPval.TextChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.editMinPval_TextChanged);
             // 
             // GinRibbon
             // 

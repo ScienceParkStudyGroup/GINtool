@@ -15,6 +15,7 @@ namespace GINtool
 
         bool gGenReport = false;
         bool gDenseOutput = true;
+        bool gOperonOutput = false;
         SysData.DataTable gRefWB = null;
         SysData.DataTable gRefStats = null;
         string[] gColNames = null;
@@ -118,6 +119,7 @@ namespace GINtool
         {
             gApplication = Globals.ThisAddIn.GetExcelApplication();
             btnRegulonFileName.Label = Properties.Settings.Default.referenceFile;
+            btnOperonFile.Label = Properties.Settings.Default.operonFile;
 
             gAvailItems = propertyItems("directionMapUnassigned");
             gUpItems = propertyItems("directionMapUp");
@@ -152,6 +154,7 @@ namespace GINtool
             ebLow.Enabled = enable;
             ebMid.Enabled = enable;
             ebHigh.Enabled = enable;
+            editMinPval.Enabled = enable;
             cbReport.Enabled = enable;
         }
 
@@ -211,37 +214,43 @@ namespace GINtool
 
             foreach (Excel.Range c in theCells.Rows)
             {
-                string lBSU;
-                bool hasFC = false;
+                string lBSU = "";
+                //bool hasFC = false;
                 double lFC = 0;
-                BsuRegulons lMap;
-                if (c.Columns.Count == 2)
+                double lPvalue = 1;
+                BsuRegulons lMap = null;
+               
+                if (c.Columns.Count == 3)
                 {
                     object[,] value = c.Value2;
-                    lFC = (double)value[1, 1];
-                    lBSU = value[1, 2].ToString();
-                    lMap = new BsuRegulons(lFC, lBSU);
-                    hasFC = true;
+                    lPvalue = (double)value[1, 1];
+                    lFC = (double)value[1, 2];
+                    lBSU = value[1, 3].ToString();
+                    lMap = new BsuRegulons(lFC, lPvalue, lBSU);
+                    //hasFC = true;
 
                 }
+                //else // only 1 column is selected                
+                //{
+                //    object value = c.Value2;
+                //    lMap = new BsuRegulons(value.ToString());
+                //    lBSU = value.ToString();
+                //}
 
-                else // only 1 column is selected                
-                {
-                    object value = c.Value2;
-                    lMap = new BsuRegulons(value.ToString());
-                    lBSU = value.ToString();
-                }
-
-                if (lBSU.Length > 0)
+                if (lMap.BSU.Length > 0)
                 {
                     SysData.DataRow[] results = Lookup(lMap.BSU);
 
                     if (results.Length > 0)
                     {
+                        string gene = results[0][Properties.Settings.Default.referenceGene].ToString();
+                        lMap.GENE = gene;
+
                         for (int r = 0; r < results.Length; r++)
                         {
                             string item = results[r][Properties.Settings.Default.referenceRegulon].ToString();
                             string direction = results[r][Properties.Settings.Default.referenceDIR].ToString();
+                            
 
                             if (item.Length > 0) // loop over found regulons
                             {
@@ -308,10 +317,21 @@ namespace GINtool
                     if (maxcol < lResults[r].REGULONS.Count)
                         maxcol = lResults[r].REGULONS.Count;
 
+                // add BSU/gene/p-value/fc columns
+
+                SysData.DataColumn bsuCol = new SysData.DataColumn("bsu", Type.GetType("System.String"));
+                myTable.Columns.Add(bsuCol);
+                SysData.DataColumn geneCol = new SysData.DataColumn("gene", Type.GetType("System.String"));
+                myTable.Columns.Add(geneCol);
+                SysData.DataColumn fcCol = new SysData.DataColumn("fc", Type.GetType("System.Double"));
+                myTable.Columns.Add(fcCol);
+                SysData.DataColumn pValCol = new SysData.DataColumn("pval", Type.GetType("System.Double"));
+                myTable.Columns.Add(pValCol);
+
                 // add count column
                 SysData.DataColumn countCol = new SysData.DataColumn("count_col", Type.GetType("System.Int16"));
                 myTable.Columns.Add(countCol);
-
+                
                 // add variable columns
                 for (int c = 0; c < maxcol; c++)
                 {
@@ -325,6 +345,12 @@ namespace GINtool
                 for (int r = 0; r < lResults.Count; r++)
                 {
                     SysData.DataRow newRow = myTable.Rows.Add();
+
+                    newRow["bsu"] = lResults[r].BSU;
+                    newRow["gene"] = lResults[r].GENE;
+                    newRow["fc"] = lResults[r].FC;
+                    newRow["pval"] = lResults[r].PVALUE;
+
                     newRow["count_col"] = lResults[r].TOT;
                     SysData.DataRow clrRow = clrTable.Rows.Add();
 
@@ -412,29 +438,20 @@ namespace GINtool
             int startC = theInputCells.Column;
             int startR = theInputCells.Row;
 
-            bool genSummary = theInputCells.Columns.Count == 2;
-            int offsetColumn = startC + (genSummary ? 2 : 1);
+            //bool genSummary = theInputCells.Columns.Count == 2;
+                        
+            //int offsetColumn = startC + (genSummary ? 2 : 1);
+            // from now always assume 3 columns.. p-value, fc, bsu
+            int offsetColumn = 1;
 
-
-            if (gGenReport)
+            if(theInputCells.Columns.Count !=3)
             {
-                if (theInputCells.Columns.Count != 2)
-                {
-                    MessageBox.Show("Please select 2 columns (first FC, second BSU)");
-                    return (null,null);
-                }
-            }
-            else
-            {
-                if (theInputCells.Columns.Count != 1)
-                {
-                    MessageBox.Show("Please select 1 column with BSU entries");
-                    return (null,null);
-                }
-            }
+                MessageBox.Show("Please select 3 columns (first P-Value, second FC, third BSU)");
+                return (null, null);
 
-
-            ClearOutputRange(theInputCells);
+            }
+           
+            //ClearOutputRange(theInputCells);
 
             // generate the results for outputting the data and summary
             List<BsuRegulons> lResults = QueryResultTable(theInputCells);
@@ -444,16 +461,18 @@ namespace GINtool
             SysData.DataTable clrTbl;
 
 
-            FastDtToExcel(lTable, theSheet, startR, offsetColumn, startR + nrRows - (bDense ? 1 : 0), offsetColumn + lTable.Columns.Count - 1);
+            Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
+
+            FastDtToExcel(lTable, lNewSheet, startR, offsetColumn, startR + nrRows - (bDense ? 1 : 0), offsetColumn + lTable.Columns.Count - 1);
             
             if (bDense)
             {
                 clrTbl = lOut.Item2;
-                ColorCells(clrTbl, theSheet, startR, offsetColumn + 1, startR + nrRows - (bDense ? 1 : 0), offsetColumn + lTable.Columns.Count - 1);
+                ColorCells(clrTbl, lNewSheet, startR, offsetColumn + 5, startR + nrRows - (bDense ? 1 : 0), offsetColumn + lTable.Columns.Count - 1);
             }
 
 
-            if (genSummary)
+            if (true/*genSummary*/)
             {
                 List<FC_BSU> lOutput = new List<FC_BSU>();
 
@@ -466,7 +485,7 @@ namespace GINtool
                         if (lResults[r].DOWN.Contains(c))
                             val = -1;
 
-                        lOutput.Add(new FC_BSU(lResults[r].FC, lResults[r].REGULONS[c], val));
+                        lOutput.Add(new FC_BSU(lResults[r].FC, lResults[r].REGULONS[c], val, lResults[r].PVALUE,lResults[r].GENE));
                     }
 
 
@@ -599,12 +618,16 @@ namespace GINtool
 
             SysData.DataTable lTable = new SysData.DataTable("FC_BSU");
             SysData.DataColumn regColumn = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
+            SysData.DataColumn geneColumn = new SysData.DataColumn("Gene", Type.GetType("System.String"));
+            SysData.DataColumn pvalColumn = new SysData.DataColumn("Pvalue", Type.GetType("System.Single"));
             SysData.DataColumn fcColumn = new SysData.DataColumn("FC", Type.GetType("System.Single"));
             SysData.DataColumn dirColumn = new SysData.DataColumn("DIR", Type.GetType("System.Int32"));
 
 
             lTable.Columns.Add(regColumn);
+            lTable.Columns.Add(geneColumn);            
             lTable.Columns.Add(fcColumn);
+            lTable.Columns.Add(pvalColumn);
             lTable.Columns.Add(dirColumn);
 
             for (int r = 0; r < aList.Count; r++)
@@ -613,6 +636,8 @@ namespace GINtool
                 lRow["Regulon"] = aList[r].BSU;
                 lRow["FC"] = aList[r].FC;
                 lRow["DIR"] = aList[r].DIR;
+                lRow["Pvalue"] = aList[r].PVALUE;
+                lRow["Gene"] = aList[r].GENE;
             }
 
             return lTable;
@@ -700,10 +725,14 @@ namespace GINtool
 
             int col = 1;
 
-            lNewSheet.Cells[1, col++] = "FC";
             lNewSheet.Cells[1, col++] = "BSU";
-            
-          
+            lNewSheet.Cells[1, col++] = "GENE";
+            lNewSheet.Cells[1, col++] = "FC";
+            lNewSheet.Cells[1, col++] = "PVALUE";
+            if(gOperonOutput)
+                lNewSheet.Cells[1, col++] = "OPERON(S)";
+
+
             int maxRegulons = 0;
 
             for (int r = 0; r < aTable.Rows.Count; r++)
@@ -762,13 +791,25 @@ namespace GINtool
         {
             SysData.DataTable lTable = new SysData.DataTable();
 
-            //col = new SysData.DataColumn("Gene", Type.GetType("System.String"));
-            //lTable.Columns.Add(col);
-            SysData.DataColumn  col = new SysData.DataColumn("FC", Type.GetType("System.Double"));
-            lTable.Columns.Add(col);
-            col = new SysData.DataColumn("BSU", Type.GetType("System.String"));
+            
+            SysData.DataColumn col = new SysData.DataColumn("BSU", Type.GetType("System.String"));
             lTable.Columns.Add(col);
 
+            col = new SysData.DataColumn("GENE", Type.GetType("System.String"));
+            lTable.Columns.Add(col);
+
+            col = new SysData.DataColumn("FC", Type.GetType("System.Double"));
+            lTable.Columns.Add(col);
+
+
+            col = new SysData.DataColumn("PVALUE", Type.GetType("System.Double"));
+            lTable.Columns.Add(col);
+
+            if (gOperonOutput)
+            {
+                col = new SysData.DataColumn("OPERON", Type.GetType("System.String"));
+                lTable.Columns.Add(col);
+            }
 
             int maxRegulons = 0;
             for (int i=0;i< lLst.Count; i++)
@@ -794,6 +835,9 @@ namespace GINtool
                     SysData.DataRow lRow = lTable.Rows.Add();
                     lRow["FC"] = lLst[r].FC;
                     lRow["BSU"] = lLst[r].BSU;
+                    lRow["GENE"] = lLst[r].GENE;
+                    lRow["PVALUE"] = lLst[r].PVALUE;
+
                     for (int i = 0; i < lLst[r].REGULONS.Count; i++)
                     {
 
@@ -840,8 +884,10 @@ namespace GINtool
                 lUnique.Add(aList[r].BSU);
 
             // add the columns per defined FC range
-            SysData.DataColumn col = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
+            SysData.DataColumn col = new SysData.DataColumn("Regulon", Type.GetType("System.String"));            
             lTable.Columns.Add(col);
+           
+
             col = new SysData.DataColumn("Count", Type.GetType("System.Int16"));
             lTable.Columns.Add(col);
             col = new SysData.DataColumn("CountData", Type.GetType("System.Int16"));
@@ -882,9 +928,26 @@ namespace GINtool
             col = new SysData.DataColumn("perc_UP", Type.GetType("System.Double"));
             lTable.Columns.Add(col);
 
+            /* define the combined table */
 
             col = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
             lTableCombine.Columns.Add(col);
+
+            col = new SysData.DataColumn("Gene", Type.GetType("System.String"));
+            lTable.Columns.Add(col);
+
+            col = new SysData.DataColumn("FC", Type.GetType("System.Double"));
+            lTable.Columns.Add(col);
+
+            col = new SysData.DataColumn("pval", Type.GetType("System.Double"));
+            lTable.Columns.Add(col);
+
+
+            if (gOperonOutput)
+            {
+                col = new SysData.DataColumn("operon", Type.GetType("System.String"));
+                lTable.Columns.Add(col);
+            }
             
             col = new SysData.DataColumn("perc_DOWN", Type.GetType("System.Double"));
             lTableCombine.Columns.Add(col);
@@ -941,10 +1004,11 @@ namespace GINtool
                 }
 
                 SysData.DataRow lNewRow = lTable.Rows.Add();
+                                
                 lNewRow["CountData"] = _tmp.Length;
                 lNewRow["Count"] = _tmp2[0]["Count"];
 
-                lNewRow["Regulon"] = reg;
+                lNewRow["Regulon"] = reg;                
                 lNewRow["down1"] = down1;
                 lNewRow["down2"] = down2;
                 lNewRow["down3"] = down3;
@@ -975,9 +1039,14 @@ namespace GINtool
                 double lCount = (double)_tmp.Length;
 
                 lNewRow = lTableCombine.Rows.Add();
-                lNewRow["Regulon"] = reg;
-
                 
+                lNewRow["Regulon"] = reg;
+                //lNewRow["Gene"] = _tmp["Gene"];
+                //lNewRow["FC"] = _tmp["FC"];
+                //lNewRow["pval"] = _tmp["Pvalue"];
+                //lNewRow["operon"] = "something";                                                                                
+
+
                 if (nrTOT > 0)
                 {
                     lNewRow["perc_DOWN"] = (double)nrDOWN / (double)(nrTOT);
@@ -1116,6 +1185,7 @@ namespace GINtool
             ebLow.Text = Properties.Settings.Default.fcLOW.ToString();
             ebMid.Text = Properties.Settings.Default.fcMID.ToString();
             ebHigh.Text = Properties.Settings.Default.fcHIGH.ToString();
+            editMinPval.Text = Properties.Settings.Default.pvalue_cutoff.ToString();
         }
 
         private void EnableItems(bool enable)
@@ -1240,7 +1310,7 @@ namespace GINtool
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
                 openFileDialog.InitialDirectory = "c:\\";
-                openFileDialog.Filter = "txt files (*.csv)|*.csv|Excel files (*.xlsx)|*.xlsx";
+                openFileDialog.Filter = "Excel files (*.xlsx)|*.xlsx|txt files (*.csv)|*.csv";
                 openFileDialog.FilterIndex = 2;
                 openFileDialog.RestoreDirectory = true;
 
@@ -1297,20 +1367,36 @@ namespace GINtool
             //    }
             //}
         }
+
+        private void editMinPval_TextChanged(object sender, RibbonControlEventArgs e)
+        {
+            if (float.TryParse(editMinPval.Text, out float val))
+            {
+                // set the text value to what is parsed
+                editMinPval.Text = val.ToString();                
+                Properties.Settings.Default.pvalue_cutoff = val;                
+            }
+            else            
+                editMinPval.Text = Properties.Settings.Default.pvalue_cutoff.ToString();                            
+        }
     }
 
 
     public struct FC_BSU
     {
-        public FC_BSU(double a, string b, int dir)
+        public FC_BSU(double a, string b, int dir, double pval, string gene)
         {
             FC = a;
             BSU = b;
             DIR = dir;
+            PVALUE = pval;
+            GENE = gene;
         }
         public double FC { get; }
         public string BSU { get; }
         public double DIR { get; }
+        public double PVALUE { get; }
+        public string GENE { get; }
     }
 
 
