@@ -44,5 +44,8 @@
     <Setting Name="pvalue_cutoff" Type="System.Single" Scope="User">
       <Value Profile="(Default)">0.05</Value>
     </Setting>
+    <Setting Name="use_pvalues" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

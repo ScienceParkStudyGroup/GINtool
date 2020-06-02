@@ -11,6 +11,19 @@ namespace GINtool
 {
     class ExcelUtils
     {
+        public enum CVErrEnum : Int32
+        {
+            ErrDiv0 = -2146826281,
+            ErrGettingData = -2146826245,
+            ErrNA = -2146826246,
+            ErrName = -2146826259,
+            ErrNull = -2146826288,
+            ErrNum = -2146826252,
+            ErrRef = -2146826265,
+            ErrValue = -2146826273
+        }
+
+
         public static DataTable ReadExcelToDatable(Excel.Application theApp, string worksheetName, string saveAsLocation, int HeaderLine, int ColumnStart)
         {
 

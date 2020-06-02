@@ -187,5 +187,17 @@ namespace GINtool.Properties {
                 this["pvalue_cutoff"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool use_pvalues {
+            get {
+                return ((bool)(this["use_pvalues"]));
+            }
+            set {
+                this["use_pvalues"] = value;
+            }
+        }
     }
 }
