@@ -199,5 +199,17 @@ namespace GINtool.Properties {
                 this["use_pvalues"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Sheet1")]
+        public string operonSheet {
+            get {
+                return ((string)(this["operonSheet"]));
+            }
+            set {
+                this["operonSheet"] = value;
+            }
+        }
     }
 }

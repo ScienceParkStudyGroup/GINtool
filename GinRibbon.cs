@@ -16,6 +16,7 @@ namespace GINtool
         bool gOperonOutput = false;
         SysData.DataTable gRefWB = null;
         SysData.DataTable gRefStats = null;
+        SysData.DataTable gRefOperons = null;
         string[] gColNames = null;
         Excel.Application gApplication = null;
 
@@ -65,6 +66,30 @@ namespace GINtool
         }
 
 
+        private bool LoadOperonData()
+        {
+            gApplication.EnableEvents = false;
+            
+            SysData.DataTable _tmp = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.operonSheet, Properties.Settings.Default.operonFile, 1, 1);
+            gRefOperons = new SysData.DataTable("OPERONS");
+            gRefOperons.CaseSensitive = false;
+            gRefOperons.Columns.Add("operon", Type.GetType("System.String"));
+            gRefOperons.Columns.Add("gene", Type.GetType("System.String"));
+
+            foreach(SysData.DataRow lRow in _tmp.Rows)
+            {
+                string[] lItems = lRow.ItemArray[0].ToString().Split('-');
+                for (int i = 0; i < lItems.Length; i++)
+                {
+                    SysData.DataRow lNewRow = gRefOperons.Rows.Add();
+                    lNewRow["operon"] = lItems[0];
+                    lNewRow["gene"] = lItems[i];
+                }
+            }
+            gApplication.EnableEvents = true;
+            return gRefOperons.Rows.Count>0;
+        }
+
         private bool LoadData()
         {
             gApplication.EnableEvents = false;
@@ -77,10 +102,8 @@ namespace GINtool
                 {
                     gColNames[i++] = col.ColumnName;
                 }
-
                 // generate database frequency table
                 CreateTableStatistics();
-
             }
             gApplication.EnableEvents = true;
             return gRefWB != null ? true : false;
@@ -140,7 +163,6 @@ namespace GINtool
                 splitButton3.Label = but_fc.Label;
 
             btLoad.Enabled = System.IO.File.Exists(Properties.Settings.Default.referenceFile);
-
 
         }
 
@@ -501,12 +523,13 @@ namespace GINtool
             renameWorksheet(lNewSheet, "Summary_");
 
             int col = 1;
-
+            
+            
             Excel.Range top = lNewSheet.Cells[1, 4];
             Excel.Range bottom = lNewSheet.Cells[1, 11];
             Excel.Range all = (Excel.Range)lNewSheet.get_Range(top, bottom);
             all.Merge();
-            all.Value = "Counts";
+            all.Value = "Observed Counts and directions";
             all.HorizontalAlignment = Excel.Constants.xlCenter;
 
             top = lNewSheet.Cells[1, 13];
@@ -520,7 +543,7 @@ namespace GINtool
             bottom = lNewSheet.Cells[1, 22];
             all = (Excel.Range)lNewSheet.get_Range(top, bottom);
             all.Merge();
-            all.Value = "REGULATIONS";
+            all.Value = "Logical direction";
             all.HorizontalAlignment = Excel.Constants.xlCenter;
 
             lNewSheet.Cells[2, col++] = "Regulon";
@@ -537,13 +560,14 @@ namespace GINtool
             lNewSheet.Cells[2, col++] = string.Format("DOWN <=-{0} & >=-{1}", Properties.Settings.Default.fcHIGH, Properties.Settings.Default.fcMID);
             lNewSheet.Cells[2, col++] = string.Format("DOWN <-{0}", Properties.Settings.Default.fcHIGH);
 
-            lNewSheet.Cells[2, col++] = "Total Relevant";            
+            lNewSheet.Cells[2, col++] = "Total Relevant";
+            int colGreen = col;
 
             lNewSheet.Cells[2, col++] = string.Format("UP >{0}", Properties.Settings.Default.fcHIGH);
             lNewSheet.Cells[2, col++] = string.Format("UP <={0} & >{1}", Properties.Settings.Default.fcHIGH, Properties.Settings.Default.fcMID);
             lNewSheet.Cells[2, col++] = string.Format("UP <={0} & >{1}", Properties.Settings.Default.fcMID, Properties.Settings.Default.fcLOW);
             lNewSheet.Cells[2, col++] = string.Format("UP <={0} & >0", Properties.Settings.Default.fcLOW);
-
+            
             lNewSheet.Cells[2, col++] = string.Format("DOWN <0 & >=-{0}", Properties.Settings.Default.fcLOW);
             lNewSheet.Cells[2, col++] = string.Format("DOWN <-{0} & >=-{1}", Properties.Settings.Default.fcMID, Properties.Settings.Default.fcLOW);
             lNewSheet.Cells[2, col++] = string.Format("DOWN <=-{0} & >=-{1}", Properties.Settings.Default.fcHIGH, Properties.Settings.Default.fcMID);
@@ -557,12 +581,29 @@ namespace GINtool
 
             FastDtToExcel(theTable, lNewSheet, 3, 1, theTable.Rows.Count + 2, theTable.Columns.Count);
 
+
+            // color cells here
+
+            
+            top = lNewSheet.Cells[3, colGreen];
+            bottom = lNewSheet.Cells[theTable.Rows.Count + 2, colGreen+4];
+            all = (Excel.Range)lNewSheet.get_Range(top, bottom);
+            all.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGreen);
+
+            top = lNewSheet.Cells[3, colGreen+4];
+            bottom = lNewSheet.Cells[theTable.Rows.Count + 2, colGreen + 4+3];
+            all = (Excel.Range)lNewSheet.get_Range(top, bottom);
+            all.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightSalmon);
+
+            // set number format
+
             top = lNewSheet.Cells[3, 13];
             bottom = lNewSheet.Cells[2 + theTable.Rows.Count, 22];
             all = (Excel.Range)lNewSheet.get_Range(top, bottom);
             all.NumberFormat = "###%";
 
 
+            // fit the width of the columns
             top = lNewSheet.Cells[1, 1];
             bottom = lNewSheet.Cells[theTable.Rows.Count+2, theTable.Columns.Count];
             all = (Excel.Range)lNewSheet.get_Range(top, bottom);
@@ -812,7 +853,22 @@ namespace GINtool
                     lRow["FC"] = lLst[r].FC;
                     lRow["BSU"] = lLst[r].BSU;
                     lRow["GENE"] = lLst[r].GENE;
-                    lRow["PVALUE"] = lLst[r].PVALUE;                    
+                    lRow["PVALUE"] = lLst[r].PVALUE;
+                    string lOperon = "";
+                    if (lLst[r].GENE != "")
+                    {
+                        SysData.DataRow[] lOperons = gRefOperons.Select(string.Format("gene='{0}'", lLst[r].GENE));
+                        List<string> strOperons = new List<string>();
+                        for (int i = 0; i < lOperons.Length; i++)
+                        {
+                            strOperons.Add(lOperons[i]["operon"].ToString());
+                        }
+
+                        lOperon = String.Join(", ", strOperons.ToArray());
+                    }
+
+
+                    lRow["OPERON"] = lOperon;
 
                     for (int i = 0; i < lLst[r].REGULONS.Count; i++)
                     {
@@ -1099,6 +1155,26 @@ namespace GINtool
         }
 
 
+
+        private void load_OperonSheet()
+        {
+            Microsoft.Office.Interop.Excel.Application excel = (Microsoft.Office.Interop.Excel.Application)Globals.ThisAddIn.Application;
+            excel.DisplayAlerts = false;
+            excel.EnableEvents = false;
+
+            Excel.Workbook excelworkBook = excel.Workbooks.Open(Properties.Settings.Default.operonFile);
+            // Set workbook to first worksheet
+            Excel.Worksheet ws = (Excel.Worksheet)excelworkBook.Sheets[1];
+            Properties.Settings.Default.operonSheet = ws.Name;
+
+
+            excelworkBook.Close();
+
+            excel.EnableEvents = true;
+            excel.DisplayAlerts = true;
+        }
+
+
         private void Fill_DropDownBoxes()
         {
             gApplication.EnableEvents = false;
@@ -1158,6 +1234,7 @@ namespace GINtool
             gApplication.EnableEvents = false;
             if (LoadData())
             {
+                gOperonOutput = LoadOperonData();
                 Fill_DropDownBoxes();
                 if (gDownItems.Count == 0 && gUpItems.Count == 0 && gAvailItems.Count == 0)
                     LoadDirectionOptions();
@@ -1319,8 +1396,8 @@ namespace GINtool
                 {
                     Properties.Settings.Default.operonFile = openFileDialog.FileName;
                     btnOperonFile.Label = Properties.Settings.Default.operonFile;
-                    //load_Worksheets();
-                    //btLoad.Enabled = true;
+                    load_OperonSheet();
+                    
                 }
             }
         }
