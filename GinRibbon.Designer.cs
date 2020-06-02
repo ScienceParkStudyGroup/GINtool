@@ -96,6 +96,7 @@
             this.btApply.Image = global::GINtool.Properties.Resources.ApplyCodeChanges_16x;
             this.btApply.Label = "apply to range";
             this.btApply.Name = "btApply";
+            this.btApply.ScreenTip = "Start the analysis (PVALUE,FC,BSU)";
             this.btApply.ShowImage = true;
             this.btApply.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btApply_Click);
             // 
@@ -105,11 +106,13 @@
             this.splitButton3.Items.Add(this.but_fc);
             this.splitButton3.Label = "use p values";
             this.splitButton3.Name = "splitButton3";
+            this.splitButton3.ScreenTip = "Select which cut-off to use for the combined report";
             // 
             // but_pvalues
             // 
             this.but_pvalues.Label = "use p values";
             this.but_pvalues.Name = "but_pvalues";
+            this.but_pvalues.ScreenTip = "Use the p-value cut-off for the combined report";
             this.but_pvalues.ShowImage = true;
             this.but_pvalues.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.button1_Click_1);
             // 
@@ -117,6 +120,7 @@
             // 
             this.but_fc.Label = "use fold changes";
             this.but_fc.Name = "but_fc";
+            this.but_fc.ScreenTip = "Use the low FC value as cut-off for the combined report";
             this.but_fc.ShowImage = true;
             this.but_fc.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.but_fc_Click);
             // 
@@ -246,6 +250,7 @@
             this.ddDir.Image = global::GINtool.Properties.Resources.DownloadLog_16x;
             this.ddDir.Label = "direction column";
             this.ddDir.Name = "ddDir";
+            this.ddDir.ScreenTip = "specify the column that contains the direction definitions";
             this.ddDir.ShowImage = true;
             this.ddDir.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ddDir_SelectionChanged);
             // 
@@ -271,6 +276,7 @@
             // 
             this.ebLow.Label = "low";
             this.ebLow.Name = "ebLow";
+            this.ebLow.ScreenTip = "Set the value for the minimum FC category";
             this.ebLow.Text = null;
             this.ebLow.TextChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ebLow_TextChanged);
             // 
@@ -278,6 +284,7 @@
             // 
             this.ebMid.Label = "mid";
             this.ebMid.Name = "ebMid";
+            this.ebMid.ScreenTip = "Set the value for the medium FC category";
             this.ebMid.Text = null;
             this.ebMid.TextChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ebMid_TextChanged);
             // 
@@ -285,6 +292,7 @@
             // 
             this.ebHigh.Label = "high";
             this.ebHigh.Name = "ebHigh";
+            this.ebHigh.ScreenTip = "Set the value for the highest FC category";
             this.ebHigh.Text = null;
             this.ebHigh.TextChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ebHigh_TextChanged);
             // 
@@ -298,6 +306,7 @@
             // 
             this.editMinPval.Label = "p-value";
             this.editMinPval.Name = "editMinPval";
+            this.editMinPval.ScreenTip = "Define the p-value cut-off value to include in the comined report";
             this.editMinPval.Text = null;
             this.editMinPval.TextChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.editMinPval_TextChanged);
             // 

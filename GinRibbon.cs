@@ -301,35 +301,7 @@ namespace GINtool
             return lList;
 
         }
-        private void ClearRange(Excel.Range range)
-        {            
-            range.Interior.Pattern = Excel.Constants.xlNone;
-            range.Interior.TintAndShade = 0;
-            range.Interior.PatternTintAndShade = 0;
-            range.Clear();
-        }
-
-        private void ClearOutputRange(Excel.Range theCells)
-        {
-            Excel.Worksheet theSheet = GetActiveShet();
-            int nrRows = theCells.Rows.Count;
-            int startC = theCells.Column;
-            int startR = theCells.Row;
-            int offsetColumn = startC + 2;
-            int maxnrCols = 16384;
-            int maxnrRows = 1048576;
-
-            if ((nrRows + 1) > maxnrRows)
-                nrRows -= 1;
-
-            Excel.Range tmpRange_;
-            
-            tmpRange_ = (Excel.Range)theSheet.Range[theSheet.Cells[startR, offsetColumn], theSheet.Cells[startR + nrRows + 1, maxnrCols - offsetColumn]];
-            tmpRange_.Clear();
-
-            ClearRange(tmpRange_);
-        }
-
+     
         (SysData.DataTable, SysData.DataTable) PrepareResultTable(List<BsuRegulons> lResults)
         {
             SysData.DataTable myTable = new System.Data.DataTable("mytable");
