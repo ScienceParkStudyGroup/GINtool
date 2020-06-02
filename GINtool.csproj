@@ -193,6 +193,7 @@
     <Compile Include="GinRibbon.Designer.cs">
       <DependentUpon>GinRibbon.cs</DependentUpon>
     </Compile>
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

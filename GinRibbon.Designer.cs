@@ -146,7 +146,6 @@
             this.splitButton1.Label = "regulon file";
             this.splitButton1.Name = "splitButton1";
             this.splitButton1.ScreenTip = "select the reference file that contains the mapping tables";
-            this.splitButton1.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.splitButton1_Click);
             // 
             // btnSelectRegulonFile
             // 
