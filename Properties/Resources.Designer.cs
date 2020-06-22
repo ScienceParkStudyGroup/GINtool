@@ -83,6 +83,16 @@ namespace GINtool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap ClearCollection_16x {
+            get {
+                object obj = ResourceManager.GetObject("ClearCollection_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap DMAChannel_16x {
             get {
                 object obj = ResourceManager.GetObject("DMAChannel_16x", resourceCulture);

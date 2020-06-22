@@ -48,6 +48,7 @@
             this.btnRegulonFileName = this.Factory.CreateRibbonButton();
             this.splitButton2 = this.Factory.CreateRibbonSplitButton();
             this.btnSelectOperonFile = this.Factory.CreateRibbonButton();
+            this.btnResetOperonFile = this.Factory.CreateRibbonButton();
             this.separator4 = this.Factory.CreateRibbonSeparator();
             this.btnOperonFile = this.Factory.CreateRibbonButton();
             this.group6 = this.Factory.CreateRibbonGroup();
@@ -175,6 +176,7 @@
             // 
             this.splitButton2.Image = global::GINtool.Properties.Resources.Network_16x;
             this.splitButton2.Items.Add(this.btnSelectOperonFile);
+            this.splitButton2.Items.Add(this.btnResetOperonFile);
             this.splitButton2.Items.Add(this.separator4);
             this.splitButton2.Items.Add(this.btnOperonFile);
             this.splitButton2.Label = "operon file";
@@ -189,6 +191,14 @@
             this.btnSelectOperonFile.ScreenTip = "select the file";
             this.btnSelectOperonFile.ShowImage = true;
             this.btnSelectOperonFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnSelectOperonFile_Click);
+            // 
+            // btnResetOperonFile
+            // 
+            this.btnResetOperonFile.Enabled = false;
+            this.btnResetOperonFile.Image = global::GINtool.Properties.Resources.ClearCollection_16x;
+            this.btnResetOperonFile.Label = "clear";
+            this.btnResetOperonFile.Name = "btnResetOperonFile";
+            this.btnResetOperonFile.ShowImage = true;
             // 
             // separator4
             // 
@@ -365,6 +375,7 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonSplitButton splitButton3;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton but_pvalues;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton but_fc;
+        internal Microsoft.Office.Tools.Ribbon.RibbonButton btnResetOperonFile;
     }
 
     partial class ThisRibbonCollection
