@@ -211,16 +211,5 @@ namespace GINtool.Properties {
                 this["operonSheet"] = value;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        public global::System.Collections.Specialized.StringCollection htmlHelp {
-            get {
-                return ((global::System.Collections.Specialized.StringCollection)(this["htmlHelp"]));
-            }
-            set {
-                this["htmlHelp"] = value;
-            }
-        }
     }
 }

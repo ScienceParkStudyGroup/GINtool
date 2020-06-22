@@ -846,10 +846,14 @@ namespace GINtool
 
 
                     lRow["OPERON"] = lOperon;
+                    double FC = lLst[r].FC;
 
                     for (int i = 0; i < lLst[r].REGULONS.Count; i++)
                     {
-                     
+
+                        bool posAssoc = lLst[r].UP.Contains(i) ? true : false;
+
+
                         SysData.DataRow[] lHit = aUsageTbl.Select(string.Format("Regulon = '{0}'", lLst[r].REGULONS[i]));
                         double nrUP = Double.Parse(lHit[0]["nr_UP"].ToString());
                         double nrDOWN = Double.Parse(lHit[0]["nr_DOWN"].ToString());
@@ -859,14 +863,28 @@ namespace GINtool
                         double percRel = Double.Parse(lHit[0]["totrelperc"].ToString());
 
                         string lVal = "";
-                       
-                        if (nrUP > nrDOWN)
-                            lVal = percUP.ToString("P0") + "# " + percRel.ToString("P0") + "-tot";
-                        if (nrDOWN > nrUP)
-                            lVal = percDOWN.ToString("P0") + "@ " + percRel.ToString("P0") + "-tot";
+
+                        // logical association
+                        if ((posAssoc && FC > 0)||(!posAssoc && FC<0))
+                        {
+                            if (nrUP > nrDOWN)
+                                lVal = percUP.ToString("P0") + "# " + percRel.ToString("P0") + "-tot";
+                            if (nrDOWN > nrUP)
+                                lVal = percDOWN.ToString("P0") + "@ " + percRel.ToString("P0") + "-tot";
+                        }
                         if (nrUP == nrDOWN)
                             lVal = "0%-" + percRel.ToString("P0") + "-tot";
-
+                        
+                        // false postive/negative
+                        if ((posAssoc && FC < 0) || (!posAssoc && FC > 0))
+                        {
+                            if (nrUP > nrDOWN)
+                                lVal = (1.0-percUP).ToString("P0") + "@ " + percRel.ToString("P0") + "-tot";
+                            if (nrDOWN > nrUP)
+                                lVal = (1.0-percDOWN).ToString("P0") + "# " + percRel.ToString("P0") + "-tot";
+                        }   
+                            
+                            
                         lRow[string.Format("Regulon_{0}", i + 1)] = lLst[r].REGULONS[i] + " " + lVal;
 
                     }
@@ -1413,7 +1431,7 @@ namespace GINtool
 
         private void tglTaskPane_Click(object sender, RibbonControlEventArgs e)
         {
-            var taskpane = TaskPaneManager.GetTaskPane("A", "GIN tool steps", () => new GINtaskpane());
+            var taskpane = TaskPaneManager.GetTaskPane("A", "GIN tool manual", () => new GINtaskpane());
             taskpane.Visible = !taskpane.Visible;            
         }
     }

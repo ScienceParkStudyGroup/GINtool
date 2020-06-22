@@ -24,17 +24,17 @@ namespace GINtool
             if (!_createdPanes.ContainsKey(key))
             {
                 var pane = Globals.ThisAddIn.CustomTaskPanes.Add(taskPaneCreatorFunc(), taskPaneTitle);
-                pane.VisibleChanged += new System.EventHandler(TaskPane_VisibleChangedEvent);
+                //pane.VisibleChanged += new System.EventHandler(TaskPane_VisibleChangedEvent);
                 pane.Width = 300;
                 _createdPanes[key] = pane;
             }
             return _createdPanes[key];
         }
 
-        private static void TaskPane_VisibleChangedEvent(object sender, EventArgs e)
-        {
-            int a = 10;
-        }
+        //private static void TaskPane_VisibleChangedEvent(object sender, EventArgs e)
+        //{
+        //    int a = 10;
+        //}
     }
     
 }

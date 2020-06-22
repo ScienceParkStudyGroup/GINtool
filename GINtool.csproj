@@ -274,6 +274,34 @@
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\step3.jpg">
+      <CustomToolNamespace>GINtool</CustomToolNamespace>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\apply.jpg" />
+    <EmbeddedResource Include="Resources\load_data.jpg">
+      <CustomToolNamespace>GINtool</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\mapping.jpg">
+      <CustomToolNamespace>GINtool</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\p_or_fc.jpg">
+      <CustomToolNamespace>GINtool</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\select_operon_file.jpg">
+      <CustomToolNamespace>GINtool</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\select_regulon_file.jpg">
+      <CustomToolNamespace>GINtool</CustomToolNamespace>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="HtmlAgilityPack">
+      <Version>1.11.24</Version>
+    </PackageReference>
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
