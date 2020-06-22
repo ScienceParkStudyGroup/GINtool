@@ -41,6 +41,7 @@
             this.but_pvalues = this.Factory.CreateRibbonButton();
             this.but_fc = this.Factory.CreateRibbonButton();
             this.btLoad = this.Factory.CreateRibbonButton();
+            this.tglTaskPane = this.Factory.CreateRibbonToggleButton();
             this.group3 = this.Factory.CreateRibbonGroup();
             this.splitButton1 = this.Factory.CreateRibbonSplitButton();
             this.btnSelectRegulonFile = this.Factory.CreateRibbonButton();
@@ -89,12 +90,14 @@
             this.group1.Items.Add(this.btApply);
             this.group1.Items.Add(this.splitButton3);
             this.group1.Items.Add(this.btLoad);
+            this.group1.Items.Add(this.tglTaskPane);
             this.group1.Label = "main";
             this.group1.Name = "group1";
             // 
             // btApply
             // 
-            this.btApply.Image = global::GINtool.Properties.Resources.ApplyCodeChanges_16x;
+            this.btApply.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.btApply.Image = global::GINtool.Properties.Resources.gear;
             this.btApply.Label = "apply to range";
             this.btApply.Name = "btApply";
             this.btApply.ScreenTip = "Start the analysis (PVALUE,FC,BSU)";
@@ -103,6 +106,8 @@
             // 
             // splitButton3
             // 
+            this.splitButton3.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.splitButton3.Image = global::GINtool.Properties.Resources.pvalue;
             this.splitButton3.Items.Add(this.but_pvalues);
             this.splitButton3.Items.Add(this.but_fc);
             this.splitButton3.Label = "use p values";
@@ -111,6 +116,7 @@
             // 
             // but_pvalues
             // 
+            this.but_pvalues.Image = global::GINtool.Properties.Resources.pvalue;
             this.but_pvalues.Label = "use p values";
             this.but_pvalues.Name = "but_pvalues";
             this.but_pvalues.ScreenTip = "Use the p-value cut-off for the combined report";
@@ -119,6 +125,7 @@
             // 
             // but_fc
             // 
+            this.but_fc.Image = global::GINtool.Properties.Resources.fold_change;
             this.but_fc.Label = "use fold changes";
             this.but_fc.Name = "but_fc";
             this.but_fc.ScreenTip = "Use the low FC value as cut-off for the combined report";
@@ -127,13 +134,23 @@
             // 
             // btLoad
             // 
+            this.btLoad.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
             this.btLoad.Enabled = false;
-            this.btLoad.Image = global::GINtool.Properties.Resources.Refetch_16x;
+            this.btLoad.Image = global::GINtool.Properties.Resources.stack;
             this.btLoad.Label = "load reference data";
             this.btLoad.Name = "btLoad";
             this.btLoad.ScreenTip = "load reference data into memory";
             this.btLoad.ShowImage = true;
             this.btLoad.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btLoad_Click);
+            // 
+            // tglTaskPane
+            // 
+            this.tglTaskPane.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.tglTaskPane.Image = global::GINtool.Properties.Resources.check;
+            this.tglTaskPane.Label = "show steps";
+            this.tglTaskPane.Name = "tglTaskPane";
+            this.tglTaskPane.ShowImage = true;
+            this.tglTaskPane.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.tglTaskPane_Click);
             // 
             // group3
             // 
@@ -144,7 +161,8 @@
             // 
             // splitButton1
             // 
-            this.splitButton1.Image = global::GINtool.Properties.Resources.FileSystemDriverFile_16x;
+            this.splitButton1.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.splitButton1.Image = global::GINtool.Properties.Resources.stack1;
             this.splitButton1.Items.Add(this.btnSelectRegulonFile);
             this.splitButton1.Items.Add(this.separator3);
             this.splitButton1.Items.Add(this.btnRegulonFileName);
@@ -154,7 +172,7 @@
             // 
             // btnSelectRegulonFile
             // 
-            this.btnSelectRegulonFile.Image = global::GINtool.Properties.Resources.Select_16x;
+            this.btnSelectRegulonFile.Image = global::GINtool.Properties.Resources.cursor;
             this.btnSelectRegulonFile.Label = "select";
             this.btnSelectRegulonFile.Name = "btnSelectRegulonFile";
             this.btnSelectRegulonFile.ScreenTip = "select the file";
@@ -174,7 +192,8 @@
             // 
             // splitButton2
             // 
-            this.splitButton2.Image = global::GINtool.Properties.Resources.Network_16x;
+            this.splitButton2.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.splitButton2.Image = global::GINtool.Properties.Resources.stack2;
             this.splitButton2.Items.Add(this.btnSelectOperonFile);
             this.splitButton2.Items.Add(this.btnResetOperonFile);
             this.splitButton2.Items.Add(this.separator4);
@@ -185,7 +204,7 @@
             // 
             // btnSelectOperonFile
             // 
-            this.btnSelectOperonFile.Image = global::GINtool.Properties.Resources.Select_16x;
+            this.btnSelectOperonFile.Image = global::GINtool.Properties.Resources.cursor;
             this.btnSelectOperonFile.Label = "select";
             this.btnSelectOperonFile.Name = "btnSelectOperonFile";
             this.btnSelectOperonFile.ScreenTip = "select the file";
@@ -195,7 +214,7 @@
             // btnResetOperonFile
             // 
             this.btnResetOperonFile.Enabled = false;
-            this.btnResetOperonFile.Image = global::GINtool.Properties.Resources.ClearCollection_16x;
+            this.btnResetOperonFile.Image = global::GINtool.Properties.Resources.denied;
             this.btnResetOperonFile.Label = "clear";
             this.btnResetOperonFile.Name = "btnResetOperonFile";
             this.btnResetOperonFile.ShowImage = true;
@@ -222,7 +241,7 @@
             // ddBSU
             // 
             this.ddBSU.Enabled = false;
-            this.ddBSU.Image = global::GINtool.Properties.Resources.Target_16x;
+            this.ddBSU.Image = global::GINtool.Properties.Resources.target;
             this.ddBSU.Label = "bsu";
             this.ddBSU.Name = "ddBSU";
             this.ddBSU.ScreenTip = "specify the column that contains the bsu code";
@@ -232,7 +251,7 @@
             // ddRegulon
             // 
             this.ddRegulon.Enabled = false;
-            this.ddRegulon.Image = global::GINtool.Properties.Resources.Driver_16x;
+            this.ddRegulon.Image = global::GINtool.Properties.Resources.crossroads;
             this.ddRegulon.Label = "regulon";
             this.ddRegulon.Name = "ddRegulon";
             this.ddRegulon.ScreenTip = "specify the column that contains the regulator names";
@@ -241,7 +260,7 @@
             // 
             // ddGene
             // 
-            this.ddGene.Image = global::GINtool.Properties.Resources.DMAChannel_16x;
+            this.ddGene.Image = global::GINtool.Properties.Resources.dna;
             this.ddGene.Label = "gene";
             this.ddGene.Name = "ddGene";
             this.ddGene.ScreenTip = "specify the column that contains the gene names";
@@ -257,7 +276,7 @@
             // 
             // ddDir
             // 
-            this.ddDir.Image = global::GINtool.Properties.Resources.DownloadLog_16x;
+            this.ddDir.Image = global::GINtool.Properties.Resources.traffic;
             this.ddDir.Label = "direction column";
             this.ddDir.Name = "ddDir";
             this.ddDir.ScreenTip = "specify the column that contains the direction definitions";
@@ -267,7 +286,7 @@
             // btRegDirMap
             // 
             this.btRegDirMap.Enabled = false;
-            this.btRegDirMap.Image = global::GINtool.Properties.Resources.StatisticsUp_16x;
+            this.btRegDirMap.Image = global::GINtool.Properties.Resources.settings;
             this.btRegDirMap.Label = "regulon direction map";
             this.btRegDirMap.Name = "btRegDirMap";
             this.btRegDirMap.ScreenTip = "define the text mappings for the direction of the regulons";
@@ -376,6 +395,7 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonButton but_pvalues;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton but_fc;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btnResetOperonFile;
+        internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton tglTaskPane;
     }
 
     partial class ThisRibbonCollection

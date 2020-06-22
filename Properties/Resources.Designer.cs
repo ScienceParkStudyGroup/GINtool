@@ -63,9 +63,9 @@ namespace GINtool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ApplyCodeChanges_16x {
+        internal static System.Drawing.Bitmap check {
             get {
-                object obj = ResourceManager.GetObject("ApplyCodeChanges_16x", resourceCulture);
+                object obj = ResourceManager.GetObject("check", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace GINtool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap BoundBreakpoint_16x {
+        internal static System.Drawing.Bitmap crossroads {
             get {
-                object obj = ResourceManager.GetObject("BoundBreakpoint_16x", resourceCulture);
+                object obj = ResourceManager.GetObject("crossroads", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -83,9 +83,9 @@ namespace GINtool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ClearCollection_16x {
+        internal static System.Drawing.Bitmap cursor {
             get {
-                object obj = ResourceManager.GetObject("ClearCollection_16x", resourceCulture);
+                object obj = ResourceManager.GetObject("cursor", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -93,9 +93,9 @@ namespace GINtool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap DMAChannel_16x {
+        internal static System.Drawing.Bitmap denied {
             get {
-                object obj = ResourceManager.GetObject("DMAChannel_16x", resourceCulture);
+                object obj = ResourceManager.GetObject("denied", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -103,9 +103,9 @@ namespace GINtool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap DownloadLog_16x {
+        internal static System.Drawing.Bitmap dna {
             get {
-                object obj = ResourceManager.GetObject("DownloadLog_16x", resourceCulture);
+                object obj = ResourceManager.GetObject("dna", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -113,9 +113,9 @@ namespace GINtool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Driver_16x {
+        internal static System.Drawing.Bitmap fold_change {
             get {
-                object obj = ResourceManager.GetObject("Driver_16x", resourceCulture);
+                object obj = ResourceManager.GetObject("fold_change", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -123,9 +123,9 @@ namespace GINtool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap FileSystemDriverFile_16x {
+        internal static System.Drawing.Bitmap gear {
             get {
-                object obj = ResourceManager.GetObject("FileSystemDriverFile_16x", resourceCulture);
+                object obj = ResourceManager.GetObject("gear", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -133,9 +133,9 @@ namespace GINtool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Network_16x {
+        internal static System.Drawing.Bitmap pvalue {
             get {
-                object obj = ResourceManager.GetObject("Network_16x", resourceCulture);
+                object obj = ResourceManager.GetObject("pvalue", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -143,9 +143,9 @@ namespace GINtool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Refetch_16x {
+        internal static System.Drawing.Bitmap settings {
             get {
-                object obj = ResourceManager.GetObject("Refetch_16x", resourceCulture);
+                object obj = ResourceManager.GetObject("settings", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -153,29 +153,9 @@ namespace GINtool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Select_16x {
+        internal static System.Drawing.Bitmap stack {
             get {
-                object obj = ResourceManager.GetObject("Select_16x", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        internal static System.Drawing.Icon share_social_interface_button_icon_icons_com_73164 {
-            get {
-                object obj = ResourceManager.GetObject("share_social_interface_button_icon_icons_com_73164", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap Space_16x {
-            get {
-                object obj = ResourceManager.GetObject("Space_16x", resourceCulture);
+                object obj = ResourceManager.GetObject("stack", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -183,9 +163,9 @@ namespace GINtool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Span_16x {
+        internal static System.Drawing.Bitmap stack1 {
             get {
-                object obj = ResourceManager.GetObject("Span_16x", resourceCulture);
+                object obj = ResourceManager.GetObject("stack1", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -193,9 +173,9 @@ namespace GINtool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap StatisticsUp_16x {
+        internal static System.Drawing.Bitmap stack2 {
             get {
-                object obj = ResourceManager.GetObject("StatisticsUp_16x", resourceCulture);
+                object obj = ResourceManager.GetObject("stack2", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -203,9 +183,19 @@ namespace GINtool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Target_16x {
+        internal static System.Drawing.Bitmap target {
             get {
-                object obj = ResourceManager.GetObject("Target_16x", resourceCulture);
+                object obj = ResourceManager.GetObject("target", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap traffic {
+            get {
+                object obj = ResourceManager.GetObject("traffic", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

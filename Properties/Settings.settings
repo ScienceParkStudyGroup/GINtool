@@ -50,5 +50,8 @@
     <Setting Name="operonSheet" Type="System.String" Scope="User">
       <Value Profile="(Default)">Sheet1</Value>
     </Setting>
+    <Setting Name="htmlHelp" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

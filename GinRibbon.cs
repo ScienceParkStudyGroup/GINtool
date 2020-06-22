@@ -24,9 +24,8 @@ namespace GINtool
         static List<string> gUpItems = null;
         static List<string> gDownItems = null;
 
-        List<int> gExcelErrorValues = null; 
-
-
+        List<int> gExcelErrorValues = null;
+   
         private List<string> propertyItems(string property)
         {
             StringCollection myCol = (StringCollection)Properties.Settings.Default[property];
@@ -142,7 +141,7 @@ namespace GINtool
         {
             gApplication = Globals.ThisAddIn.GetExcelApplication();
             btnRegulonFileName.Label = Properties.Settings.Default.referenceFile;
-            btnOperonFile.Label = Properties.Settings.Default.operonFile;
+            btnOperonFile.Label = Properties.Settings.Default.operonFile;        
 
             gAvailItems = propertyItems("directionMapUnassigned");
             gUpItems = propertyItems("directionMapUp");
@@ -157,10 +156,16 @@ namespace GINtool
 
             gExcelErrorValues = ((int[])Enum.GetValues(typeof(ExcelUtils.CVErrEnum))).ToList();
 
-            if(Properties.Settings.Default.use_pvalues)
+            if (Properties.Settings.Default.use_pvalues)
+            {
                 splitButton3.Label = but_pvalues.Label;
+                splitButton3.Image = but_pvalues.Image;
+            }
             else
+            {
                 splitButton3.Label = but_fc.Label;
+                splitButton3.Image = but_pvalues.Image;
+            }
 
             btLoad.Enabled = System.IO.File.Exists(Properties.Settings.Default.referenceFile);
 
@@ -181,7 +186,7 @@ namespace GINtool
             ebMid.Enabled = enable;
             ebHigh.Enabled = enable;
             editMinPval.Enabled = enable;            
-            splitButton3.Enabled = enable;
+            splitButton3.Enabled = enable;            
         }
 
 
@@ -1395,13 +1400,21 @@ namespace GINtool
         private void button1_Click_1(object sender, RibbonControlEventArgs e)
         {
             splitButton3.Label = but_pvalues.Label;
+            splitButton3.Image = but_pvalues.Image;
             Properties.Settings.Default.use_pvalues = true;
         }
 
         private void but_fc_Click(object sender, RibbonControlEventArgs e)
         {
             splitButton3.Label = but_fc.Label;
+            splitButton3.Image = but_fc.Image;
             Properties.Settings.Default.use_pvalues = false;
+        }
+
+        private void tglTaskPane_Click(object sender, RibbonControlEventArgs e)
+        {
+            var taskpane = TaskPaneManager.GetTaskPane("A", "GIN tool steps", () => new GINtaskpane());
+            taskpane.Visible = !taskpane.Visible;            
         }
     }
 
