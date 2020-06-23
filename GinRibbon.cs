@@ -67,6 +67,9 @@ namespace GINtool
 
         private bool LoadOperonData()
         {
+            if (Properties.Settings.Default.operonFile.Length == 0 || Properties.Settings.Default.operonSheet.Length == 0)
+                return false;
+
             gApplication.EnableEvents = false;
             
             SysData.DataTable _tmp = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.operonSheet, Properties.Settings.Default.operonFile, 1, 1);
@@ -141,7 +144,10 @@ namespace GINtool
         {
             gApplication = Globals.ThisAddIn.GetExcelApplication();
             btnRegulonFileName.Label = Properties.Settings.Default.referenceFile;
-            btnOperonFile.Label = Properties.Settings.Default.operonFile;        
+            btnOperonFile.Label = Properties.Settings.Default.operonFile;
+
+            if (Properties.Settings.Default.operonFile.Length == 0)
+                btnOperonFile.Label = "No file selected";
 
             gAvailItems = propertyItems("directionMapUnassigned");
             gUpItems = propertyItems("directionMapUp");
@@ -831,26 +837,31 @@ namespace GINtool
                     lRow["BSU"] = lLst[r].BSU;
                     lRow["GENE"] = lLst[r].GENE;
                     lRow["PVALUE"] = lLst[r].PVALUE;
-                    string lOperon = "";
-                    if (lLst[r].GENE != "")
+
+                    if (gRefOperons != null)
                     {
-                        SysData.DataRow[] lOperons = gRefOperons.Select(string.Format("gene='{0}'", lLst[r].GENE));
-                        List<string> strOperons = new List<string>();
-                        for (int i = 0; i < lOperons.Length; i++)
+                        string lOperon = "";
+                        if (lLst[r].GENE != "")
                         {
-                            strOperons.Add(lOperons[i]["operon"].ToString());
+                            SysData.DataRow[] lOperons = gRefOperons.Select(string.Format("gene='{0}'", lLst[r].GENE));
+                            List<string> strOperons = new List<string>();
+                            for (int i = 0; i < lOperons.Length; i++)
+                            {
+                                strOperons.Add(lOperons[i]["operon"].ToString());
+                            }
+
+                            lOperon = String.Join(", ", strOperons.ToArray());
                         }
 
-                        lOperon = String.Join(", ", strOperons.ToArray());
+                        lRow["OPERON"] = lOperon;
                     }
 
-
-                    lRow["OPERON"] = lOperon;
                     double FC = lLst[r].FC;
 
                     for (int i = 0; i < lLst[r].REGULONS.Count; i++)
                     {
 
+                        // check association direction 
                         bool posAssoc = lLst[r].UP.Contains(i) ? true : false;
 
 
@@ -882,8 +893,7 @@ namespace GINtool
                                 lVal = (1.0-percUP).ToString("P0") + "@ " + percRel.ToString("P0") + "-tot";
                             if (nrDOWN > nrUP)
                                 lVal = (1.0-percDOWN).ToString("P0") + "# " + percRel.ToString("P0") + "-tot";
-                        }   
-                            
+                        }                               
                             
                         lRow[string.Format("Regulon_{0}", i + 1)] = lLst[r].REGULONS[i] + " " + lVal;
 
@@ -1431,8 +1441,21 @@ namespace GINtool
 
         private void tglTaskPane_Click(object sender, RibbonControlEventArgs e)
         {
-            var taskpane = TaskPaneManager.GetTaskPane("A", "GIN tool manual", () => new GINtaskpane());
+            var taskpane = TaskPaneManager.GetTaskPane("A", "GIN tool manual", () => new GINtaskpane(), SetTaskPaneVisbile);
             taskpane.Visible = !taskpane.Visible;            
+        }
+
+
+        public void SetTaskPaneVisbile(bool visible)
+        {
+            tglTaskPane.Checked = visible;
+        }
+
+        private void btnResetOperonFile_Click(object sender, RibbonControlEventArgs e)
+        {
+            Properties.Settings.Default.operonFile = "";
+            Properties.Settings.Default.operonSheet = "";
+            btnOperonFile.Label = "No file selected";
         }
     }
 

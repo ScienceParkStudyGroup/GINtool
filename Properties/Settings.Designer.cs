@@ -166,7 +166,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("not defined yet")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string operonFile {
             get {
                 return ((string)(this["operonFile"]));

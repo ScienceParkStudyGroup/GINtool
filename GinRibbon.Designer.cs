@@ -147,7 +147,7 @@
             // 
             this.tglTaskPane.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
             this.tglTaskPane.Image = global::GINtool.Properties.Resources.check;
-            this.tglTaskPane.Label = "show steps";
+            this.tglTaskPane.Label = "show/hide steps";
             this.tglTaskPane.Name = "tglTaskPane";
             this.tglTaskPane.ShowImage = true;
             this.tglTaskPane.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.tglTaskPane_Click);
@@ -213,11 +213,11 @@
             // 
             // btnResetOperonFile
             // 
-            this.btnResetOperonFile.Enabled = false;
             this.btnResetOperonFile.Image = global::GINtool.Properties.Resources.denied;
             this.btnResetOperonFile.Label = "clear";
             this.btnResetOperonFile.Name = "btnResetOperonFile";
             this.btnResetOperonFile.ShowImage = true;
+            this.btnResetOperonFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnResetOperonFile_Click);
             // 
             // separator4
             // 

@@ -17,41 +17,30 @@ namespace GINtool
 {
     public partial class GINtaskpane : UserControl
     {
-    
+
+        public delegate void UpdateButtonStatus(bool visible);
+        public UpdateButtonStatus updateButtonStatus = null;
+
         public GINtaskpane()
         {
-            InitializeComponent();
-
-            ///Properties.Settings.Default.htmlHelp;
-
-            //string yourRTFText = @"{\rtf1\ansi{\fonttbl\f0\fswiss Helvetica;}\f0\pard This is some {\b bold} text.\par }"; 
-            //MemoryStream stream = new MemoryStream(UTF8Encoding.Default.GetBytes(yourRTFText));
-            //richTextBox1.Text = stream.ToString();            
-
-            // webView1.Navigate("http://www.contoso.com");
-
-            //sWrite.WriteLine("<p><img src='data:image/jpeg;base64," + Base64Encoded(Resource.Image) + "' height='10%' width='5%' > </p>");
-
+            InitializeComponent();         
 
             HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument(); 
 
             string html = ReadResource("GINtool.Resources.user_manual.htm"); 
             doc.LoadHtml(html);
 
+            // parse document for images and return the src value
             var urls = doc.DocumentNode.Descendants("img")
                                 .Select(e => e.GetAttributeValue("src", null))
                                 .Where(s => !String.IsNullOrEmpty(s));
 
-            //var str = doc.DocumentNode.InnerText;
-            //doc.DocumentNode.
-
+            // for each src entry found, read it from resources and display it as inline base64 encoded text
             foreach(string _s in urls)
             {
                 var assembly = Assembly.GetExecutingAssembly();
                 string _orig = string.Format("GINtool.Resources.{0}",_s);
 
-
-                //string gif = ReadResource(_orig);
                 Bitmap image = new Bitmap(assembly.GetManifestResourceStream(_orig));
                 string img = Base64Encoded(image);
 
@@ -61,14 +50,11 @@ namespace GINtool
                 html = html.Replace(rep,_nwe);
             }
 
-            webBrowser1.DocumentText = html; // ReadResource("GINtool.Resources.user_manual.htm");
+            // show text in webbrowser component
+            webBrowser1.DocumentText = html; 
         }
-
-        public void LoadHtml()
-        {
-            //string html = Properties.Settings.Default.htmlHelp;
-          
-        }
+        
+     
 
         public string ReadResource(string resourceName)
         {

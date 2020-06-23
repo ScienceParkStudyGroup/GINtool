@@ -39,7 +39,7 @@
       <Value Profile="(Default)">gene</Value>
     </Setting>
     <Setting Name="operonFile" Type="System.String" Scope="User">
-      <Value Profile="(Default)">not defined yet</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="pvalue_cutoff" Type="System.Single" Scope="User">
       <Value Profile="(Default)">0.05</Value>
