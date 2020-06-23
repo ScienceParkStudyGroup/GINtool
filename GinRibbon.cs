@@ -746,7 +746,9 @@ namespace GINtool
                 {
                     Excel.Range lR = all.Cells[r + 2, c + 1];
                     int UpPos = clrRow[c].ToString().IndexOf("#");
-                    int DownPos = clrRow[c].ToString().IndexOf("@");                                        
+                    int DownPos = clrRow[c].ToString().IndexOf("@");
+                    int UpColor = clrRow[c].ToString().IndexOf('&');
+                    int DownColor = clrRow[c].ToString().IndexOf('!');
 
                     lR.Value = clrRow[c];
 
@@ -758,17 +760,41 @@ namespace GINtool
 
                     if (UpPos > 0)
                     {
-                        Excel.Characters lChar = lR.Characters[UpPos+1, 1];
+                        Excel.Characters lChar = lR.Characters[UpPos+1, 1];                        
                         lChar.Text = "á"; // the arrow up
                         lChar.Font.Name = "Wingdings";
-                        lR.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGreen);
+
+                        if (UpColor > 0)
+                        {
+                            // delete the & symbol
+                            lR.Characters[UpColor+1,1].Delete();
+                            lR.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGreen);
+                        }
+                        else
+                        {
+                            // delete the ! symbol
+                            lR.Characters[DownColor+1,1].Delete();
+                            lR.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightSalmon);
+                        }
                     }
                     else
                     {
-                        Excel.Characters lChar = lR.Characters[DownPos + 1, 1];
-                        lChar.Text = "â"; // the arrow down
+                        Excel.Characters lChar = lR.Characters[DownPos + 1, 2];
+                        lChar.Text = "â "; // the arrow down
                         lChar.Font.Name = "Wingdings";
-                        lR.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightSalmon);
+                        if (DownColor > 0)
+                        {
+                            // delete the ! symbol
+                            lR.Characters[DownColor+1,1].Delete();
+                            lR.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightSalmon);
+                        }
+                        else
+                        {
+                            // delete the & symbol
+                            lR.Characters[UpColor+1,1].Delete();
+                            lR.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGreen);
+                        }
+                            
                     }                                            
                 }
             }
@@ -863,7 +889,8 @@ namespace GINtool
 
                         // check association direction 
                         bool posAssoc = lLst[r].UP.Contains(i) ? true : false;
-
+                        // depending on the association in the table the cell color is red or green
+                        char clrC = posAssoc ? '&' : '!';
 
                         SysData.DataRow[] lHit = aUsageTbl.Select(string.Format("Regulon = '{0}'", lLst[r].REGULONS[i]));
                         double nrUP = Double.Parse(lHit[0]["nr_UP"].ToString());
@@ -879,9 +906,9 @@ namespace GINtool
                         if ((posAssoc && FC > 0)||(!posAssoc && FC<0))
                         {
                             if (nrUP > nrDOWN)
-                                lVal = percUP.ToString("P0") + "# " + percRel.ToString("P0") + "-tot";
+                                lVal = percUP.ToString("P0") + "@"+ clrC + percRel.ToString("P0") + "-tot";
                             if (nrDOWN > nrUP)
-                                lVal = percDOWN.ToString("P0") + "@ " + percRel.ToString("P0") + "-tot";
+                                lVal = percDOWN.ToString("P0") + "#" +clrC + percRel.ToString("P0") + "-tot";
                         }
                         if (nrUP == nrDOWN)
                             lVal = "0%-" + percRel.ToString("P0") + "-tot";
@@ -890,9 +917,19 @@ namespace GINtool
                         if ((posAssoc && FC < 0) || (!posAssoc && FC > 0))
                         {
                             if (nrUP > nrDOWN)
-                                lVal = (1.0-percUP).ToString("P0") + "@ " + percRel.ToString("P0") + "-tot";
+                            {                                
+                                if(percUP < 1.0)
+                                    lVal = (1.0 - percUP).ToString("P0") + "#" +clrC + percRel.ToString("P0") + "-tot";
+                                else
+                                    lVal = percUP.ToString("P0") + "@" + clrC + percRel.ToString("P0") + "-tot";
+                            }
                             if (nrDOWN > nrUP)
-                                lVal = (1.0-percDOWN).ToString("P0") + "# " + percRel.ToString("P0") + "-tot";
+                            {
+                                if(percDOWN<1.0)
+                                    lVal = (1.0 - percDOWN).ToString("P0") + "@" + clrC + percRel.ToString("P0") + "-tot";
+                                else
+                                    lVal = percDOWN.ToString("P0") + "#"+clrC + percRel.ToString("P0") + "-tot";
+                            }
                         }                               
                             
                         lRow[string.Format("Regulon_{0}", i + 1)] = lLst[r].REGULONS[i] + " " + lVal;
