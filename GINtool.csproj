@@ -132,6 +132,7 @@
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Forms.DataVisualization" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
@@ -193,6 +194,7 @@
     <Compile Include="dlgUpDown.Designer.cs">
       <DependentUpon>dlgUpDown.cs</DependentUpon>
     </Compile>
+    <Compile Include="EnrichmentAnalysis.cs" />
     <Compile Include="ExcelUtils.cs" />
     <Compile Include="GinRibbon.cs">
       <SubType>Component</SubType>
@@ -303,6 +305,13 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\barchart.png" />
+    <None Include="Resources\BWJrU_0005_Excel.png" />
+    <None Include="Resources\BWJrU_0000_Berry.png" />
+    <None Include="Resources\BWJrU_0001_Bright.png" />
+    <None Include="Resources\BWJrU_0002_Bright-Pastel.png" />
+    <None Include="Resources\BWJrU_0003_Chocolate.png" />
+    <None Include="Resources\BWJrU_0007_Gray.png" />
     <Content Include="Resources\Resources.txt" />
   </ItemGroup>
   <PropertyGroup>

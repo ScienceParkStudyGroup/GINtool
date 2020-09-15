@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Data;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
@@ -12,6 +14,7 @@ namespace GINtool
 
     public partial class GinRibbon
     {
+        #region inits
 
         bool gOperonOutput = false;
         SysData.DataTable gRefWB = null;
@@ -20,12 +23,20 @@ namespace GINtool
         string[] gColNames = null;
         Excel.Application gApplication = null;
 
+        bool gCompositPlot = false;
+        bool gQPlot = false;
+
         static List<string> gAvailItems = null;
         static List<string> gUpItems = null;
         static List<string> gDownItems = null;
 
         List<int> gExcelErrorValues = null;
-   
+
+        EnrichmentAnalysis enrichmentAnalysis1 = null;
+
+        #endregion
+
+        #region database_utils
         private List<string> propertyItems(string property)
         {
             StringCollection myCol = (StringCollection)Properties.Settings.Default[property];
@@ -63,6 +74,9 @@ namespace GINtool
             SysData.DataTable dt_unique = GetDistinctRecords(dt, gColNames);
             return dt_unique.Select();
         }
+        #endregion
+
+
 
 
         private bool LoadOperonData()
@@ -158,6 +172,21 @@ namespace GINtool
             ddGene.Enabled = false;
             ddRegulon.Enabled = false;
             ddDir.Enabled = false;
+
+            edtMaxGroups.Enabled = false;
+            btnPalette.Enabled = false;
+
+            cbComposit.Checked = Properties.Settings.Default.compositPlot;
+            cbQplot.Checked = Properties.Settings.Default.qPlot;
+            gCompositPlot = cbComposit.Checked;
+            gQPlot = cbQplot.Enabled;
+
+            if (cbComposit.Checked || cbQplot.Enabled)
+                if (enrichmentAnalysis1 == null)
+                {
+                    enrichmentAnalysis1 = new EnrichmentAnalysis(gApplication);
+                }
+
             EnableOutputOptions(false);
 
             gExcelErrorValues = ((int[])Enum.GetValues(typeof(ExcelUtils.CVErrEnum))).ToList();
@@ -181,7 +210,9 @@ namespace GINtool
         {
             if (gApplication != null)
             {
-                return (Excel.Range)gApplication.Selection;
+                try { return (Excel.Range)gApplication.Selection; }
+                catch (Exception e) { return null; }
+                
             }
             return null;
         }
@@ -192,7 +223,8 @@ namespace GINtool
             ebMid.Enabled = enable;
             ebHigh.Enabled = enable;
             editMinPval.Enabled = enable;            
-            splitButton3.Enabled = enable;            
+            splitButton3.Enabled = enable;
+            splitbtnEA.Enabled = enable;
         }
 
 
@@ -209,27 +241,28 @@ namespace GINtool
         {
 
             Excel.FormatConditions fcs = columnRange.FormatConditions;
-            var formatCondition = fcs.Add(Excel.XlFormatConditionType.xlDatabar);
 
-            formatCondition.MinPoint.Modify(Excel.XlConditionValueTypes.xlConditionValueAutomaticMin);
-            formatCondition.MaxPoint.Modify(Excel.XlConditionValueTypes.xlConditionValueAutomaticMax);
+            var formatCondition = fcs.Add(Microsoft.Office.Interop.Excel.XlFormatConditionType.xlDatabar);
+
+            formatCondition.MinPoint.Modify(Microsoft.Office.Interop.Excel.XlConditionValueTypes.xlConditionValueAutomaticMin);
+            formatCondition.MaxPoint.Modify(Microsoft.Office.Interop.Excel.XlConditionValueTypes.xlConditionValueAutomaticMax);
 
 
-            formatCondition.BarFillType = Excel.XlGradientFillType.xlGradientFillPath;
-            formatCondition.Direction = Excel.Constants.xlContext;
-            formatCondition.NegativeBarFormat.ColorType = Excel.XlDataBarNegativeColorType.xlDataBarColor;
+            formatCondition.BarFillType = Microsoft.Office.Interop.Excel.XlGradientFillType.xlGradientFillPath;
+            formatCondition.Direction = Microsoft.Office.Interop.Excel.Constants.xlContext;
+            formatCondition.NegativeBarFormat.ColorType = Microsoft.Office.Interop.Excel.XlDataBarNegativeColorType.xlDataBarColor;
 
             formatCondition.BarColor.Color = 8700771; // System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGreen);
             formatCondition.BarColor.TintAndShade = 0; // System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGreen);
 
 
             formatCondition.BarBorder.Color.Color = 8700771; // System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGreen);
-            formatCondition.BarBorder.Type = Excel.XlDataBarBorderType.xlDataBarBorderSolid;
+            formatCondition.BarBorder.Type = Microsoft.Office.Interop.Excel.XlDataBarBorderType.xlDataBarBorderSolid;
 
-            formatCondition.NegativeBarFormat.BorderColorType = Excel.XlDataBarNegativeColorType.xlDataBarColor;
-            formatCondition.NegativeBarFormat.Parent.BarBorder.Type = Excel.XlDataBarBorderType.xlDataBarBorderSolid;
+            formatCondition.NegativeBarFormat.BorderColorType = Microsoft.Office.Interop.Excel.XlDataBarNegativeColorType.xlDataBarColor;
+            formatCondition.NegativeBarFormat.Parent.BarBorder.Type = Microsoft.Office.Interop.Excel.XlDataBarBorderType.xlDataBarBorderSolid;
 
-            formatCondition.AxisPosition = Excel.XlDataBarAxisPosition.xlDataBarAxisAutomatic;
+            formatCondition.AxisPosition = Microsoft.Office.Interop.Excel.XlDataBarAxisPosition.xlDataBarAxisAutomatic;
 
             formatCondition.AxisColor.Color = 0; // System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.White);
             formatCondition.AxisColor.TintAndShade = 0;
@@ -383,6 +416,35 @@ namespace GINtool
             Excel.Range theInputCells = GetActiveCell();
             Excel.Worksheet theSheet = GetActiveShet();
 
+            if (theSheet == null)
+                return (null,null);
+
+            if (theSheet.Name.Contains("Plot_"))
+            {
+                MessageBox.Show("Please select 3 columns (first P-Value, second FC, third BSU)");
+                return (null, null);             
+            }
+
+            if (theSheet.Name.Contains("Summary_"))
+            {
+                MessageBox.Show("Please select 3 columns (first P-Value, second FC, third BSU)");
+                return (null, null);
+            }
+
+            if (theSheet.Name.Contains("Combined_"))
+            {
+                MessageBox.Show("Please select 3 columns (first P-Value, second FC, third BSU)");
+                return (null, null);
+            }
+
+
+            if (theSheet.Name.Contains("Mapped_"))
+            {
+                MessageBox.Show("Please select 3 columns (first P-Value, second FC, third BSU)");
+                return (null, null);
+            }
+                
+
             int nrRows = theInputCells.Rows.Count;
             int startC = theInputCells.Column;
             int startR = theInputCells.Row;
@@ -513,21 +575,21 @@ namespace GINtool
             Excel.Range all = (Excel.Range)lNewSheet.get_Range(top, bottom);
             all.Merge();
             all.Value = "Observed Counts and directions";
-            all.HorizontalAlignment = Excel.Constants.xlCenter;
+            all.HorizontalAlignment = Microsoft.Office.Interop.Excel.Constants.xlCenter;
 
             top = lNewSheet.Cells[1, 13];
             bottom = lNewSheet.Cells[1, 20];
             all = (Excel.Range)lNewSheet.get_Range(top, bottom);
             all.Merge();
             all.Value = "Percentage";
-            all.HorizontalAlignment = Excel.Constants.xlCenter;
+            all.HorizontalAlignment = Microsoft.Office.Interop.Excel.Constants.xlCenter;
 
             top = lNewSheet.Cells[1, 21];
             bottom = lNewSheet.Cells[1, 22];
             all = (Excel.Range)lNewSheet.get_Range(top, bottom);
             all.Merge();
             all.Value = "Logical direction";
-            all.HorizontalAlignment = Excel.Constants.xlCenter;
+            all.HorizontalAlignment = Microsoft.Office.Interop.Excel.Constants.xlCenter;
 
             lNewSheet.Cells[2, col++] = "Regulon";
             lNewSheet.Cells[2, col++] = "Total number in database";
@@ -1039,6 +1101,7 @@ namespace GINtool
             lTableCombine.Columns.Add(col);
 
 
+            // file the table
             foreach (string reg in lUnique)
             {
                 int up1 = 0;
@@ -1267,7 +1330,11 @@ namespace GINtool
             ddDir.Enabled = true;
             ddGene.Enabled = true;
             btRegDirMap.Enabled = true;
+            edtMaxGroups.Enabled = true;
+            btnPalette.Enabled = true;
+
             gApplication.EnableEvents = true;
+
 
         }
 
@@ -1301,6 +1368,8 @@ namespace GINtool
             ddBSU.Enabled = enable;
             ddRegulon.Enabled = enable;
             ddGene.Enabled = enable;
+            edtMaxGroups.Enabled = enable;
+            btnPalette.Enabled = enable;
 
         }
     
@@ -1386,7 +1455,8 @@ namespace GINtool
         {
             validateTextBoxData(ebHigh);
         }
-    
+
+        #region main_routine
         private void btApply_Click(object sender, RibbonControlEventArgs e)
         {
             gApplication.EnableEvents = false;
@@ -1400,11 +1470,163 @@ namespace GINtool
                 CreateSummarySheet(lSummary);
                 SysData.DataTable lCombined = CreateCombinedTable(lCombineInfo, lList);
                 CreateCombinedSheet(lCombined);
+                if (gCompositPlot)
+                    CreateCompositPlot(lOutput, lSummary);
+                if (gQPlot)
+                    CreateQPlot(lOutput, lSummary);
             }
 
             gApplication.EnableEvents = true;
             gApplication.DisplayAlerts = true;
         }
+
+        private void CreateCompositPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary)
+        {
+            gApplication.EnableEvents = false;
+            gApplication.DisplayAlerts = false;
+
+            Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
+            renameWorksheet(lNewSheet, "CompositPlot");
+
+            SysData.DataTable _fc_BSU = ReformatResults(aOutput);
+
+
+            HashSet<string> lRegulons = new HashSet<string>();
+
+            //string.Format("[{0}] LIKE '%{1}%'", Properties.Settings.Default.referenceBSU, value
+
+            SysData.DataView lRelevant = aSummary.AsDataView();
+            lRelevant.RowFilter = "totrel>0";
+            SysData.DataTable dataTable = lRelevant.ToTable(); 
+               
+
+            foreach(SysData.DataRow row in dataTable.Rows)
+            {
+                lRegulons.Add(row.ItemArray[0].ToString());
+            }
+
+
+
+            //for (int r = 0; r < lRelevant.Length; r++)
+            //    lUnique.Add(lRelevant[r].["Regulon"]);
+            string subsets = string.Join(",", lRegulons.ToArray());
+            subsets = string.Join(",", subsets.Split(',').Select(x => $"'{x}'"));
+
+            SysData.DataView dataView = _fc_BSU.AsDataView();
+            dataView.RowFilter = String.Format("Regulon in ({0})", subsets);
+            dataTable = dataView.ToTable();
+
+            //SysData.DataRow[] geneTable = _fc_BSU.Select(String.Format("Regulon in ({0})", subsets));
+            Excel.Shape distPlot = enrichmentAnalysis1.DrawDistributionPlot(lRegulons, dataTable);
+
+
+            distPlot.Name = "distributionPlot";
+            distPlot.Copy();
+
+            Excel.Range aRange = lNewSheet.Cells[1,1];
+            lNewSheet.Paste(aRange);
+
+            foreach (Excel.Shape aShape in lNewSheet.Shapes)
+            {
+                if (aShape.Name == "distributionPlot")
+                {
+                    aShape.Top = 10;
+                    aShape.Left = 50;
+                    aShape.Width = 700;
+                    aShape.Height = 300;
+
+                }
+            }
+
+
+
+
+            Excel.Shape eaPlot = enrichmentAnalysis1.DrawEnrichmentChart(lRegulons, dataTable);
+
+            eaPlot.Name = "eaPlot";
+            eaPlot.Copy();
+
+            aRange = lNewSheet.Cells[1, 1];
+            lNewSheet.Paste(aRange);
+
+            foreach (Excel.Shape aShape in lNewSheet.Shapes)
+            {
+                if (aShape.Name == "eaPlot")
+                {
+                    aShape.Top = 310;
+                    aShape.Left = 50;
+                    aShape.Width = 400;
+                    //aShape.Height = 500;
+
+                }
+            }
+
+
+
+
+
+            gApplication.EnableEvents = true;
+            gApplication.DisplayAlerts = true;
+            //throw new NotImplementedException();
+        }
+
+
+        private void CreateQPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary)
+        {
+            gApplication.EnableEvents = false;
+            gApplication.DisplayAlerts = false;
+
+            Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
+            renameWorksheet(lNewSheet, "QPlot");
+
+            #region format_data
+            SysData.DataTable _fc_BSU = ReformatResults(aOutput);
+            HashSet<string> lRegulons = new HashSet<string>();
+
+            SysData.DataView lRelevant = aSummary.AsDataView();
+            lRelevant.RowFilter = "totrel>0";
+            SysData.DataTable dataTable = lRelevant.ToTable();
+
+
+            foreach (SysData.DataRow row in dataTable.Rows)
+            {
+                lRegulons.Add(row.ItemArray[0].ToString());
+            }
+
+            string subsets = string.Join(",", lRegulons.ToArray());
+            subsets = string.Join(",", subsets.Split(',').Select(x => $"'{x}'"));
+
+            SysData.DataView dataView = _fc_BSU.AsDataView();
+            dataView.RowFilter = String.Format("Regulon in ({0})", subsets);
+            dataTable = dataView.ToTable();
+            #endregion
+
+
+            Excel.Shape qPlot = enrichmentAnalysis1.DrawQPlot(lRegulons, dataTable);
+
+            qPlot.Name = "qPlot";
+            qPlot.Copy();
+
+            Excel.Range aRange = lNewSheet.Cells[1, 1];
+            lNewSheet.Paste(aRange);
+
+            foreach (Excel.Shape aShape in lNewSheet.Shapes)
+            {
+                if (aShape.Name == "qPlot")
+                {
+                    aShape.Top = 10;
+                    aShape.Left = 10;
+                    aShape.Width = 900;
+                    aShape.Height = 800;
+
+                }
+            }
+
+            gApplication.EnableEvents = true;
+            gApplication.DisplayAlerts = true;
+        }
+
+        #endregion
 
         private void button1_Click(object sender, RibbonControlEventArgs e)
         {
@@ -1493,6 +1715,126 @@ namespace GINtool
             Properties.Settings.Default.operonFile = "";
             Properties.Settings.Default.operonSheet = "";
             btnOperonFile.Label = "No file selected";
+        }
+
+        private void btnEA_Click(object sender, RibbonControlEventArgs e)
+        {
+            
+
+            Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
+            renameWorksheet(lNewSheet, "Plots_");
+            EnrichmentAnalysis enrichmentAnalysis = new EnrichmentAnalysis(gApplication);
+            
+            //Excel.Shape distPlot = enrichmentAnalysis.DrawEnrichmentChart();
+            //distPlot.Name = "distributionPlot";
+            //distPlot.Copy();
+            
+            //Excel.Range aRange = lNewSheet.Cells[4, 4];
+            //lNewSheet.Paste(aRange);
+
+            //Excel.Shape dc2 = distPlot.Duplicate();
+            //dc2.Name = "otherPlot";
+            //dc2.Copy();
+            //lNewSheet.Paste();
+
+
+            //float p0_height = 0;
+            //float p0_width = 0;
+
+
+            //int shapenr = 0;
+            //foreach(Excel.Shape aShape in lNewSheet.Shapes)
+            //{
+               
+            //    if (aShape.Name == "distributionPlot")
+            //    {
+            //        aShape.Top = 10;
+            //        aShape.Left = 100;
+            //        aShape.Width = 500;
+            //        aShape.Height = 300;
+
+            //        p0_height = aShape.Height;
+            //        p0_width = aShape.Width;
+            //    }
+            //    else
+            //    {
+            //        aShape.Top = 10;
+            //        aShape.Left = p0_width+100;
+            //        aShape.Height = p0_height;
+            //    }
+
+            //    shapenr++;
+
+            //}
+
+
+            //dc2.Top = 10;
+            //dc2.Left = 600; // distPlot.Width+distPlot.Left;
+            //dc2.Width = 100;
+
+
+        }
+
+        private void clrExcel_Click(object sender, RibbonControlEventArgs e)
+        {
+            btnPalette.Image = clrExcel.Image;
+            Properties.Settings.Default.defaultPalette = (int)System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Excel;
+        }
+
+        private void clrGray_Click(object sender, RibbonControlEventArgs e)
+        {
+            btnPalette.Image = clrGray.Image;
+            Properties.Settings.Default.defaultPalette = (int)System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Grayscale;
+
+        }
+
+
+        private void cbComposit_Click(object sender, RibbonControlEventArgs e)
+        {
+            gCompositPlot = cbComposit.Checked;
+            Properties.Settings.Default.compositPlot = gCompositPlot;
+            if (gCompositPlot)
+                if (enrichmentAnalysis1 == null)
+                {
+                    enrichmentAnalysis1 = new EnrichmentAnalysis(gApplication);
+                }
+        }
+
+        private void cbQplot_Click(object sender, RibbonControlEventArgs e)
+        {
+            gQPlot = cbQplot.Checked;
+            Properties.Settings.Default.qPlot = gQPlot;
+            
+        }
+
+        private void clrGray_Click_1(object sender, RibbonControlEventArgs e)
+        {
+            btnPalette.Image = clrGray.Image;
+            Properties.Settings.Default.defaultPalette = (int)System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Grayscale;
+        }
+
+        private void clrBerry_Click(object sender, RibbonControlEventArgs e)
+        {
+            btnPalette.Image = clrBerry.Image;
+            Properties.Settings.Default.defaultPalette = (int)System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Berry;
+        }
+
+        private void clrBright_Click(object sender, RibbonControlEventArgs e)
+        {
+            btnPalette.Image = clrBright.Image;
+            Properties.Settings.Default.defaultPalette = (int)System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Bright;
+        }
+
+        private void clrBrightPastel_Click(object sender, RibbonControlEventArgs e)
+        {
+            btnPalette.Image = clrBrightPastel.Image;
+            Properties.Settings.Default.defaultPalette = (int)System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.BrightPastel;
+        }
+
+        private void clrChocolate_Click(object sender, RibbonControlEventArgs e)
+        {
+            btnPalette.Image = clrChocolate.Image;
+            Properties.Settings.Default.defaultPalette = (int)System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Chocolate;
         }
     }
 
