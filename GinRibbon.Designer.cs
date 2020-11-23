@@ -453,6 +453,7 @@
             // 
             this.edtMaxGroups.Label = "max groups";
             this.edtMaxGroups.Name = "edtMaxGroups";
+            this.edtMaxGroups.Text = null;
             // 
             // GinRibbon
             // 

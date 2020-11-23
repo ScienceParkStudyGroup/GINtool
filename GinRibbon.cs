@@ -749,22 +749,31 @@ namespace GINtool
             // get a list of all sheet names
             List<string> _sheets = new List<string>();
 
-            foreach (Excel.Worksheet sheet in gApplication.Sheets)
-                _sheets.Add(sheet.Name);
+            foreach (var sheet in gApplication.Sheets)
+            {   
+                if(sheet is Excel.Chart)
+                    _sheets.Add(((Excel.Chart)sheet).Name);
+                else
+                    _sheets.Add(((Excel.Worksheet)sheet).Name);
+            }
 
             return _sheets;
                 
         }
 
 
-        private void renameWorksheet(Excel.Worksheet aSheet, string wsBase)
+        private void renameWorksheet(object aSheet, string wsBase)
         {
             // create a sheetname starting with wsBase
             List<string> currentSheets = listSheets();
             int s = 1;
             while (currentSheets.Contains(string.Format("{0}_{1}", wsBase, s)))
                 s += 1;
-            aSheet.Name = string.Format("{0}_{1}", wsBase, s);
+            
+            if(aSheet is Excel.Chart)
+                ((Excel.Chart) aSheet).Name = string.Format("{0}_{1}", wsBase, s);
+            else
+                ((Excel.Worksheet)(aSheet)).Name = string.Format("{0}_{1}", wsBase, s);
         }
 
         private void CreateCombinedSheet(SysData.DataTable aTable)
@@ -1485,8 +1494,8 @@ namespace GINtool
             gApplication.EnableEvents = false;
             gApplication.DisplayAlerts = false;
 
-            Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
-            renameWorksheet(lNewSheet, "CompositPlot");
+            //Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
+            //renameWorksheet(lNewSheet, "CompositPlot");
 
             SysData.DataTable _fc_BSU = ReformatResults(aOutput);
 
@@ -1516,50 +1525,55 @@ namespace GINtool
             dataView.RowFilter = String.Format("Regulon in ({0})", subsets);
             dataTable = dataView.ToTable();
 
+
+            //FastDtToExcel(dataTable, lNewSheet, 1, 1, dataTable.Rows.Count,dataTable.Columns.Count);
+
             //SysData.DataRow[] geneTable = _fc_BSU.Select(String.Format("Regulon in ({0})", subsets));
-            Excel.Shape distPlot = enrichmentAnalysis1.DrawDistributionPlot(lRegulons, dataTable);
+            //Excel.Shape distPlot = enrichmentAnalysis1.DrawDistributionPlot(lRegulons, dataTable,);
 
+            //distPlot.Name = "distributionPlot";
+            //distPlot.Copy();
 
-            distPlot.Name = "distributionPlot";
-            distPlot.Copy();
+            //Excel.Range aRange = lNewSheet.Cells[1, 1];
+            //lNewSheet.Paste(aRange);
 
-            Excel.Range aRange = lNewSheet.Cells[1,1];
-            lNewSheet.Paste(aRange);
+            //foreach (Excel.Shape aShape in lNewSheet.Shapes)
+            //{
+            //    if (aShape.Name == "distributionPlot")
+            //    {
+            //        aShape.Top = 10;
+            //        aShape.Left = 50;
+            //        aShape.Width = 700;
+            //        aShape.Height = 300;
 
-            foreach (Excel.Shape aShape in lNewSheet.Shapes)
-            {
-                if (aShape.Name == "distributionPlot")
-                {
-                    aShape.Top = 10;
-                    aShape.Left = 50;
-                    aShape.Width = 700;
-                    aShape.Height = 300;
+            //    }
+            //}
 
-                }
-            }
+            
 
+   
 
+            //Excel.Worksheet lNewSheet = (Excel.Worksheet) 
+             Excel.Chart aChart = enrichmentAnalysis1.CreateExcelChart(lRegulons, dataTable);
+             renameWorksheet(aChart, "CompositPlot");
 
+            //eaPlot.Name = "eaPlot";
+            //eaPlot.Copy();
 
-            Excel.Shape eaPlot = enrichmentAnalysis1.DrawEnrichmentChart(lRegulons, dataTable);
+            //aRange = lNewSheet.Cells[1, 1];
+            //lNewSheet.Paste(aRange);
 
-            eaPlot.Name = "eaPlot";
-            eaPlot.Copy();
+            //foreach (Excel.Shape aShape in lNewSheet.Shapes)
+            //{
+            //    if (aShape.Name == "eaPlot")
+            //    {
+            //        aShape.Top = 310;
+            //        aShape.Left = 50;
+            //        aShape.Width = 400;
+            //        //aShape.Height = 500;
 
-            aRange = lNewSheet.Cells[1, 1];
-            lNewSheet.Paste(aRange);
-
-            foreach (Excel.Shape aShape in lNewSheet.Shapes)
-            {
-                if (aShape.Name == "eaPlot")
-                {
-                    aShape.Top = 310;
-                    aShape.Left = 50;
-                    aShape.Width = 400;
-                    //aShape.Height = 500;
-
-                }
-            }
+            //    }
+            //}
 
 
 
@@ -1602,25 +1616,25 @@ namespace GINtool
             #endregion
 
 
-            Excel.Shape qPlot = enrichmentAnalysis1.DrawQPlot(lRegulons, dataTable);
+            //Excel.Shape qPlot = enrichmentAnalysis1.DrawQPlot(lRegulons, dataTable);
 
-            qPlot.Name = "qPlot";
-            qPlot.Copy();
+            //qPlot.Name = "qPlot";
+            //qPlot.Copy();
 
-            Excel.Range aRange = lNewSheet.Cells[1, 1];
-            lNewSheet.Paste(aRange);
+            //Excel.Range aRange = lNewSheet.Cells[1, 1];
+            //lNewSheet.Paste(aRange);
 
-            foreach (Excel.Shape aShape in lNewSheet.Shapes)
-            {
-                if (aShape.Name == "qPlot")
-                {
-                    aShape.Top = 10;
-                    aShape.Left = 10;
-                    aShape.Width = 900;
-                    aShape.Height = 800;
+            //foreach (Excel.Shape aShape in lNewSheet.Shapes)
+            //{
+            //    if (aShape.Name == "qPlot")
+            //    {
+            //        aShape.Top = 10;
+            //        aShape.Left = 10;
+            //        aShape.Width = 900;
+            //        aShape.Height = 800;
 
-                }
-            }
+            //    }
+            //}
 
             gApplication.EnableEvents = true;
             gApplication.DisplayAlerts = true;
