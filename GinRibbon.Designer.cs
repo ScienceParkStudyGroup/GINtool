@@ -41,10 +41,6 @@
             this.but_pvalues = this.Factory.CreateRibbonButton();
             this.but_fc = this.Factory.CreateRibbonButton();
             this.btLoad = this.Factory.CreateRibbonButton();
-            this.splitbtnEA = this.Factory.CreateRibbonSplitButton();
-            this.cbComposit = this.Factory.CreateRibbonCheckBox();
-            this.cbQplot = this.Factory.CreateRibbonCheckBox();
-            this.separator1 = this.Factory.CreateRibbonSeparator();
             this.tglTaskPane = this.Factory.CreateRibbonToggleButton();
             this.group3 = this.Factory.CreateRibbonGroup();
             this.splitButton1 = this.Factory.CreateRibbonSplitButton();
@@ -56,6 +52,11 @@
             this.btnResetOperonFile = this.Factory.CreateRibbonButton();
             this.separator4 = this.Factory.CreateRibbonSeparator();
             this.btnOperonFile = this.Factory.CreateRibbonButton();
+            this.splitButton4 = this.Factory.CreateRibbonSplitButton();
+            this.btnSelectCatFile = this.Factory.CreateRibbonButton();
+            this.btnClearCatFile = this.Factory.CreateRibbonButton();
+            this.separator1 = this.Factory.CreateRibbonSeparator();
+            this.btnCatFile = this.Factory.CreateRibbonButton();
             this.group6 = this.Factory.CreateRibbonGroup();
             this.ddBSU = this.Factory.CreateRibbonDropDown();
             this.ddRegulon = this.Factory.CreateRibbonDropDown();
@@ -70,14 +71,9 @@
             this.group4 = this.Factory.CreateRibbonGroup();
             this.editMinPval = this.Factory.CreateRibbonEditBox();
             this.grpPref = this.Factory.CreateRibbonGroup();
-            this.btnPalette = this.Factory.CreateRibbonGallery();
-            this.clrBerry = this.Factory.CreateRibbonButton();
-            this.clrBright = this.Factory.CreateRibbonButton();
-            this.clrBrightPastel = this.Factory.CreateRibbonButton();
-            this.clrChocolate = this.Factory.CreateRibbonButton();
-            this.clrExcel = this.Factory.CreateRibbonButton();
-            this.clrGray = this.Factory.CreateRibbonButton();
-            this.edtMaxGroups = this.Factory.CreateRibbonEditBox();
+            this.cbOrderFC = this.Factory.CreateRibbonCheckBox();
+            this.cbUseCategories = this.Factory.CreateRibbonCheckBox();
+            this.btPlot = this.Factory.CreateRibbonButton();
             this.TabGINtool.SuspendLayout();
             this.group1.SuspendLayout();
             this.group3.SuspendLayout();
@@ -105,7 +101,6 @@
             this.group1.Items.Add(this.btApply);
             this.group1.Items.Add(this.splitButton3);
             this.group1.Items.Add(this.btLoad);
-            this.group1.Items.Add(this.splitbtnEA);
             this.group1.Items.Add(this.tglTaskPane);
             this.group1.Label = "main";
             this.group1.Name = "group1";
@@ -159,32 +154,6 @@
             this.btLoad.ShowImage = true;
             this.btLoad.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btLoad_Click);
             // 
-            // splitbtnEA
-            // 
-            this.splitbtnEA.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-            this.splitbtnEA.Image = global::GINtool.Properties.Resources.barchart;
-            this.splitbtnEA.Items.Add(this.cbComposit);
-            this.splitbtnEA.Items.Add(this.cbQplot);
-            this.splitbtnEA.Items.Add(this.separator1);
-            this.splitbtnEA.Label = "enrichment plots";
-            this.splitbtnEA.Name = "splitbtnEA";
-            // 
-            // cbComposit
-            // 
-            this.cbComposit.Label = "composit plot";
-            this.cbComposit.Name = "cbComposit";
-            this.cbComposit.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.cbComposit_Click);
-            // 
-            // cbQplot
-            // 
-            this.cbQplot.Label = "q plot";
-            this.cbQplot.Name = "cbQplot";
-            this.cbQplot.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.cbQplot_Click);
-            // 
-            // separator1
-            // 
-            this.separator1.Name = "separator1";
-            // 
             // tglTaskPane
             // 
             this.tglTaskPane.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
@@ -198,6 +167,7 @@
             // 
             this.group3.Items.Add(this.splitButton1);
             this.group3.Items.Add(this.splitButton2);
+            this.group3.Items.Add(this.splitButton4);
             this.group3.Label = "reference files";
             this.group3.Name = "group3";
             // 
@@ -271,6 +241,42 @@
             this.btnOperonFile.Label = "no file selected";
             this.btnOperonFile.Name = "btnOperonFile";
             this.btnOperonFile.ShowImage = true;
+            // 
+            // splitButton4
+            // 
+            this.splitButton4.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.splitButton4.Image = global::GINtool.Properties.Resources.swatches;
+            this.splitButton4.Items.Add(this.btnSelectCatFile);
+            this.splitButton4.Items.Add(this.btnClearCatFile);
+            this.splitButton4.Items.Add(this.separator1);
+            this.splitButton4.Items.Add(this.btnCatFile);
+            this.splitButton4.Label = "category file";
+            this.splitButton4.Name = "splitButton4";
+            // 
+            // btnSelectCatFile
+            // 
+            this.btnSelectCatFile.Image = global::GINtool.Properties.Resources.cursor;
+            this.btnSelectCatFile.Label = "select";
+            this.btnSelectCatFile.Name = "btnSelectCatFile";
+            this.btnSelectCatFile.ShowImage = true;
+            this.btnSelectCatFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnSelectCatFile_Click);
+            // 
+            // btnClearCatFile
+            // 
+            this.btnClearCatFile.Image = global::GINtool.Properties.Resources.denied;
+            this.btnClearCatFile.Label = "clear";
+            this.btnClearCatFile.Name = "btnClearCatFile";
+            this.btnClearCatFile.ShowImage = true;
+            // 
+            // separator1
+            // 
+            this.separator1.Name = "separator1";
+            // 
+            // btnCatFile
+            // 
+            this.btnCatFile.Label = "no file selected";
+            this.btnCatFile.Name = "btnCatFile";
+            this.btnCatFile.ShowImage = true;
             // 
             // group6
             // 
@@ -383,77 +389,32 @@
             // 
             // grpPref
             // 
-            this.grpPref.Items.Add(this.btnPalette);
-            this.grpPref.Items.Add(this.edtMaxGroups);
-            this.grpPref.Label = "preferences";
+            this.grpPref.Items.Add(this.cbOrderFC);
+            this.grpPref.Items.Add(this.cbUseCategories);
+            this.grpPref.Items.Add(this.btPlot);
+            this.grpPref.Label = "plot options";
             this.grpPref.Name = "grpPref";
             // 
-            // btnPalette
+            // cbOrderFC
             // 
-            this.btnPalette.Buttons.Add(this.clrBerry);
-            this.btnPalette.Buttons.Add(this.clrBright);
-            this.btnPalette.Buttons.Add(this.clrBrightPastel);
-            this.btnPalette.Buttons.Add(this.clrChocolate);
-            this.btnPalette.Buttons.Add(this.clrExcel);
-            this.btnPalette.Buttons.Add(this.clrGray);
-            this.btnPalette.Image = global::GINtool.Properties.Resources.BWJrU_0005_Excel;
-            this.btnPalette.Label = "color palette";
-            this.btnPalette.Name = "btnPalette";
-            this.btnPalette.ShowImage = true;
+            this.cbOrderFC.Label = "reverse order ";
+            this.cbOrderFC.Name = "cbOrderFC";
+            this.cbOrderFC.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.cbOrderFC_Click);
             // 
-            // clrBerry
+            // cbUseCategories
             // 
-            this.clrBerry.Image = global::GINtool.Properties.Resources.BWJrU_0000_Berry;
-            this.clrBerry.Label = "Berry";
-            this.clrBerry.Name = "clrBerry";
-            this.clrBerry.ShowImage = true;
-            this.clrBerry.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.clrBerry_Click);
+            this.cbUseCategories.Label = "use categories";
+            this.cbUseCategories.Name = "cbUseCategories";
+            this.cbUseCategories.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.cbUseCategories_Click);
             // 
-            // clrBright
+            // btPlot
             // 
-            this.clrBright.Image = global::GINtool.Properties.Resources.BWJrU_0001_Bright;
-            this.clrBright.Label = "Bright";
-            this.clrBright.Name = "clrBright";
-            this.clrBright.ShowImage = true;
-            this.clrBright.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.clrBright_Click);
-            // 
-            // clrBrightPastel
-            // 
-            this.clrBrightPastel.Image = global::GINtool.Properties.Resources.BWJrU_0002_Bright_Pastel;
-            this.clrBrightPastel.Label = "Bright Pastel";
-            this.clrBrightPastel.Name = "clrBrightPastel";
-            this.clrBrightPastel.ShowImage = true;
-            this.clrBrightPastel.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.clrBrightPastel_Click);
-            // 
-            // clrChocolate
-            // 
-            this.clrChocolate.Image = global::GINtool.Properties.Resources.BWJrU_0003_Chocolate;
-            this.clrChocolate.Label = "Chocolate";
-            this.clrChocolate.Name = "clrChocolate";
-            this.clrChocolate.ShowImage = true;
-            this.clrChocolate.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.clrChocolate_Click);
-            // 
-            // clrExcel
-            // 
-            this.clrExcel.Image = global::GINtool.Properties.Resources.BWJrU_0005_Excel;
-            this.clrExcel.Label = "Excel";
-            this.clrExcel.Name = "clrExcel";
-            this.clrExcel.ShowImage = true;
-            this.clrExcel.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.clrExcel_Click);
-            // 
-            // clrGray
-            // 
-            this.clrGray.Image = global::GINtool.Properties.Resources.BWJrU_0007_Gray;
-            this.clrGray.Label = "Gray";
-            this.clrGray.Name = "clrGray";
-            this.clrGray.ShowImage = true;
-            this.clrGray.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.clrGray_Click_1);
-            // 
-            // edtMaxGroups
-            // 
-            this.edtMaxGroups.Label = "max groups";
-            this.edtMaxGroups.Name = "edtMaxGroups";
-            this.edtMaxGroups.Text = null;
+            this.btPlot.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.btPlot.Image = global::GINtool.Properties.Resources.barchart;
+            this.btPlot.Label = "make plots";
+            this.btPlot.Name = "btPlot";
+            this.btPlot.ShowImage = true;
+            this.btPlot.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btPlot_Click);
             // 
             // GinRibbon
             // 
@@ -514,19 +475,15 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonButton but_fc;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btnResetOperonFile;
         internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton tglTaskPane;
-        internal Microsoft.Office.Tools.Ribbon.RibbonSplitButton splitbtnEA;
-        internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbComposit;
-        internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbQplot;
-        internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator1;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup grpPref;
-        internal Microsoft.Office.Tools.Ribbon.RibbonGallery btnPalette;
-        private Microsoft.Office.Tools.Ribbon.RibbonButton clrExcel;
-        private Microsoft.Office.Tools.Ribbon.RibbonButton clrBerry;
-        private Microsoft.Office.Tools.Ribbon.RibbonButton clrBright;
-        private Microsoft.Office.Tools.Ribbon.RibbonButton clrBrightPastel;
-        private Microsoft.Office.Tools.Ribbon.RibbonButton clrChocolate;
-        private Microsoft.Office.Tools.Ribbon.RibbonButton clrGray;
-        internal Microsoft.Office.Tools.Ribbon.RibbonEditBox edtMaxGroups;
+        internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbUseCategories;
+        internal Microsoft.Office.Tools.Ribbon.RibbonButton btPlot;
+        internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbOrderFC;
+        internal Microsoft.Office.Tools.Ribbon.RibbonSplitButton splitButton4;
+        internal Microsoft.Office.Tools.Ribbon.RibbonButton btnSelectCatFile;
+        internal Microsoft.Office.Tools.Ribbon.RibbonButton btnClearCatFile;
+        internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator1;
+        internal Microsoft.Office.Tools.Ribbon.RibbonButton btnCatFile;
     }
 
     partial class ThisRibbonCollection

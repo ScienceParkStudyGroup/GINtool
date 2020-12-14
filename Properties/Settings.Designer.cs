@@ -12,7 +12,7 @@ namespace GINtool.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.7.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.8.1.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -214,37 +214,37 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int defaultPalette {
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool useFCorder {
             get {
-                return ((int)(this["defaultPalette"]));
+                return ((bool)(this["useFCorder"]));
             }
             set {
-                this["defaultPalette"] = value;
+                this["useFCorder"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool compositPlot {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string categoryFile {
             get {
-                return ((bool)(this["compositPlot"]));
+                return ((string)(this["categoryFile"]));
             }
             set {
-                this["compositPlot"] = value;
+                this["categoryFile"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool qPlot {
+        [global::System.Configuration.DefaultSettingValueAttribute("Sheet1")]
+        public string catSheet {
             get {
-                return ((bool)(this["qPlot"]));
+                return ((string)(this["catSheet"]));
             }
             set {
-                this["qPlot"] = value;
+                this["catSheet"] = value;
             }
         }
     }

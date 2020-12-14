@@ -188,13 +188,19 @@
   -->
   <ItemGroup>
     <Compile Include="BsuRegulons.cs" />
+    <Compile Include="dlgTreeView.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="dlgTreeView.Designer.cs">
+      <DependentUpon>dlgTreeView.cs</DependentUpon>
+    </Compile>
     <Compile Include="dlgUpDown.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="dlgUpDown.Designer.cs">
       <DependentUpon>dlgUpDown.cs</DependentUpon>
     </Compile>
-    <Compile Include="EnrichmentAnalysis.cs" />
+    <Compile Include="PlotRoutines.cs" />
     <Compile Include="ExcelUtils.cs" />
     <Compile Include="GinRibbon.cs">
       <SubType>Component</SubType>
@@ -212,6 +218,9 @@
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
+    <EmbeddedResource Include="dlgTreeView.resx">
+      <DependentUpon>dlgTreeView.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="dlgUpDown.resx">
       <DependentUpon>dlgUpDown.cs</DependentUpon>
     </EmbeddedResource>
@@ -305,6 +314,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\swatches.png" />
     <None Include="Resources\barchart.png" />
     <None Include="Resources\BWJrU_0005_Excel.png" />
     <None Include="Resources\BWJrU_0000_Berry.png" />
