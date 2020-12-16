@@ -46,6 +46,8 @@ namespace GINtool
         SysData.DataTable gCombineInfo = null;
 
         int gDDcatLevel = 1;
+        private bool gPlotDistribution = false;
+        private bool gPlotClustered = false;
 
         //PlotRoutines gEnrichmentAnalysis;
 
@@ -264,6 +266,8 @@ namespace GINtool
             btnCatFile.Label = Properties.Settings.Default.categoryFile;
             cbOrderFC.Checked = Properties.Settings.Default.useFCorder;
 
+            
+
             if (Properties.Settings.Default.operonFile.Length == 0)
                 btnOperonFile.Label = "No file selected";
 
@@ -276,6 +280,7 @@ namespace GINtool
             ddGene.Enabled = false;
             ddRegulon.Enabled = false;
             ddDir.Enabled = false;
+            btPlot.Enabled = false;
             cbUseCategories.Enabled = false;
             gOrderFC = cbOrderFC.Checked;
             //edtMaxGroups.Enabled = false;
@@ -339,7 +344,19 @@ namespace GINtool
         {
             if (gApplication != null)
             {
-                return (Excel.Worksheet)gApplication.ActiveSheet;
+                if (gApplication.ActiveSheet is Excel.Chart)
+                {
+                    MessageBox.Show("Please activate data sheet and select columns with data");
+                    return null;
+                }
+                try
+                {
+                    return (Excel.Worksheet)gApplication.ActiveSheet;
+                }
+                catch(Exception ex)
+                {
+                    MessageBox.Show(ex.Message.ToString());
+                }
             }
             return null;
         }
@@ -904,9 +921,9 @@ namespace GINtool
             List<string> _sheets = new List<string>();
 
             foreach (var sheet in gApplication.Sheets)
-            {   
-                if(sheet is Excel.Chart)
-                    _sheets.Add(((Excel.Chart)sheet).Name);
+            {
+                if (sheet is Excel.Chart)                
+                    _sheets.Add(((Excel.Chart)sheet).Name);                
                 else
                     _sheets.Add(((Excel.Worksheet)sheet).Name);
             }
@@ -934,9 +951,13 @@ namespace GINtool
             int s = 1;
             while (currentSheets.Contains(string.Format("{0}_{1}", wsBase, s)))
                 s += 1;
-            
-            if(aSheet is Excel.Chart)
-                ((Excel.Chart) aSheet).Name = string.Format("{0}_{1}", wsBase, s);
+
+            if (aSheet is Excel.Chart)
+            {
+                Excel.ChartObject chartObject = (Excel.ChartObject)((Excel.Chart)aSheet).Parent;
+                //chartObject.
+                //((Excel.Chart)aSheet).Name = string.Format("{0}_{1}", wsBase, s);
+            }
             else
                 ((Excel.Worksheet)(aSheet)).Name = string.Format("{0}_{1}", wsBase, s);
 
@@ -944,86 +965,86 @@ namespace GINtool
         }
 
 
-        private Excel.Worksheet CreateCongruenceDataSheet(HashSet<string> aRegulons, SysData.DataTable aTable)
-        {
+        //private Excel.Worksheet CreateCongruenceDataSheet(HashSet<string> aRegulons, SysData.DataTable aTable)
+        //{
 
-            gApplication.StatusBar = "Generating sheet for plotting data";
-            gApplication.ScreenUpdating = false;
-            gApplication.DisplayAlerts = false;
-            gApplication.EnableEvents = false;
+        //    gApplication.StatusBar = "Generating sheet for plotting data";
+        //    gApplication.ScreenUpdating = false;
+        //    gApplication.DisplayAlerts = false;
+        //    gApplication.EnableEvents = false;
 
-            Excel.Worksheet aSheet = gApplication.Worksheets.Add();
+        //    Excel.Worksheet aSheet = gApplication.Worksheets.Add();
             
                         
 
-            int nrGenes = aTable.Rows.Count;
-            int nrRegulons = aRegulons.Count;
+        //    int nrGenes = aTable.Rows.Count;
+        //    int nrRegulons = aRegulons.Count;
 
-            List<float[]> fc = new List<float[]>();
+        //    List<float[]> fc = new List<float[]>();
 
-            SysData.DataView dataView = aTable.AsDataView();
+        //    SysData.DataView dataView = aTable.AsDataView();
 
-            double MMAX = (double)(float)aTable.Rows[0]["FC"];
-            double MMIN = (double)(float)aTable.Rows[0]["FC"];
-            List<double> meanFC = new List<double>();
+        //    double MMAX = (double)(float)aTable.Rows[0]["FC"];
+        //    double MMIN = (double)(float)aTable.Rows[0]["FC"];
+        //    List<double> meanFC = new List<double>();
 
-            foreach (string regulon in aRegulons)
-            {
-                dataView.RowFilter = String.Format("Regulon = '{0}'", regulon);
-                SysData.DataTable dataTable = dataView.ToTable();
-                int nrRows = dataTable.Rows.Count;
-                float[] vs = new float[nrRows];
-                int[] ys = new int[nrRows];
-                for (int _r = 0; _r < nrRows; _r++)
-                {
-                    double _val = (double)(float)dataTable.Rows[_r]["FC"];
-                    if (_val > MMAX) { MMAX = _val; }
-                    if (_val < MMIN) { MMIN = _val; }
-                    vs[_r] = (float)_val;
-                    ys[_r] = fc.Count;
+        //    foreach (string regulon in aRegulons)
+        //    {
+        //        dataView.RowFilter = String.Format("Regulon = '{0}'", regulon);
+        //        SysData.DataTable dataTable = dataView.ToTable();
+        //        int nrRows = dataTable.Rows.Count;
+        //        float[] vs = new float[nrRows];
+        //        int[] ys = new int[nrRows];
+        //        for (int _r = 0; _r < nrRows; _r++)
+        //        {
+        //            double _val = (double)(float)dataTable.Rows[_r]["FC"];
+        //            if (_val > MMAX) { MMAX = _val; }
+        //            if (_val < MMIN) { MMIN = _val; }
+        //            vs[_r] = (float)_val;
+        //            ys[_r] = fc.Count;
 
-                }
-                meanFC.Add(vs.Average());
-                fc.Add(vs);
-            }
+        //        }
+        //        meanFC.Add(vs.Average());
+        //        fc.Add(vs);
+        //    }
 
-            int[] sortedEntries = Enumerable.Range(0, nrRegulons).ToArray();
+        //    int[] sortedEntries = Enumerable.Range(0, nrRegulons).ToArray();
 
-            if (gOrderFC)
-            {
-                double[] __values = meanFC.ToArray();                
-                var sortedEntriesPairs = __values
-                    .Select((x, i) => new KeyValuePair<double, int>(x, i))
-                    .OrderBy(x => x.Key)
-                    .ToList();
+        //    if (gOrderFC)
+        //    {
+        //        double[] __values = meanFC.ToArray();                
+        //        var sortedEntriesPairs = __values
+        //            .Select((x, i) => new KeyValuePair<double, int>(x, i))
+        //            .OrderBy(x => x.Key)
+        //            .ToList();
 
-                sortedEntries = sortedEntriesPairs.Select(x => x.Value).ToArray();
-            }
-
-
-            int totrow = 2;
-            for (int i = 0; i < nrRegulons; i++)
-            {
-                aSheet.Cells[1, 1] = "yoffset";
-                aSheet.Cells[1, i + 2] = aRegulons.ToArray()[sortedEntries[i]];
-
-                for (int j = 0; j < fc[sortedEntries[i]].Length; j++)
-                {
-                    aSheet.Cells[totrow, 1] = i + 0.5;
-                    aSheet.Cells[totrow++, i + 2] = fc[sortedEntries[i]][j];
-                }
-            }
+        //        sortedEntries = sortedEntriesPairs.Select(x => x.Value).ToArray();
+        //    }
 
 
-            gApplication.ScreenUpdating = true;
-            gApplication.DisplayAlerts = true;
-            gApplication.EnableEvents = true;
+        //    int totrow = 2;
+        //    for (int i = 0; i < nrRegulons; i++)
+        //    {
+        //        aSheet.Cells[1, 1] = "yoffset";
+        //        aSheet.Cells[1, i + 2] = aRegulons.ToArray()[sortedEntries[i]];
 
-            gApplication.StatusBar = "Ready";
+        //        for (int j = 0; j < fc[sortedEntries[i]].Length; j++)
+        //        {
+        //            aSheet.Cells[totrow, 1] = i + 0.5;
+        //            aSheet.Cells[totrow++, i + 2] = fc[sortedEntries[i]][j];
+        //        }
+        //    }
 
-            return aSheet;
 
-        }
+        //    gApplication.ScreenUpdating = true;
+        //    gApplication.DisplayAlerts = true;
+        //    gApplication.EnableEvents = true;
+
+        //    gApplication.StatusBar = "Ready";
+
+        //    return aSheet;
+
+        //}
 
         // from https://stackoverflow.com/questions/665754/inner-join-of-datatables-in-c-sharp
         private DataTable JoinDataTables(DataTable t1, DataTable t2, params Func<DataRow, DataRow, bool>[] joinOn)
@@ -1068,136 +1089,136 @@ namespace GINtool
 
 
 
-        private Excel.Worksheet CategoryData(SysData.DataTable aTable, List<cat_elements> cat_s)
-        {
+        //private Excel.Worksheet CategoryData(SysData.DataTable aTable, List<cat_elements> cat_s)
+        //{
 
-            gApplication.StatusBar = "Generating categorized sheet for plotting data";
-            gApplication.ScreenUpdating = false;
-            gApplication.DisplayAlerts = false;
-            gApplication.EnableEvents = false;
+        //    gApplication.StatusBar = "Generating categorized sheet for plotting data";
+        //    gApplication.ScreenUpdating = false;
+        //    gApplication.DisplayAlerts = false;
+        //    gApplication.EnableEvents = false;
 
-            Excel.Worksheet aSheet = gApplication.Worksheets.Add();
+        //    Excel.Worksheet aSheet = gApplication.Worksheets.Add();
 
 
-            //string[] cols = new string[] { string.Format("ucat{0}_int",gDDcatLevel.ToString()) };
-            //SysData.DataTable dt_unique = GetDistinctRecords(gCategories, cols);
+        //    //string[] cols = new string[] { string.Format("ucat{0}_int",gDDcatLevel.ToString()) };
+        //    //SysData.DataTable dt_unique = GetDistinctRecords(gCategories, cols);
             
 
-            //List<string> lCategories = new List<string>();
-            //for (int i = 0; i < dt_unique.Rows.Count; i++)
+        //    //List<string> lCategories = new List<string>();
+        //    //for (int i = 0; i < dt_unique.Rows.Count; i++)
           
 
-            //DataTable newTable = GinRibbon.DtTbl(new DataTable[] {lTable,aTable});
+        //    //DataTable newTable = GinRibbon.DtTbl(new DataTable[] {lTable,aTable});
 
-            //DataTable newTable = lTable.Merge(aTable);
+        //    //DataTable newTable = lTable.Merge(aTable);
 
-            int nrGenes = aTable.Rows.Count;
-            //int nrRegulons = lCategories.Count;
+        //    int nrGenes = aTable.Rows.Count;
+        //    //int nrRegulons = lCategories.Count;
 
-            List<float[]> fc = new List<float[]>();
+        //    List<float[]> fc = new List<float[]>();
 
-            SysData.DataView dataView = aTable.AsDataView();
-
-
+        //    SysData.DataView dataView = aTable.AsDataView();
 
 
 
 
 
-            double MMAX = (double)(float)aTable.Rows[0]["FC"];
-            double MMIN = (double)(float)aTable.Rows[0]["FC"];
-            List<double> meanFC = new List<double>();
 
 
-            int nrcat = 0;
-            foreach (cat_elements cs in cat_s)
-            {
+        //    double MMAX = (double)(float)aTable.Rows[0]["FC"];
+        //    double MMIN = (double)(float)aTable.Rows[0]["FC"];
+        //    List<double> meanFC = new List<double>();
 
 
-                string categories = string.Join(",", cs.elements.ToArray());
-                categories = string.Join(",", categories.Split(',').Select(x => $"'{x}'"));
+        //    int nrcat = 0;
+        //    foreach (cat_elements cs in cat_s)
+        //    {
 
 
-                DataTable lTable = gCategories.Select(string.Format("catid_short in= {0}",categories)).CopyToDataTable();
-
-                DataTable _dataTable = JoinDataTables(lTable, aTable,
-                   (row1, row2) =>
-                   row1.Field<string>(gCategoryGeneColumn) == row2.Field<string>("Gene"));
-
-                if (_dataTable.Rows.Count == 0)
-                    continue;
-
-                _dataTable = GetDistinctRecords(_dataTable,new string[] { "Gene" });
-
-                //DataRow[] _lResult = gCategories.Select(string.Format("ucat{0}_int = {1}", gDDcatLevel.ToString(), row[0].ToString()));
-
-                //lCategories.Add(string.Format("{0}", _lResult[0].ItemArray[gDDcatLevel+2]));
-                //nrcat++;
+        //        string categories = string.Join(",", cs.elements.ToArray());
+        //        categories = string.Join(",", categories.Split(',').Select(x => $"'{x}'"));
 
 
-                int nrRows = _dataTable.Rows.Count;
-                float[] vs = new float[nrRows];
-                int[] ys = new int[nrRows];
-                for (int _r = 0; _r < nrRows; _r++)
-                {
-                    double _val = (double)(float)_dataTable.Rows[_r]["FC"];
-                    if (_val > MMAX) { MMAX = _val; }
-                    if (_val < MMIN) { MMIN = _val; }
-                    vs[_r] = (float)_val;
-                    ys[_r] = fc.Count;
+        //        DataTable lTable = gCategories.Select(string.Format("catid_short in= {0}",categories)).CopyToDataTable();
 
-                }
-                meanFC.Add(vs.Average());
-                fc.Add(vs);
-            }
+        //        DataTable _dataTable = JoinDataTables(lTable, aTable,
+        //           (row1, row2) =>
+        //           row1.Field<string>(gCategoryGeneColumn) == row2.Field<string>("Gene"));
 
+        //        if (_dataTable.Rows.Count == 0)
+        //            continue;
 
-            int nrRegulons = cat_s.Count();
+        //        _dataTable = GetDistinctRecords(_dataTable,new string[] { "Gene" });
 
-            if (nrRegulons>255)
-            {
-                MessageBox.Show("No more than 255 series can be plotted, please select fewer categories");
-                return null;
-            }
+        //        //DataRow[] _lResult = gCategories.Select(string.Format("ucat{0}_int = {1}", gDDcatLevel.ToString(), row[0].ToString()));
+
+        //        //lCategories.Add(string.Format("{0}", _lResult[0].ItemArray[gDDcatLevel+2]));
+        //        //nrcat++;
 
 
-            int[] sortedEntries = Enumerable.Range(0, nrRegulons).ToArray();
+        //        int nrRows = _dataTable.Rows.Count;
+        //        float[] vs = new float[nrRows];
+        //        int[] ys = new int[nrRows];
+        //        for (int _r = 0; _r < nrRows; _r++)
+        //        {
+        //            double _val = (double)(float)_dataTable.Rows[_r]["FC"];
+        //            if (_val > MMAX) { MMAX = _val; }
+        //            if (_val < MMIN) { MMIN = _val; }
+        //            vs[_r] = (float)_val;
+        //            ys[_r] = fc.Count;
 
-            if (gOrderFC)
-            {
-                double[] __values = meanFC.ToArray();
-                var sortedEntriesPairs = __values
-                    .Select((x, i) => new KeyValuePair<double, int>(x, i))
-                    .OrderBy(x => x.Key)
-                    .ToList();
-
-                sortedEntries = sortedEntriesPairs.Select(x => x.Value).ToArray();
-            }
-
-
-            int totrow = 2;
-            for (int i = 0; i < cat_s.Count; i++)
-            {
-                aSheet.Cells[1, 1] = "yoffset";
-                aSheet.Cells[1, i + 2] = cat_s[i].elements.ToArray()[sortedEntries[i]];
-
-                for (int j = 0; j < fc[sortedEntries[i]].Length; j++)
-                {
-                    aSheet.Cells[totrow, 1] = i + 0.5;
-                    aSheet.Cells[totrow++, i + 2] = fc[sortedEntries[i]][j];
-                }
-            }
+        //        }
+        //        meanFC.Add(vs.Average());
+        //        fc.Add(vs);
+        //    }
 
 
-            gApplication.ScreenUpdating = true;
-            gApplication.DisplayAlerts = true;
-            gApplication.EnableEvents = true;
+        //    int nrRegulons = cat_s.Count();
 
-            gApplication.StatusBar = "Ready";
+        //    if (nrRegulons>255)
+        //    {
+        //        MessageBox.Show("No more than 255 series can be plotted, please select fewer categories");
+        //        return null;
+        //    }
 
-            return aSheet;
 
-        }
+        //    int[] sortedEntries = Enumerable.Range(0, nrRegulons).ToArray();
+
+        //    if (gOrderFC)
+        //    {
+        //        double[] __values = meanFC.ToArray();
+        //        var sortedEntriesPairs = __values
+        //            .Select((x, i) => new KeyValuePair<double, int>(x, i))
+        //            .OrderBy(x => x.Key)
+        //            .ToList();
+
+        //        sortedEntries = sortedEntriesPairs.Select(x => x.Value).ToArray();
+        //    }
+
+
+        //    int totrow = 2;
+        //    for (int i = 0; i < cat_s.Count; i++)
+        //    {
+        //        aSheet.Cells[1, 1] = "yoffset";
+        //        aSheet.Cells[1, i + 2] = cat_s[i].elements.ToArray()[sortedEntries[i]];
+
+        //        for (int j = 0; j < fc[sortedEntries[i]].Length; j++)
+        //        {
+        //            aSheet.Cells[totrow, 1] = i + 0.5;
+        //            aSheet.Cells[totrow++, i + 2] = fc[sortedEntries[i]][j];
+        //        }
+        //    }
+
+
+        //    gApplication.ScreenUpdating = true;
+        //    gApplication.DisplayAlerts = true;
+        //    gApplication.EnableEvents = true;
+
+        //    gApplication.StatusBar = "Ready";
+
+        //    return aSheet;
+
+        //}
 
 
 
@@ -1800,11 +1821,12 @@ namespace GINtool
             {
                 gOperonOutput = LoadOperonData();
                 gCatOutput = LoadCategoryData();
-                cbUseCategories.Enabled = gCatOutput;
+                cbUseCategories.Enabled = gCatOutput;                
                 Fill_DropDownBoxes();
                 if (gDownItems.Count == 0 && gUpItems.Count == 0 && gAvailItems.Count == 0)
                     LoadDirectionOptions();
                 btApply.Enabled = true;
+                btPlot.Enabled = true; 
                 LoadFCDefaults();
                 EnableOutputOptions(true);
             }
@@ -1825,6 +1847,7 @@ namespace GINtool
             ddBSU.Enabled = enable;
             ddRegulon.Enabled = enable;
             ddGene.Enabled = enable;
+            //btPlot.Enabled = enable;
             //edtMaxGroups.Enabled = enable;
             //btnPalette.Enabled = enable;
 
@@ -1916,22 +1939,42 @@ namespace GINtool
         #region main_routines
         private void btPlot_Click(object sender, RibbonControlEventArgs e)
         {
+            if (gPlotClustered)
+            {
+                dlgTreeView dlg = new dlgTreeView();
 
-            dlgTreeView dlg = new dlgTreeView();
+                if (gCategories != null && cbUseCategories.Checked)
+                {
+                    dlg.populateTree(gCategories);
+                }
+                if (gRefWB != null && !cbUseCategories.Checked)
+                {
+                    dlg.populateTree(gRefWB, cat: false);
+                }
 
-            if (gCategories!=null && cbUseCategories.Checked)
-            {                
-                dlg.populateTree(gCategories);                
+
+
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+
+                    if (gNeedsUpdating || gOutput == null || gSummary == null)
+                    {
+                        (gOutput, gList) = GenerateOutput(suppressOutput: true);
+                        if (gOutput != null && gList != null)
+                            (gSummary, gCombineInfo) = CreateUsageTable(gOutput);
+                        gNeedsUpdating = false;
+                    }
+
+                    //if (gEnrichmentAnalysis == null)
+                    //gEnrichmentAnalysis = new EnrichmentAnalysis(gApplication);
+
+                    if (gOutput != null && gSummary != null && dlg.GetSelection().Count() > 0)
+                        CategoryPlot(gOutput, gSummary, dlg.GetSelection());
+                }
             }
 
-            if(gRefWB!=null && !cbUseCategories.Checked)
+            if(gPlotDistribution)
             {
-                // Need to fix this later dlg.populateTree(gRefWB);                
-            }
-
-            if (dlg.ShowDialog() == DialogResult.OK)
-            {
-
                 if (gNeedsUpdating || gOutput == null || gSummary == null)
                 {
                     (gOutput, gList) = GenerateOutput(suppressOutput: true);
@@ -1940,11 +1983,8 @@ namespace GINtool
                     gNeedsUpdating = false;
                 }
 
-                //if (gEnrichmentAnalysis == null)
-                //gEnrichmentAnalysis = new EnrichmentAnalysis(gApplication);
-
-                if (gOutput != null && gSummary != null && dlg.GetSelection().Count()>0)
-                    CategoryPlot(gOutput, gSummary, dlg.GetSelection());
+                if (gOutput != null && gSummary != null )
+                    DistributionPlot(gOutput, gSummary);
             }
 
         }
@@ -2020,15 +2060,15 @@ namespace GINtool
         }
 
 
-        private List<element_fc> Regulons2ElementsFC (SysData.DataView dataView, HashSet<string> regulons)
+        private List<element_fc> Regulons2ElementsFC(SysData.DataView dataView, List<cat_elements> cat_Elements) // HashSet<string> regulons)
         {
             List<element_fc> element_Fcs = new List<element_fc>();
             
-            foreach(string reg in regulons)
+            foreach(cat_elements el in cat_Elements)
             {                
-                dataView.RowFilter = String.Format("Regulon='{0}'", reg);
+                dataView.RowFilter = String.Format("Regulon='{0}'", el.catName);
                 element_fc element_Fc;
-                element_Fc.catName = reg;
+                element_Fc.catName = el.catName;
                 SysData.DataTable _dataTable = dataView.ToTable();
                 float[] _fcs = new float[_dataTable.Rows.Count];
                 for (int i = 0; i < _dataTable.Rows.Count; i++)
@@ -2041,6 +2081,27 @@ namespace GINtool
             }
                   
             return element_Fcs;
+        }
+
+        // output of all genes in table
+        private (List<float>,List<int>) SortedFoldChanges(SysData.DataTable dataTable)
+        {
+            List<float> _values = new List<float>();
+            foreach (SysData.DataRow row in dataTable.Rows)
+            {
+                _values.Add(row.Field<float>("FC"));
+            }
+
+            float[] __values = _values.ToArray();
+
+            var sortedGenes = __values
+                .Select((x, i) => new KeyValuePair<float, int>(x, i))
+                .OrderBy(x => x.Key)
+                .ToList();
+
+            List<float> sortedGenesValues = sortedGenes.Select(x => x.Key).ToList();
+            List<int> sortedGenesInt = sortedGenes.Select(x => x.Value).ToList();
+            return (sortedGenesValues, sortedGenesInt);
         }
 
 
@@ -2178,17 +2239,34 @@ namespace GINtool
             chartPage.Legend.Delete();
             chartPage.Location(Excel.XlChartLocation.xlLocationAsNewSheet, Type.Missing);
           
-
-            return null;
-
             aSheet.Delete();
-          
-            return null;
-            //return chartPage;
+            return chartPage;
 
         }
 
 
+
+
+
+        private void DistributionPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary)
+        {
+            gApplication.EnableEvents = false;
+            gApplication.DisplayAlerts = false;
+
+            SysData.DataTable _fc_BSU = ReformatResults(aOutput);
+            (List<float> sFC, List<int> sIdx) = SortedFoldChanges(_fc_BSU);
+
+
+            int chartNr = nextWorksheet("DistributionPlot");
+            string chartName = "DistributionPlot_" + chartNr.ToString();
+
+            Excel.Chart aChart = PlotRoutines.CreateDistributionPlot(sFC,sIdx, chartName);
+            this.RibbonUI.ActivateTab("TabGINtool");
+
+
+            gApplication.EnableEvents = true;
+            gApplication.DisplayAlerts = true;
+        }
         private void CategoryPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements )
         {
             gApplication.EnableEvents = false;
@@ -2207,13 +2285,17 @@ namespace GINtool
             
             SysData.DataView dataView = _fc_BSU.AsDataView();
             List<element_fc> catPlotData = null;
-            if(gCatOutput)
+
+            if (gUseCatOutput)
                 catPlotData = CatElements2ElementsFC(dataView, cat_Elements);
             else
-                catPlotData = Regulons2ElementsFC(dataView, lRegulons);
-                      
-            Excel.Chart aChart = PlotRoutines.CreateCategoryPlot(catPlotData);
-            //renameWorksheet(aChart, "CategoryPlot");            
+                catPlotData = Regulons2ElementsFC(dataView, cat_Elements);
+           
+
+            int chartNr = gUseCatOutput ? nextWorksheet("CategoryPlot"): nextWorksheet("RegulonPlot");            
+            string chartName = (gUseCatOutput ? "CategoryPlot_" : "RegulonPlot_") + chartNr.ToString();
+
+            Excel.Chart aChart = PlotRoutines.CreateCategoryPlot(catPlotData,chartName);            
             this.RibbonUI.ActivateTab("TabGINtool");
             
 
@@ -2484,6 +2566,16 @@ namespace GINtool
         private void cbUseCategories_Click(object sender, RibbonControlEventArgs e)
         {
             gUseCatOutput = cbUseCategories.Checked;
+        }
+
+        private void cbClustered_Click(object sender, RibbonControlEventArgs e)
+        {
+            gPlotClustered = cbClustered.Checked;
+        }
+
+        private void cbDistribution_Click(object sender, RibbonControlEventArgs e)
+        {
+            gPlotDistribution = cbDistribution.Checked;
         }
 
 

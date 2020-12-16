@@ -118,71 +118,57 @@ namespace GINtool
 
         //}
 
-        //public Excel.Shape DrawDistributionPlot(HashSet<string> aRegulons, SysData.DataTable aTable, Excel.Worksheet aSheet)
-        //{
-        //    if (theApp == null)
-        //        return null;
+        public static Excel.Chart CreateDistributionPlot(List<float> sortedFC, List<int> sortedIndex, string chartName)
+        {
+            if (theApp == null)
+                return null;
 
-        //    IntPtr hWnd = (IntPtr)theApp.Hwnd;
+            Excel.Worksheet aSheet = theApp.Worksheets.Add();
 
-        //    nrGenes = aTable.Rows.Count;
-        //    nrRegulons = aRegulons.Count;
+            Excel.ChartObjects xlCharts = (Excel.ChartObjects)aSheet.ChartObjects(Type.Missing);
+            Excel.ChartObject myChart = (Excel.ChartObject)xlCharts.Add(10, 80, 500, 500);
+            Excel.Chart chartPage = myChart.Chart;
 
-        //    distributionChart = new Chart();
-        //    distributionChart.Legends.Clear();
-        //    ChartArea chartArea = new ChartArea("distibutionChart");
+            chartPage.ChartType = Excel.XlChartType.xlXYScatter;
 
-        //    distributionChart.Height = 300; // nrRegulons * multiplier;
-        //    distributionChart.Width = 700;
+            var series = (Excel.SeriesCollection)chartPage.SeriesCollection();
 
-        //    chartArea.AxisX.MajorGrid.Enabled = false;
-        //    chartArea.AxisY.MajorGrid.Enabled = false;
+            var aSerie = series.NewSeries();
+            aSerie.Name = String.Format("Serie {0}", 1);
+            aSerie.ChartType = Excel.XlChartType.xlColumnClustered;
 
-        //    chartArea.AxisX.Minimum = 0;
-        //    chartArea.AxisX.Maximum = nrGenes;
+
+            aSerie.XValues = sortedIndex.ToArray();
+            aSerie.Values = sortedFC.ToArray();
             
 
-        //    distributionChart.ChartAreas.Add(chartArea);
-          
+            //distributionChart.Palette = (ChartColorPalette)Properties.Settings.Default.defaultPalette;
+            //distributionChart.Titles.Add("distribution plot");
 
-        //    List<float> _values = new List<float>();
-        //    foreach (SysData.DataRow row in aTable.Rows)
-        //    {
-        //        _values.Add(row.Field<float>("FC"));
-        //    }
+            var yAxis = (Excel.Axis)chartPage.Axes(Excel.XlAxisType.xlCategory, Excel.XlAxisGroup.xlPrimary);
+            yAxis.HasTitle = true;
+            yAxis.AxisTitle.Text = "index (sorted)"; 
 
-        //    float[] __values = _values.ToArray();
+            var xAxis = (Excel.Axis)chartPage.Axes(Excel.XlAxisType.xlValue, Excel.XlAxisGroup.xlPrimary);
+            xAxis.HasTitle = true;
+            xAxis.AxisTitle.Text = "fold change";
 
-        //    var sortedGenes = __values
-        //        .Select((x, i) => new KeyValuePair<float, int>(x, i))
-        //        .OrderBy(x => x.Key)
-        //        .ToList();
 
-        //    sortedGenesValues = sortedGenes.Select(x => x.Key).ToList();
-        //    sortedGenesInt = sortedGenes.Select(x => x.Value).ToList();
+            chartPage.Axes(Excel.XlAxisType.xlCategory).TickLabelPosition = Excel.XlTickLabelPosition.xlTickLabelPositionNone;
+            chartPage.Axes(Excel.XlAxisType.xlValue).MajorGridLines.Delete();
+            chartPage.Legend.Delete();
+            chartPage.ChartTitle.Delete();
 
-        //    string toClipboard = string.Join("\n", sortedGenesInt.ToArray());
-        //    System.Windows.Forms.Clipboard.SetData(System.Windows.Forms.DataFormats.Text,toClipboard);
+            chartPage.Location(Excel.XlChartLocation.xlLocationAsNewSheet, chartName);
+        
 
-        //    System.Windows.Forms.DataVisualization.Charting.Series aSerie = distributionChart.Series.Add(String.Format("Serie {0}", 1));
-        //    aSerie.ChartType = SeriesChartType.Column;
+            aSheet.Delete();
 
-        //    for (int _p = 0; _p < sortedGenesValues.Count; _p++)
-        //    {
-        //        aSerie.Points.AddXY(_p, sortedGenesValues[_p]);
-        //    }
+            return chartPage;
 
-        //    distributionChart.Palette = (ChartColorPalette)Properties.Settings.Default.defaultPalette; 
-        //    distributionChart.Titles.Add("distribution plot");
+         
 
-        //    chartArea.AxisX.Title = "index (sorted)";
-        //    chartArea.AxisY.Title = "fold change";
-
-            
-
-        //    return CreateEmfShape(distributionChart, hWnd, theApp);
-
-        //}
+        }
 
         //public Excel.Shape DrawEnrichmentScoreChart(HashSet<string> aRegulons, SysData.DataTable aTable)
         //{
@@ -296,7 +282,7 @@ namespace GINtool
 
         //}
 
-        public static Excel.Chart CreateCategoryPlot(List<element_fc> element_Fcs)
+        public static Excel.Chart CreateCategoryPlot(List<element_fc> element_Fcs, string chartName)
         {
             if (theApp == null)
                 return null;
@@ -419,7 +405,7 @@ namespace GINtool
             chartPage.Axes(Excel.XlAxisType.xlValue).MinimumScale = 0;
             chartPage.Legend.Delete();
 
-            chartPage.Location(Excel.XlChartLocation.xlLocationAsNewSheet, Type.Missing);
+            chartPage.Location(Excel.XlChartLocation.xlLocationAsNewSheet, chartName);
 
             aSheet.Delete();
             

@@ -15,7 +15,10 @@ namespace GINtool
     {
         // define category columns 
         string[] catcols = new string[] { "cat1", "cat2", "cat3", "cat4", "cat5" };
-        
+        string[] regColumn = new string[] { Properties.Settings.Default.referenceRegulon };
+        //string[] refColumn = null;
+        bool catMode = true;
+
         List<cat_elements> gSelection = new List<cat_elements>();
 
         public List<cat_elements> GetSelection()
@@ -49,13 +52,32 @@ namespace GINtool
 
         //    return null;
         //}
-        public void populateTree(SysData.DataTable dataTable)
+        public void populateTree(SysData.DataTable dataTable, bool cat = true)
         {
-            DataTable lView = GetDistinctRecords(dataTable, catcols);           
-            BuildTree(dataTable, treeView1.Nodes.Add("Categories"),1);           
+            DataTable lView = null;
+            if (cat)
+            {
+                catMode = true;
+                lView = GetDistinctRecords(dataTable, catcols);
+                //refColumn = catcols;
+                BuildTree(dataTable, treeView1.Nodes.Add("Categories"), 1);
+            }
+            else
+            {
+                catMode = false;
+                lView = GetDistinctRecords(dataTable, regColumn);
+                //refColumn = regColumn;
+                BuildTree(dataTable, treeView1.Nodes.Add("Regulons"), 1);
+            }
+                  
         }
 
-     
+        private DataTable GetDistinctRegulons(DataTable dataTable, string[] regColumn)
+        {
+            throw new NotImplementedException();
+        }
+
+
 
         // recursive population of treeview control
         public TreeNode BuildTree(DataTable dt, TreeNode trv = null, int lvl = 1, string accumlevel = "")
@@ -63,9 +85,18 @@ namespace GINtool
             // Clear the TreeView if there are another datas in this TreeView
             if (trv is null)
                 trv = new TreeNode();
-            
-            DataTable _lcats = GetDistinctRecords(dt, new string[] { catcols[lvl - 1] });
-            if (lvl < 5)
+
+
+
+            DataTable _lcats = null;
+
+            if (catMode)
+                _lcats = GetDistinctRecords(dt, new string[] { catcols[lvl - 1] });
+            else
+                _lcats = GetDistinctRecords(dt, regColumn); 
+
+           
+            if (catMode ? lvl < 5 : lvl<1)
             {
                 int _rownr = 0;
                 foreach (DataRow _row in _lcats.Rows)
@@ -85,12 +116,13 @@ namespace GINtool
                     node.ToolTipText = node.Tag.ToString();
 
                     DataTable __lcats = dt.Select(string.Format("{0}='{1}'", catcols[lvl - 1], node.Text)).CopyToDataTable();
-                    BuildTree(__lcats, node, lvl: lvl + 1, accumlevel != "" ? accumlevel + "." + _rownr.ToString() : _rownr.ToString());                   
+                    if(__lcats.Rows.Count>0)
+                        BuildTree(__lcats, node, lvl: lvl + 1, accumlevel != "" ? accumlevel + "." + _rownr.ToString() : _rownr.ToString());                   
 
                 }               
                 
             }
-            else // level == 5
+            else if (catMode) // level == 5 or 
             {
                 foreach (DataRow _row in _lcats.Rows)
                 {
@@ -102,6 +134,28 @@ namespace GINtool
                     _lNode.ToolTipText = string.Format("# subcat {0}", _lcats.Rows.Count.ToString());
 
                     return _lNode;                    
+                }
+            }
+            else // !catMode
+            {
+                int _rownr = 0;
+                foreach (DataRow _row in _lcats.Rows)
+                {
+
+                    if (_row[0].ToString() == "")
+                        return null;
+
+                    _rownr++;
+
+                    TreeNode node = trv.Nodes.Add(_row[0].ToString());
+                    node.Tag = accumlevel == "" ? string.Format("{0}", _rownr) : string.Format("{0}.{1}", accumlevel, _rownr);
+                    node.ToolTipText = node.Tag.ToString();
+
+
+                    //TreeNode _lNode = new TreeNode(_row[0].ToString());
+                    //_lNode.ToolTipText = string.Format("# subcat {0}", _lcats.Rows.Count.ToString());
+
+                    //return _lNode;
                 }
             }
 
