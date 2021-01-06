@@ -73,10 +73,10 @@
             this.grpPref = this.Factory.CreateRibbonGroup();
             this.cbOrderFC = this.Factory.CreateRibbonCheckBox();
             this.cbUseCategories = this.Factory.CreateRibbonCheckBox();
-            this.btPlot = this.Factory.CreateRibbonButton();
             this.separator2 = this.Factory.CreateRibbonSeparator();
             this.cbDistribution = this.Factory.CreateRibbonCheckBox();
             this.cbClustered = this.Factory.CreateRibbonCheckBox();
+            this.btPlot = this.Factory.CreateRibbonButton();
             this.TabGINtool.SuspendLayout();
             this.group1.SuspendLayout();
             this.group3.SuspendLayout();
@@ -413,15 +413,6 @@
             this.cbUseCategories.Name = "cbUseCategories";
             this.cbUseCategories.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.cbUseCategories_Click);
             // 
-            // btPlot
-            // 
-            this.btPlot.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-            this.btPlot.Image = global::GINtool.Properties.Resources.barchart;
-            this.btPlot.Label = "make plots";
-            this.btPlot.Name = "btPlot";
-            this.btPlot.ShowImage = true;
-            this.btPlot.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btPlot_Click);
-            // 
             // separator2
             // 
             this.separator2.Name = "separator2";
@@ -437,6 +428,15 @@
             this.cbClustered.Label = "clustered";
             this.cbClustered.Name = "cbClustered";
             this.cbClustered.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.cbClustered_Click);
+            // 
+            // btPlot
+            // 
+            this.btPlot.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.btPlot.Image = global::GINtool.Properties.Resources.barchart;
+            this.btPlot.Label = "make plots";
+            this.btPlot.Name = "btPlot";
+            this.btPlot.ShowImage = true;
+            this.btPlot.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btPlot_Click);
             // 
             // GinRibbon
             // 

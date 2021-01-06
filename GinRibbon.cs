@@ -2056,6 +2056,13 @@ namespace GINtool
                 element_Fcs.Add(element_Fc);                               
             }
 
+            float[] __values = element_Fcs.Select(x => x.average).ToArray();
+            var sortedElements = (!gOrderFC) ? __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderByDescending(x => x.Key).ToList();
+
+            //List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
+            //return (element_Fcs, sortedIndex);
+
+            element_Fcs = sortedElements.Select(x => element_Fcs[x.Value]).ToList();
             return element_Fcs;
         }
 
@@ -2070,21 +2077,39 @@ namespace GINtool
                 element_fc element_Fc;
                 element_Fc.catName = el.catName;
                 SysData.DataTable _dataTable = dataView.ToTable();
-                float[] _fcs = new float[_dataTable.Rows.Count];
-                for (int i = 0; i < _dataTable.Rows.Count; i++)
+                if (_dataTable.Rows.Count > 0)
                 {
-                    _fcs[i] = float.Parse(_dataTable.Rows[i]["FC"].ToString());
+                    float[] _fcs = new float[_dataTable.Rows.Count];
+                    for (int i = 0; i < _dataTable.Rows.Count; i++)
+                    {
+                        _fcs[i] = float.Parse(_dataTable.Rows[i]["FC"].ToString());
+                    }
+
+                    element_Fc.average = _fcs.Average();
+                    element_Fc.fc = _fcs;
+                    element_Fcs.Add(element_Fc);
                 }
-                element_Fc.average = _fcs.Average();
-                element_Fc.fc = _fcs;
-                element_Fcs.Add(element_Fc);
+                else
+                {
+                    element_Fc.average = 0;
+                    element_Fc.fc = new float[] { 0 };
+                    element_Fcs.Add(element_Fc);
+                }
             }
-                  
+
+
+            float[] __values = element_Fcs.Select(x => x.average).ToArray();
+            var sortedElements = (!gOrderFC) ? __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderByDescending(x => x.Key).ToList();
+
+            //List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
+            //return (element_Fcs, sortedIndex);
+            element_Fcs = sortedElements.Select(x => element_Fcs[x.Value]).ToList();            
             return element_Fcs;
         }
 
+    
         // output of all genes in table
-        private (List<float>,List<int>) SortedFoldChanges(SysData.DataTable dataTable)
+        private (List<float>, List<int>) SortedFoldChanges(SysData.DataTable dataTable)
         {
             List<float> _values = new List<float>();
             foreach (SysData.DataRow row in dataTable.Rows)
@@ -2093,12 +2118,9 @@ namespace GINtool
             }
 
             float[] __values = _values.ToArray();
+            var sortedGenes = (!gOrderFC) ? __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderByDescending(x => x.Key).ToList();
 
-            var sortedGenes = __values
-                .Select((x, i) => new KeyValuePair<float, int>(x, i))
-                .OrderBy(x => x.Key)
-                .ToList();
-
+            
             List<float> sortedGenesValues = sortedGenes.Select(x => x.Key).ToList();
             List<int> sortedGenesInt = sortedGenes.Select(x => x.Value).ToList();
             return (sortedGenesValues, sortedGenesInt);
@@ -2245,15 +2267,14 @@ namespace GINtool
         }
 
 
-
-
-
         private void DistributionPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary)
         {
             gApplication.EnableEvents = false;
             gApplication.DisplayAlerts = false;
 
-            SysData.DataTable _fc_BSU = ReformatResults(aOutput);
+            SysData.DataTable _fc_BSU_ = ReformatResults(aOutput);
+            SysData.DataTable _fc_BSU = GetDistinctRecords(_fc_BSU_, new string[] { "Gene","FC"});
+
             (List<float> sFC, List<int> sIdx) = SortedFoldChanges(_fc_BSU);
 
 
@@ -2267,6 +2288,7 @@ namespace GINtool
             gApplication.EnableEvents = true;
             gApplication.DisplayAlerts = true;
         }
+
         private void CategoryPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements )
         {
             gApplication.EnableEvents = false;
@@ -2284,10 +2306,11 @@ namespace GINtool
                 lRegulons.Add(row.ItemArray[0].ToString());
             
             SysData.DataView dataView = _fc_BSU.AsDataView();
-            List<element_fc> catPlotData = null;
-
+            List<element_fc> catPlotData = null;            
             if (gUseCatOutput)
-                catPlotData = CatElements2ElementsFC(dataView, cat_Elements);
+            {
+                catPlotData = CatElements2ElementsFC(dataView, cat_Elements);                
+            }
             else
                 catPlotData = Regulons2ElementsFC(dataView, cat_Elements);
            
@@ -2295,6 +2318,8 @@ namespace GINtool
             int chartNr = gUseCatOutput ? nextWorksheet("CategoryPlot"): nextWorksheet("RegulonPlot");            
             string chartName = (gUseCatOutput ? "CategoryPlot_" : "RegulonPlot_") + chartNr.ToString();
 
+
+            
             Excel.Chart aChart = PlotRoutines.CreateCategoryPlot(catPlotData,chartName);            
             this.RibbonUI.ActivateTab("TabGINtool");
             

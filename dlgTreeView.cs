@@ -38,7 +38,7 @@ namespace GINtool
         }
 
         // http://www.authorcode.com/create-treeview-from-datatable-in-c/
-        
+
 
         //private TreeNode Searchnode(string nodetext, TreeView trv)
         //{
@@ -69,7 +69,7 @@ namespace GINtool
                 //refColumn = regColumn;
                 BuildTree(dataTable, treeView1.Nodes.Add("Regulons"), 1);
             }
-                  
+
         }
 
         private DataTable GetDistinctRegulons(DataTable dataTable, string[] regColumn)
@@ -93,10 +93,10 @@ namespace GINtool
             if (catMode)
                 _lcats = GetDistinctRecords(dt, new string[] { catcols[lvl - 1] });
             else
-                _lcats = GetDistinctRecords(dt, regColumn); 
+                _lcats = GetDistinctRecords(dt, regColumn);
 
-           
-            if (catMode ? lvl < 5 : lvl<1)
+
+            if (catMode ? lvl < 5 : lvl < 1)
             {
                 int _rownr = 0;
                 foreach (DataRow _row in _lcats.Rows)
@@ -116,11 +116,11 @@ namespace GINtool
                     node.ToolTipText = node.Tag.ToString();
 
                     DataTable __lcats = dt.Select(string.Format("{0}='{1}'", catcols[lvl - 1], node.Text)).CopyToDataTable();
-                    if(__lcats.Rows.Count>0)
-                        BuildTree(__lcats, node, lvl: lvl + 1, accumlevel != "" ? accumlevel + "." + _rownr.ToString() : _rownr.ToString());                   
+                    if (__lcats.Rows.Count > 0)
+                        BuildTree(__lcats, node, lvl: lvl + 1, accumlevel != "" ? accumlevel + "." + _rownr.ToString() : _rownr.ToString());
 
-                }               
-                
+                }
+
             }
             else if (catMode) // level == 5 or 
             {
@@ -133,7 +133,7 @@ namespace GINtool
                     TreeNode _lNode = new TreeNode(_row[0].ToString());
                     _lNode.ToolTipText = string.Format("# subcat {0}", _lcats.Rows.Count.ToString());
 
-                    return _lNode;                    
+                    return _lNode;
                 }
             }
             else // !catMode
@@ -178,10 +178,10 @@ namespace GINtool
 
             foreach (TreeNode tn in treeNodes)
             {
-                TreeNode _node = (TreeNode) tn.Clone();
+                TreeNode _node = (TreeNode)tn.Clone();
                 while (_node.Nodes.Count > 0)
                     _node = _node.Nodes[0];
-                _tags.Add(_node.Tag.ToString());  
+                _tags.Add(_node.Tag.ToString());
             }
 
             return _tags.ToArray();
@@ -193,7 +193,7 @@ namespace GINtool
             List<string> codes = new List<string>();
             if (treeNode.Nodes.Count == 0)
             {
-                string[] tags = treeNode.Tag.ToString().Split('_');                
+                string[] tags = treeNode.Tag.ToString().Split('_');
                 codes.Add(tags[0]);
             }
             else
@@ -217,7 +217,7 @@ namespace GINtool
         }
 
         private void addToSelection(TreeNode treeNode)
-        {           
+        {
             gSelection.Add(createCategoryItem(treeNode));
         }
 
@@ -230,7 +230,7 @@ namespace GINtool
         // select button pressed
         private void button1_Click(object sender, EventArgs e)
         {
-            
+
             TreeNode treeNode = treeView1.SelectedNode;
             if (treeNode == null)
                 return;
@@ -244,9 +244,9 @@ namespace GINtool
             treeNode.Tag = treeNode.Tag + "_" + fp + "_" + nodeIndex.ToString();
 
             treeView1.Nodes.Remove(treeNode);
-           
-            if(treeNode != null)
-            {                
+
+            if (treeNode != null)
+            {
                 treeView2.Nodes.Add(treeNode);
                 addToSelection(treeNode);
             }
@@ -289,16 +289,16 @@ namespace GINtool
                     {
                         treeView1.Nodes.Remove(tnode);
 
-                        TreeNode _tnode = headNode.Nodes[Int32.Parse(lvl[0])-1];
-                        for (int i = 1; i < lvl.Count()-1; i++)
+                        TreeNode _tnode = headNode.Nodes[Int32.Parse(lvl[0]) - 1];
+                        for (int i = 1; i < lvl.Count() - 1; i++)
                             _tnode = _tnode.Nodes[Int32.Parse(lvl[i]) - 1];
 
-                        _tnode.Nodes.Insert(Int32.Parse(lvl[lvl.Count()-1]) - 1,tnode);                                            
+                        _tnode.Nodes.Insert(Int32.Parse(lvl[lvl.Count() - 1]) - 1, tnode);
                     }
                 }
 
             }
-         
+
         }
 
         // copied from inet, insert item in tree at specified location
@@ -310,49 +310,48 @@ namespace GINtool
             {
                 if (tnode.FullPath == path)
                 {
-                    tnode.Nodes.Insert(index,node);
+                    tnode.Nodes.Insert(index, node);
                     found = true;
                     break;
                 }
-                if(!found)
-                    found = insertInChild(tnode, index,path, node);
+                if (!found)
+                    found = insertInChild(tnode, index, path, node);
             }
             return found;
         }
 
 
-        public bool insertInChild(TreeNode original,int  index,string path, TreeNode node)
+        public bool insertInChild(TreeNode original, int index, string path, TreeNode node)
         {
             bool found = false;
             foreach (TreeNode tnode in original.Nodes)
             {
                 if (tnode.FullPath == path)
                 {
-                    tnode.Nodes.Insert(index,node);
+                    tnode.Nodes.Insert(index, node);
                     found = true;
                     break;
                 }
-                if(!found)
-                    found = insertInChild(tnode, index,path, node);
+                if (!found)
+                    found = insertInChild(tnode, index, path, node);
             }
             return found;
         }
 
         // strip tag from positional info .. actually overlaps with checkParentNodes .. needs to be combined later
-        private (TreeNode, string, int) getPositionInfo (TreeNode treeNode)
+        private (TreeNode, string, int) getPositionInfo(TreeNode treeNode)
         {
             string[] tags = treeNode.Tag.ToString().Split('_');
             treeNode.Tag = tags[0];
-            return (treeNode, tags[1], Int32.Parse(tags[2]));          
+            return (treeNode, tags[1], Int32.Parse(tags[2]));
         }
 
         // insert in tree from treeview 1
         private bool insertNode(TreeNode treeNode, int index, string fullPath)
         {
             return insertInParent(fullPath, index, treeNode);
-            
-        }
 
+        }
 
 
         private void button3_Click(object sender, EventArgs e)
@@ -365,6 +364,102 @@ namespace GINtool
         {
             this.DialogResult = DialogResult.Cancel;
             this.Close();
+        }
+
+
+        private void CheckAllChildNodes(TreeNode treeNode, bool nodeChecked)
+        {
+            List<TreeNode> selection = new List<TreeNode>();
+
+            foreach (TreeNode node in treeNode.Nodes)
+                selection.Add(node);
+
+
+            foreach (TreeNode node in selection)
+            {
+                string fp = node.FullPath;
+                int nodeIndex = node.Index;
+                // remove last part of tree
+                int rstr = fp.LastIndexOf('\\');
+                if (rstr > 0) fp = fp.Remove(rstr);
+                // add position information in Tag field
+                node.Tag = node.Tag + "_" + fp + "_" + nodeIndex.ToString();
+
+                treeView1.Nodes.Remove(node);
+
+                if (node != null)
+                {
+                    treeView2.Nodes.Add(node);
+                    addToSelection(node);
+                }
+
+            }
+
+        }
+
+        // NOTE   This code can be added to the BeforeCheck event handler instead of the AfterCheck event.
+        // After a tree node's Checked property is changed, all its child nodes are updated to the same value.
+        private void node_AfterCheck(object sender, TreeViewEventArgs e)
+        {
+            // The code only executes if the user caused the checked state to change.
+            if (e.Action != TreeViewAction.Unknown)
+            {
+                if (e.Node.Nodes.Count > 0)
+                {
+                    /* Calls the CheckAllChildNodes method, passing in the current 
+                    Checked value of the TreeNode whose checked state changed. */
+                    this.CheckAllChildNodes(e.Node, e.Node.Checked);
+                }
+            }
+        }
+
+        private void btnAllSel_Click(object sender, EventArgs e)
+        {
+            List<TreeNode> selection = new List<TreeNode>();
+
+            foreach (TreeNode node in treeView1.TopNode.Nodes)
+                selection.Add(node);
+
+
+            foreach (TreeNode node in selection)
+            {
+                string fp = node.FullPath;
+                int nodeIndex = node.Index;
+                // remove last part of tree
+                int rstr = fp.LastIndexOf('\\');
+                if (rstr > 0) fp = fp.Remove(rstr);
+                // add position information in Tag field
+                node.Tag = node.Tag + "_" + fp + "_" + nodeIndex.ToString();
+
+                treeView1.Nodes.Remove(node);
+
+                if (node != null)
+                {
+                    treeView2.Nodes.Add(node);
+                    addToSelection(node);
+                }
+
+            }
+        }
+
+
+        private void btnAllBack_Click(object sender, EventArgs e)
+        {
+            List<TreeNode> selection = new List<TreeNode>();
+
+            foreach (TreeNode node in treeView2.Nodes)
+                selection.Add(node);
+
+            foreach (TreeNode treeNode in selection)
+            {
+                treeView2.Nodes.Remove(treeNode);
+                (TreeNode node, string fullpath, int idx) = getPositionInfo(treeNode);
+                removeFromSelection(treeNode.Index);
+                if (!insertNode(node, idx, fullpath)) // add as main node
+                    treeView1.Nodes[0].Nodes.Add(node);
+                else // check if main nodes are correctly placed
+                    checkParentNodes();
+            }
         }
     }
 

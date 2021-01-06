@@ -134,11 +134,11 @@ namespace GINtool
             var series = (Excel.SeriesCollection)chartPage.SeriesCollection();
 
             var aSerie = series.NewSeries();
-            aSerie.Name = String.Format("Serie {0}", 1);
-            aSerie.ChartType = Excel.XlChartType.xlColumnClustered;
+            aSerie.Name = String.Format("Serie {0}", 1);            
+            //aSerie.ChartType = Excel.XlChartType.xlXYScatter;
 
 
-            aSerie.XValues = sortedIndex.ToArray();
+            //aSerie.XValues = sortedIndex.ToArray();
             aSerie.Values = sortedFC.ToArray();
             
 

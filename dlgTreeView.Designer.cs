@@ -39,6 +39,8 @@ namespace GINtool
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.button3 = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
+            this.btnAllSel = new System.Windows.Forms.Button();
+            this.btnAllBack = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -65,7 +67,7 @@ namespace GINtool
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(309, 110);
+            this.button2.Location = new System.Drawing.Point(309, 92);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
             this.button2.TabIndex = 3;
@@ -139,11 +141,33 @@ namespace GINtool
             this.button4.UseVisualStyleBackColor = true;
             this.button4.Click += new System.EventHandler(this.button4_Click);
             // 
+            // btnAllSel
+            // 
+            this.btnAllSel.Location = new System.Drawing.Point(309, 169);
+            this.btnAllSel.Name = "btnAllSel";
+            this.btnAllSel.Size = new System.Drawing.Size(75, 23);
+            this.btnAllSel.TabIndex = 11;
+            this.btnAllSel.Text = ">>";
+            this.btnAllSel.UseVisualStyleBackColor = true;
+            this.btnAllSel.Click += new System.EventHandler(this.btnAllSel_Click);
+            // 
+            // btnAllBack
+            // 
+            this.btnAllBack.Location = new System.Drawing.Point(309, 198);
+            this.btnAllBack.Name = "btnAllBack";
+            this.btnAllBack.Size = new System.Drawing.Size(75, 23);
+            this.btnAllBack.TabIndex = 12;
+            this.btnAllBack.Text = "<<";
+            this.btnAllBack.UseVisualStyleBackColor = true;
+            this.btnAllBack.Click += new System.EventHandler(this.btnAllBack_Click);
+            // 
             // dlgTreeView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(815, 450);
+            this.Controls.Add(this.btnAllBack);
+            this.Controls.Add(this.btnAllSel);
             this.Controls.Add(this.button4);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.groupBox3);
@@ -175,5 +199,7 @@ namespace GINtool
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.Button button3;
         private System.Windows.Forms.Button button4;
+        private System.Windows.Forms.Button btnAllSel;
+        private System.Windows.Forms.Button btnAllBack;
     }
 }
