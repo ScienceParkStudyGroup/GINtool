@@ -36,7 +36,7 @@
     <PublishUrl>publish\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.33</ApplicationVersion>
+    <ApplicationVersion>1.0.0.41</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -188,6 +188,7 @@
   -->
   <ItemGroup>
     <Compile Include="BsuRegulons.cs" />
+    <Compile Include="ClassExtensions.cs" />
     <Compile Include="dlgTreeView.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -314,6 +315,8 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\tools.png" />
+    <None Include="Resources\takeoff.png" />
     <None Include="Resources\swatches.png" />
     <None Include="Resources\barchart.png" />
     <None Include="Resources\BWJrU_0005_Excel.png" />
@@ -322,6 +325,9 @@
     <None Include="Resources\BWJrU_0002_Bright-Pastel.png" />
     <None Include="Resources\BWJrU_0003_Chocolate.png" />
     <None Include="Resources\BWJrU_0007_Gray.png" />
+    <None Include="Resources\check1.png" />
+    <None Include="Resources\clipboard.png" />
+    <None Include="Resources\crop.png" />
     <Content Include="Resources\Resources.txt" />
   </ItemGroup>
   <PropertyGroup>

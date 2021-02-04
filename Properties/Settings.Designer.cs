@@ -215,12 +215,12 @@ namespace GINtool.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool useFCorder {
+        public bool sortAscending {
             get {
-                return ((bool)(this["useFCorder"]));
+                return ((bool)(this["sortAscending"]));
             }
             set {
-                this["useFCorder"] = value;
+                this["sortAscending"] = value;
             }
         }
         
@@ -245,6 +245,114 @@ namespace GINtool.Properties {
             }
             set {
                 this["catSheet"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool regPlot {
+            get {
+                return ((bool)(this["regPlot"]));
+            }
+            set {
+                this["regPlot"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool tblMap {
+            get {
+                return ((bool)(this["tblMap"]));
+            }
+            set {
+                this["tblMap"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool tblCombine {
+            get {
+                return ((bool)(this["tblCombine"]));
+            }
+            set {
+                this["tblCombine"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool tblSummary {
+            get {
+                return ((bool)(this["tblSummary"]));
+            }
+            set {
+                this["tblSummary"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool catPlot {
+            get {
+                return ((bool)(this["catPlot"]));
+            }
+            set {
+                this["catPlot"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool distPlot {
+            get {
+                return ((bool)(this["distPlot"]));
+            }
+            set {
+                this["distPlot"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool useCat {
+            get {
+                return ((bool)(this["useCat"]));
+            }
+            set {
+                this["useCat"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool tblOperon {
+            get {
+                return ((bool)(this["tblOperon"]));
+            }
+            set {
+                this["tblOperon"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool useSort {
+            get {
+                return ((bool)(this["useSort"]));
+            }
+            set {
+                this["useSort"] = value;
             }
         }
     }

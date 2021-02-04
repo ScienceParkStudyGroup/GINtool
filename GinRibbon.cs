@@ -9,15 +9,35 @@ using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 using SysData = System.Data;
 
+
 namespace GINtool
 {
-
+  
     public partial class GinRibbon
     {
         #region inits
 
         bool gOperonOutput = false;
         bool gCatOutput = false;
+        //bool gpValueUpdate = true;
+        //bool gRegulonPlot = true;
+
+        byte gNeedsUpdate = (byte)UPDATE_FLAGS.ALL;
+
+        // int[] updateFlags = new int[3] { 1, 1, 1 };
+
+        //bool SummaryTableNeedsUpdating = true;
+        //bool CombinedTableNeedsUpdating = true;
+        //bool OperonTableNeedsUpdating = true;
+        //bool MappedTableNeedsUpdating = true;
+        //bool RegulonPlotsNeedsUpdating = true;
+        //bool CategoryPlotNeedsUpdating = true;
+        //bool DistributionPlotNeedsUpdating = true;
+        //bool RegulonPlotNeedsUpdating = true;
+
+
+        int maxGenesPerOperon = 1;
+
         SysData.DataTable gRefWB = null; // RegulonData .. rename later
         SysData.DataTable gRefStats = null;
         SysData.DataTable gRefOperons = null;
@@ -28,10 +48,11 @@ namespace GINtool
 
         //bool gGeneratePlots = false;
         //bool gQPlot = false;
-        bool gNeedsUpdating = true;
-        bool gOrderFC = true;
-
-        bool gUseCatOutput = false;
+        //bool gNeedsUpdating = true;
+        //bool gOrderAscending = true;
+        bool gSortResults = false;
+        
+        //bool gUseCatOutput = false;
 
         static List<string> gAvailItems = null;
         static List<string> gUpItems = null;
@@ -45,9 +66,11 @@ namespace GINtool
         List<BsuRegulons> gList = null;
         SysData.DataTable gCombineInfo = null;
 
-        int gDDcatLevel = 1;
-        private bool gPlotDistribution = false;
-        private bool gPlotClustered = false;
+        //int gDDcatLevel = 1;
+        
+        
+       // private bool gPlotDistribution = false;
+     //   private bool gPlotClustered = false; // is category plot
 
         //PlotRoutines gEnrichmentAnalysis;
 
@@ -178,14 +201,13 @@ namespace GINtool
 
         private bool LoadOperonData()
         {
-
-            gApplication.StatusBar = "Load operon data";
-
-            if (Properties.Settings.Default.operonFile.Length == 0 || Properties.Settings.Default.operonSheet.Length == 0)
-                return false;
+          
+            if (Properties.Settings.Default.operonFile.Length == 0 || Properties.Settings.Default.operonSheet.Length == 0)            
+                return false;            
 
             gApplication.EnableEvents = false;
-            
+            gApplication.StatusBar = "Load operon data";
+
             SysData.DataTable _tmp = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.operonSheet, Properties.Settings.Default.operonFile, 1, 1);
             gRefOperons = new SysData.DataTable("OPERONS");
             gRefOperons.CaseSensitive = false;
@@ -195,6 +217,10 @@ namespace GINtool
             foreach(SysData.DataRow lRow in _tmp.Rows)
             {
                 string[] lItems = lRow.ItemArray[0].ToString().Split('-');
+                
+                if (maxGenesPerOperon < lItems.Length)
+                    maxGenesPerOperon = lItems.Length;
+
                 for (int i = 0; i < lItems.Length; i++)
                 {
                     SysData.DataRow lNewRow = gRefOperons.Rows.Add();
@@ -203,7 +229,6 @@ namespace GINtool
                 }
             }
             gApplication.EnableEvents = true;
-
             gApplication.StatusBar = "Ready";
             return gRefOperons.Rows.Count>0;
         }
@@ -264,8 +289,24 @@ namespace GINtool
             btnRegulonFileName.Label = Properties.Settings.Default.referenceFile;
             btnOperonFile.Label = Properties.Settings.Default.operonFile;
             btnCatFile.Label = Properties.Settings.Default.categoryFile;
-            cbOrderFC.Checked = Properties.Settings.Default.useFCorder;
+            cbOrderFC.Checked = Properties.Settings.Default.useSort;
+            cbDescending.Checked = !Properties.Settings.Default.sortAscending;
+            cbAscending.Checked = Properties.Settings.Default.sortAscending;
 
+            chkRegulon.Checked = Properties.Settings.Default.regPlot;
+            cbMapping.Checked = Properties.Settings.Default.tblMap;
+            cbSummary.Checked = Properties.Settings.Default.tblSummary;
+            cbCombined.Checked = Properties.Settings.Default.tblCombine;
+            cbOperon.Checked = Properties.Settings.Default.tblOperon;
+
+            cbClustered.Checked = Properties.Settings.Default.catPlot;
+            cbDistribution.Checked = Properties.Settings.Default.distPlot;
+            chkRegulon.Checked = Properties.Settings.Default.regPlot;
+
+            //cbOrderFC.Checked = Properties.Settings.Default.useFCorder;
+            cbUseCategories.Checked = Properties.Settings.Default.useCat;
+            cbUsePValues.Checked = Properties.Settings.Default.use_pvalues;
+            cbUseFoldChanges.Checked = !Properties.Settings.Default.use_pvalues;
             
 
             if (Properties.Settings.Default.operonFile.Length == 0)
@@ -275,6 +316,7 @@ namespace GINtool
             gUpItems = propertyItems("directionMapUp");
             gDownItems = propertyItems("directionMapDown");
 
+            btnSelect.Enabled = false;
             btApply.Enabled = false;
             ddBSU.Enabled = false;
             ddGene.Enabled = false;
@@ -282,7 +324,18 @@ namespace GINtool
             ddDir.Enabled = false;
             btPlot.Enabled = false;
             cbUseCategories.Enabled = false;
-            gOrderFC = cbOrderFC.Checked;
+            cbMapping.Enabled = false;
+            cbSummary.Enabled = false;
+            cbCombined.Enabled = false;
+            cbOperon.Enabled = false;
+            cbOrderFC.Enabled = false;
+            cbUsePValues.Enabled = false;
+            cbUseFoldChanges.Enabled = false;
+            toggleButton1.Enabled = true;
+            cbAscending.Enabled = false;
+            cbDescending.Enabled = false;
+
+            //gOrderAscending = cbOrderFC.Checked;
             //edtMaxGroups.Enabled = false;
             //btnPalette.Enabled = false;
 
@@ -303,16 +356,16 @@ namespace GINtool
 
             gExcelErrorValues = ((int[])Enum.GetValues(typeof(ExcelUtils.CVErrEnum))).ToList();
 
-            if (Properties.Settings.Default.use_pvalues)
-            {
-                splitButton3.Label = but_pvalues.Label;
-                splitButton3.Image = but_pvalues.Image;
-            }
-            else
-            {
-                splitButton3.Label = but_fc.Label;
-                splitButton3.Image = but_pvalues.Image;
-            }
+            //if (Properties.Settings.Default.use_pvalues)
+            //{
+            //    splitButton3.Label = but_pvalues.Label;
+            //    splitButton3.Image = but_pvalues.Image;
+            //}
+            //else
+            //{
+            //    splitButton3.Label = but_fc.Label;
+            //    splitButton3.Image = but_pvalues.Image;
+            //}
 
             btLoad.Enabled = System.IO.File.Exists(Properties.Settings.Default.referenceFile);
 
@@ -335,7 +388,28 @@ namespace GINtool
             ebMid.Enabled = enable;
             ebHigh.Enabled = enable;
             editMinPval.Enabled = enable;            
-            splitButton3.Enabled = enable;
+            //splitButton3.Enabled = enable;
+
+            //cbUseCategories.Enabled = enable;
+            cbMapping.Enabled = enable;
+            cbSummary.Enabled = enable;
+            cbCombined.Enabled = enable;
+
+            cbClustered.Enabled = enable;
+            cbDistribution.Enabled = enable;
+            chkRegulon.Enabled= enable && gOperonOutput;
+
+            cbOrderFC.Enabled = enable;
+            cbUseCategories.Enabled = enable && gCatOutput;
+
+            cbOperon.Enabled = enable && gOperonOutput;
+
+            cbUsePValues.Enabled = enable;
+            cbUseFoldChanges.Enabled = enable;
+
+            cbAscending.Enabled = enable;
+            cbDescending.Enabled = enable;
+
             //splitbtnEA.Enabled = enable;
         }
 
@@ -547,10 +621,14 @@ namespace GINtool
             return RangeAddress(sht.Cells[row, col]);
         }
 
-
+        // the main routine after mouse selection update // generates mapping output.. should be de-coupled (update data & mapping output)
         private (List<FC_BSU>, List<BsuRegulons>) GenerateOutput(bool suppressOutput=false)
         {
             gApplication.StatusBar = "Formatting output results";
+
+            gApplication.ScreenUpdating = false;
+            gApplication.DisplayAlerts = false;
+            gApplication.EnableEvents = false;
 
             Excel.Range theInputCells = GetActiveCell();
 
@@ -598,23 +676,27 @@ namespace GINtool
             }
 
 
-            if (RangeAddress(theInputCells) != gInputRange)
+            if (RangeAddress(theInputCells) != gInputRange || (gOutput == null || gList == null))
             {
                 gInputRange = RangeAddress(theInputCells);
-                gNeedsUpdating = true;
+                gNeedsUpdate = (byte)UPDATE_FLAGS.ALL;
+                //gNeedsUpdating = true;                
             }
             else
             {
+                gApplication.ScreenUpdating = true;
+                gApplication.DisplayAlerts = true;
+                gApplication.EnableEvents = true;
+                gApplication.StatusBar = "Ready";
                 return (gOutput, gList);
             }
-
-
+            
             int nrRows = theInputCells.Rows.Count;
             int startC = theInputCells.Column;
             int startR = theInputCells.Row;
 
             // from now always assume 3 columns.. p-value, fc, bsu
-            int offsetColumn = 1;
+           // int offsetColumn = 1;
 
             if(theInputCells.Columns.Count !=3)
             {
@@ -622,46 +704,48 @@ namespace GINtool
                 return (null, null);
 
             }                       
+
             // generate the results for outputting the data and summary
             List<BsuRegulons> lResults = QueryResultTable(theInputCells);
             // output the data
-            var lOut = PrepareResultTable(lResults);
-            SysData.DataTable lTable = lOut.Item1;
-            SysData.DataTable clrTbl;
+            //var lOut = PrepareResultTable(lResults);
 
-            if (!suppressOutput)
-            {
-                gApplication.StatusBar = "Creating mapping sheet";
+            //SysData.DataTable lTable = lOut.Item1;
+            //SysData.DataTable clrTbl;
 
-                Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
-                renameWorksheet(lNewSheet, "Mapped_");
+            //if (!suppressOutput)
+            //{
+            //    gApplication.StatusBar = "Creating mapping sheet";
+
+            //    Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
+            //    renameWorksheet(lNewSheet, "Mapped_");
 
 
-                lNewSheet.Cells[1, 1] = "BSU";
-                lNewSheet.Cells[1, 2] = "GENE";
-                lNewSheet.Cells[1, 3] = "FC";
-                lNewSheet.Cells[1, 4] = "PVALUE";
-                lNewSheet.Cells[1, 5] = "TOT REGULONS";
+            //    lNewSheet.Cells[1, 1] = "BSU";
+            //    lNewSheet.Cells[1, 2] = "GENE";
+            //    lNewSheet.Cells[1, 3] = "FC";
+            //    lNewSheet.Cells[1, 4] = "PVALUE";
+            //    lNewSheet.Cells[1, 5] = "TOT REGULONS";
 
-                string lastColumn = lTable.Columns[lTable.Columns.Count - 1].ColumnName;
-                lastColumn = lastColumn.Replace("col_", "");
-                int maxreg = Int16.Parse(lastColumn);
+            //    string lastColumn = lTable.Columns[lTable.Columns.Count - 1].ColumnName;
+            //    lastColumn = lastColumn.Replace("col_", "");
+            //    int maxreg = Int16.Parse(lastColumn);
 
-                for (int i = 0; i < maxreg; i++)
-                    lNewSheet.Cells[1, i + 6] = string.Format("Regulon_{0}", i + 1);
+            //    for (int i = 0; i < maxreg; i++)
+            //        lNewSheet.Cells[1, i + 6] = string.Format("Regulon_{0}", i + 1);
 
-                FastDtToExcel(lTable, lNewSheet, startR, offsetColumn, startR + nrRows - 1, offsetColumn + lTable.Columns.Count - 1);
+            //    FastDtToExcel(lTable, lNewSheet, startR, offsetColumn, startR + nrRows - 1, offsetColumn + lTable.Columns.Count - 1);
 
-                Excel.Range top = lNewSheet.Cells[1, 1];
-                Excel.Range bottom = lNewSheet.Cells[lTable.Rows.Count + 1, lTable.Columns.Count];
-                Excel.Range all = (Excel.Range)lNewSheet.get_Range(top, bottom);
+            //    Excel.Range top = lNewSheet.Cells[1, 1];
+            //    Excel.Range bottom = lNewSheet.Cells[lTable.Rows.Count + 1, lTable.Columns.Count];
+            //    Excel.Range all = (Excel.Range)lNewSheet.get_Range(top, bottom);
 
-                all.Columns.AutoFit();
+            //    all.Columns.AutoFit();
 
-                clrTbl = lOut.Item2;
-                ColorCells(clrTbl, lNewSheet, startR, offsetColumn + 5, startR + nrRows - 1, offsetColumn + lTable.Columns.Count - 1);
+            //    clrTbl = lOut.Item2;
+            //    ColorCells(clrTbl, lNewSheet, startR, offsetColumn + 5, startR + nrRows - 1, offsetColumn + lTable.Columns.Count - 1);
 
-            }
+            //}
 
             List<FC_BSU> lOutput = new List<FC_BSU>();
 
@@ -678,10 +762,66 @@ namespace GINtool
                 }
 
 
+
+            gApplication.ScreenUpdating = true;
+            gApplication.DisplayAlerts = true;
+            gApplication.EnableEvents = true;
+
+
             gApplication.StatusBar = "Ready";
             
+
+
             return (lOutput, lResults);
            
+        }
+       
+
+        private void CreateMappingSheet(List<BsuRegulons> bsuRegulons)
+        {
+            var lOut = PrepareResultTable(bsuRegulons);
+
+            SysData.DataTable lTable = lOut.Item1;
+            SysData.DataTable clrTbl;
+            
+
+            gApplication.StatusBar = "Creating mapping sheet";
+
+            int nrRows = lTable.Rows.Count;
+            //int startC = 1;
+            int startR = 2;
+
+            // from now always assume 3 columns.. p-value, fc, bsu
+            int offsetColumn = 1;
+
+
+            Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
+            renameWorksheet(lNewSheet, "Mapped_");
+
+            lNewSheet.Cells[1, 1] = "BSU";
+            lNewSheet.Cells[1, 2] = "GENE";
+            lNewSheet.Cells[1, 3] = "FC";
+            lNewSheet.Cells[1, 4] = "PVALUE";
+            lNewSheet.Cells[1, 5] = "TOT REGULONS";
+
+            string lastColumn = lTable.Columns[lTable.Columns.Count - 1].ColumnName;
+            lastColumn = lastColumn.Replace("col_", "");
+            int maxreg = Int16.Parse(lastColumn);
+
+            for (int i = 0; i < maxreg; i++)
+                lNewSheet.Cells[1, i + 6] = string.Format("Regulon_{0}", i + 1);
+
+            FastDtToExcel(lTable, lNewSheet, startR, offsetColumn, startR + nrRows - 1, offsetColumn + lTable.Columns.Count - 1);
+
+            Excel.Range top = lNewSheet.Cells[1, 1];
+            Excel.Range bottom = lNewSheet.Cells[lTable.Rows.Count + 1, lTable.Columns.Count];
+            Excel.Range all = (Excel.Range)lNewSheet.get_Range(top, bottom);
+
+            all.Columns.AutoFit();
+
+            clrTbl = lOut.Item2;
+            ColorCells(clrTbl, lNewSheet, startR, offsetColumn + 5, startR + nrRows - 1, offsetColumn + lTable.Columns.Count - 1);
+            
         }
 
         private void FastDtToExcel(System.Data.DataTable dt, Excel.Worksheet sheet, int firstRow, int firstCol, int lastRow, int lastCol)
@@ -1010,7 +1150,7 @@ namespace GINtool
 
         //    int[] sortedEntries = Enumerable.Range(0, nrRegulons).ToArray();
 
-        //    if (gOrderFC)
+        //    if (gOrderAscending)
         //    {
         //        double[] __values = meanFC.ToArray();                
         //        var sortedEntriesPairs = __values
@@ -1184,7 +1324,7 @@ namespace GINtool
 
         //    int[] sortedEntries = Enumerable.Range(0, nrRegulons).ToArray();
 
-        //    if (gOrderFC)
+        //    if (gOrderAscending)
         //    {
         //        double[] __values = meanFC.ToArray();
         //        var sortedEntriesPairs = __values
@@ -1220,7 +1360,48 @@ namespace GINtool
 
         //}
 
+        private void CreateOperonSheet(SysData.DataTable table)
+        {
+            Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
+            renameWorksheet(lNewSheet, "Operon_");
 
+
+            int maxNrGenes = Int32.Parse(table.Compute("max([nrgenes])",string.Empty).ToString());
+
+            gApplication.ScreenUpdating = false;
+            gApplication.DisplayAlerts = false;
+            gApplication.EnableEvents = false;
+
+            int firstRow = 1;
+            int firstCol = 1;
+            //int lastCol = table.Columns.Count + firstCol;
+            int lastCol = (maxNrGenes + 4) + firstCol;
+            int lastRow = table.Rows.Count + firstRow;
+
+            Excel.Range top = lNewSheet.Cells[firstRow, firstCol];
+            Excel.Range bottom = lNewSheet.Cells[lastRow, lastCol];
+            Excel.Range all = (Excel.Range)lNewSheet.get_Range(top, bottom);
+
+            int col = 1;
+
+            lNewSheet.Cells[1, col++] = "Gene";
+            lNewSheet.Cells[1, col++] = "Operon Name";
+            lNewSheet.Cells[1, col++] = "Nr genes";
+            lNewSheet.Cells[1, col++] = "Operon";
+
+            for (int c=0;c< maxNrGenes; c++)
+            {
+                string colHeader = string.Format("FC Gene #{0}", c + 1);
+                lNewSheet.Cells[1, c+col] = colHeader;
+            }
+
+            FastDtToExcel(table, lNewSheet, 2, 1, table.Rows.Count + 1, maxNrGenes + 4);
+
+
+            gApplication.ScreenUpdating = true;
+            gApplication.DisplayAlerts = true;
+            gApplication.EnableEvents = true;
+        }
 
         private void CreateCombinedSheet(SysData.DataTable aTable)
         {
@@ -1246,8 +1427,9 @@ namespace GINtool
             lNewSheet.Cells[1, col++] = "GENE";
             lNewSheet.Cells[1, col++] = "FC";
             lNewSheet.Cells[1, col++] = "PVALUE";
-            if(gOperonOutput)
-                lNewSheet.Cells[1, col++] = "OPERON(S)";
+            
+            //if(gOperonOutput)
+            //    lNewSheet.Cells[1, col++] = "OPERON(S)";
 
 
             // determine the maximum number of regulons from the table that wass passed
@@ -1328,6 +1510,99 @@ namespace GINtool
         }
 
 
+        private (List<string>,List<double>) GetOperonGenesFC(string operon, List<BsuRegulons> lLst)
+        {
+
+            SysData.DataRow[] lquery = gRefOperons.Select(string.Format("Operon = '{0}'", operon));
+
+            List<string> lgenes = new List<string>();
+            List<double> lFCs = new List<double>();
+
+            int nrHits = lquery.Count();
+
+            foreach (DataRow row in lquery)
+            {                
+                string lgene = row["gene"].ToString();
+//                if (lgene == operon && nrHits>1)
+//                    continue;
+                lgenes.Add(lgene);
+                BsuRegulons result = lLst.Find(item => item.GENE == lgene );
+                if (result != null)
+                    lFCs.Add(result.FC);
+                else
+                    lFCs.Add(Double.NaN);
+
+            }   
+                                   
+            return (lgenes,lFCs);
+        }
+
+        private SysData.DataTable CreateOperonTable(SysData.DataTable aUsageTbl, List<BsuRegulons> lLst)
+        {
+            SysData.DataTable lTable = new SysData.DataTable();
+
+            SysData.DataColumn col = new SysData.DataColumn("Gene", Type.GetType("System.String"));
+            lTable.Columns.Add(col);
+
+            col = new SysData.DataColumn("operon", Type.GetType("System.String"));
+            lTable.Columns.Add(col);
+
+            col = new SysData.DataColumn("nrgenes", Type.GetType("System.Int16"));
+            lTable.Columns.Add(col);
+
+            col = new SysData.DataColumn("operon_genes", Type.GetType("System.String"));
+            lTable.Columns.Add(col);
+
+            for(int nr=0;nr<maxGenesPerOperon;nr++)
+            {
+                col = new SysData.DataColumn(string.Format("gene_{0}",nr+1), Type.GetType("System.Double"));
+                lTable.Columns.Add(col);
+            }
+
+
+            //SysData.DataTable uOperons = GetDistinctRecords(gRefOperons, new string[] { "Operon" });
+            double lowVal = Properties.Settings.Default.fcLOW;
+            for (int r = 0; r < lLst.Count; r++)
+            {
+                string geneName = lLst[r].GENE;
+
+                bool accept = Properties.Settings.Default.use_pvalues ? lLst[r].PVALUE < Properties.Settings.Default.pvalue_cutoff : Math.Abs(lLst[r].FC) > lowVal;
+                if (!accept)
+                    continue;
+
+                HashSet<string> luOperons = new HashSet<string>();
+
+                SysData.DataRow[] lOperons = gRefOperons.Select(string.Format("gene='{0}'", lLst[r].GENE));
+                foreach (DataRow row in lOperons)
+                {
+                    string operon = row["operon"].ToString();
+                    luOperons.Add(operon);
+                }
+
+                foreach(string operon in luOperons)
+                { 
+                    
+                    (List<string> lgenes, List<double> lFCs) = GetOperonGenesFC(operon, lLst);
+                    int nrgenes = lgenes.Count;
+                    string opgenes = string.Join("-", lgenes.ToArray());
+                    // addrow
+                    SysData.DataRow lRow = lTable.Rows.Add();
+                    lRow["gene"] = geneName;
+                    lRow["operon"] = operon;
+                    lRow["nrgenes"] = nrgenes;
+                    lRow["operon_genes"] = opgenes;
+                    for(int i=0;i<nrgenes;i++)
+                    {
+                        lRow[string.Format("gene_{0}", i + 1)] = lFCs[i];
+                    }
+                }
+                                
+            }
+
+
+            return lTable;
+        }
+
         private SysData.DataTable CreateCombinedTable(SysData.DataTable aUsageTbl, List <BsuRegulons> lLst)
         {
             SysData.DataTable lTable = new SysData.DataTable();
@@ -1346,11 +1621,11 @@ namespace GINtool
             col = new SysData.DataColumn("PVALUE", Type.GetType("System.Double"));
             lTable.Columns.Add(col);
             
-            if (gOperonOutput)
-            {
-                col = new SysData.DataColumn("OPERON", Type.GetType("System.String"));
-                lTable.Columns.Add(col);
-            }
+            //if (gOperonOutput)
+            //{
+            //    col = new SysData.DataColumn("OPERON", Type.GetType("System.String"));
+            //    lTable.Columns.Add(col);
+            //}
 
             int maxRegulons = 0;
             for (int i=0;i< lLst.Count; i++)
@@ -1381,23 +1656,23 @@ namespace GINtool
                     lRow["GENE"] = lLst[r].GENE;
                     lRow["PVALUE"] = lLst[r].PVALUE;
 
-                    if (gRefOperons != null)
-                    {
-                        string lOperon = "";
-                        if (lLst[r].GENE != "")
-                        {
-                            SysData.DataRow[] lOperons = gRefOperons.Select(string.Format("gene='{0}'", lLst[r].GENE));
-                            List<string> strOperons = new List<string>();
-                            for (int i = 0; i < lOperons.Length; i++)
-                            {
-                                strOperons.Add(lOperons[i]["operon"].ToString());
-                            }
+                    //if (gRefOperons != null)
+                    //{
+                    //    string lOperon = "";
+                    //    if (lLst[r].GENE != "")
+                    //    {
+                    //        SysData.DataRow[] lOperons = gRefOperons.Select(string.Format("gene='{0}'", lLst[r].GENE));
+                    //        List<string> strOperons = new List<string>();
+                    //        for (int i = 0; i < lOperons.Length; i++)
+                    //        {
+                    //            strOperons.Add(lOperons[i]["operon"].ToString());
+                    //        }
 
-                            lOperon = String.Join(", ", strOperons.ToArray());
-                        }
+                    //        lOperon = String.Join(", ", strOperons.ToArray());
+                    //    }
 
-                        lRow["OPERON"] = lOperon;
-                    }
+                    //    lRow["OPERON"] = lOperon;
+                    //}
 
                     double FC = lLst[r].FC;
 
@@ -1814,6 +2089,19 @@ namespace GINtool
 
         }
 
+
+        private void ResetTables()
+        {
+            gOutput = null;
+            gList = null;
+            gSummary = null;
+            gInputRange = null;
+            EnableOutputOptions(false);
+            btApply.Enabled = false;
+            btPlot.Enabled = false; 
+
+        }
+
         private void btLoad_Click(object sender, RibbonControlEventArgs e)
         {
             gApplication.EnableEvents = false;
@@ -1821,14 +2109,17 @@ namespace GINtool
             {
                 gOperonOutput = LoadOperonData();
                 gCatOutput = LoadCategoryData();
-                cbUseCategories.Enabled = gCatOutput;                
+               // cbUseCategories.Enabled = gCatOutput;                
                 Fill_DropDownBoxes();
                 if (gDownItems.Count == 0 && gUpItems.Count == 0 && gAvailItems.Count == 0)
                     LoadDirectionOptions();
-                btApply.Enabled = true;
-                btPlot.Enabled = true; 
+                //btApply.Enabled = true;
+                //btPlot.Enabled = true; 
+                btnSelect.Enabled = true;
+                toggleButton1.Enabled = true;
                 LoadFCDefaults();
-                EnableOutputOptions(true);
+                ResetTables();
+                //EnableOutputOptions(true);
             }
             gApplication.EnableEvents = true;
         }
@@ -1856,11 +2147,13 @@ namespace GINtool
         private void ddBSU_SelectionChanged(object sender, RibbonControlEventArgs e)
         {
             Properties.Settings.Default.referenceBSU = ddBSU.SelectedItem.Label;
+            SetFlags(UPDATE_FLAGS.ALL);
         }
 
         private void ddRegulon_SelectionChanged(object sender, RibbonControlEventArgs e)
         {
             Properties.Settings.Default.referenceRegulon = ddRegulon.SelectedItem.Label;
+            SetFlags(UPDATE_FLAGS.ALL);
         }
 
         private void btRegDirMap_Click(object sender, RibbonControlEventArgs e)
@@ -1872,6 +2165,8 @@ namespace GINtool
             storeValue("directionMapUp", gUpItems);
             storeValue("directionMapDown", gDownItems);
 
+            SetFlags(UPDATE_FLAGS.ALL);            
+
         }
 
         private void ddDir_SelectionChanged(object sender, RibbonControlEventArgs e)
@@ -1881,6 +2176,7 @@ namespace GINtool
             gUpItems.Clear();
             gDownItems.Clear();
             LoadDirectionOptions();
+            SetFlags(UPDATE_FLAGS.ALL);
         }
 
         private void validateTextBoxData(RibbonEditBox bx)
@@ -1909,6 +2205,8 @@ namespace GINtool
                     Properties.Settings.Default.fcMID = val;
                 if (high)
                     Properties.Settings.Default.fcHIGH = val;
+
+                SetFlags(UPDATE_FLAGS.FC_dependent);
             }
             else
             {
@@ -1939,7 +2237,14 @@ namespace GINtool
         #region main_routines
         private void btPlot_Click(object sender, RibbonControlEventArgs e)
         {
-            if (gPlotClustered)
+            if(!(Properties.Settings.Default.catPlot ||Properties.Settings.Default.regPlot  || Properties.Settings.Default.distPlot))
+            {
+                MessageBox.Show("Please select at least one plot to generate");
+                return;
+            }
+
+
+            if ((Properties.Settings.Default.catPlot || Properties.Settings.Default.regPlot)) //& gNeedsUpdate.Check(UPDATE_FLAGS.PCat))
             {
                 dlgTreeView dlg = new dlgTreeView();
 
@@ -1952,66 +2257,208 @@ namespace GINtool
                     dlg.populateTree(gRefWB, cat: false);
                 }
 
-
-
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
 
-                    if (gNeedsUpdating || gOutput == null || gSummary == null)
+                    if ((gOutput == null || gSummary == null) || gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
                     {
                         (gOutput, gList) = GenerateOutput(suppressOutput: true);
+
                         if (gOutput != null && gList != null)
+                        {
+                            UnSetFlags(UPDATE_FLAGS.TMapped);
                             (gSummary, gCombineInfo) = CreateUsageTable(gOutput);
-                        gNeedsUpdating = false;
+                            UnSetFlags(UPDATE_FLAGS.TCombined);
+                            //UnSetFlags(UPDATE_FLAGS.TSummary);
+                            //gNeedsUpdate.UnSet(UPDATE_FLAGS.TCombined);
+                        }
+                        
+                        //gNeedsUpdating = false;
                     }
 
                     //if (gEnrichmentAnalysis == null)
                     //gEnrichmentAnalysis = new EnrichmentAnalysis(gApplication);
 
-                    if (gOutput != null && gSummary != null && dlg.GetSelection().Count() > 0)
-                        CategoryPlot(gOutput, gSummary, dlg.GetSelection());
+                    if ((gOutput != null && gSummary != null && dlg.GetSelection().Count() > 0) ) //&& gNeedsUpdate.Check(UPDATE_FLAGS.PCat))
+                    {
+                        if (Properties.Settings.Default.catPlot)
+                        {
+                            CategoryPlot(gOutput, gSummary, dlg.GetSelection());
+                            //UnSetFlags(UPDATE_FLAGS.PCat);
+                            //gNeedsUpdate.UnSet(UPDATE_FLAGS.PCat);
+                        }
+                    //}
+                    //if ((gOutput != null && gSummary != null && dlg.GetSelection().Count() > 0) ) //&& gNeedsUpdate.Check(UPDATE_FLAGS.PRegulon))
+                    //{ 
+                        if (Properties.Settings.Default.regPlot)
+                        {
+                            // data for now.. to be changed in plot
+                            RegulonPlotData(gOutput, gSummary, dlg.GetSelection());
+                            //UnSetFlags(UPDATE_FLAGS.PRegulon);
+                            //gNeedsUpdate.UnSet(UPDATE_FLAGS.PRegulon);
+                        }
+                    }
                 }
+
             }
 
-            if(gPlotDistribution)
+
+            // verschil tussen tabel maken en data updaten!!!! 1-2-2021
+
+            if(Properties.Settings.Default.distPlot)
             {
-                if (gNeedsUpdating || gOutput == null || gSummary == null)
+                if (gOutput == null || gSummary == null || gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
                 {
                     (gOutput, gList) = GenerateOutput(suppressOutput: true);
                     if (gOutput != null && gList != null)
+                    {
+                        UnSetFlags(UPDATE_FLAGS.TMapped);                        
                         (gSummary, gCombineInfo) = CreateUsageTable(gOutput);
-                    gNeedsUpdating = false;
+                        UnSetFlags(UPDATE_FLAGS.TCombined);                        
+                    }                    
                 }
 
-                if (gOutput != null && gSummary != null )
+                if ((gOutput != null && gSummary != null) ) //&& gNeedsUpdate.Check(UPDATE_FLAGS.PDist))
+                {
                     DistributionPlot(gOutput, gSummary);
+                    //UnSetFlags(UPDATE_FLAGS.PDist);
+                }
             }
 
+
         }
+        //private void btApply_Click(object sender, RibbonControlEventArgs e)
+        //{
+        //    gApplication.EnableEvents = false;
+        //    gApplication.DisplayAlerts = false;
+
+        //    if(gNeedsUpdate.None())            
+        //        return;            
+
+
+        //    if (gOutput == null || gSummary == null)
+        //    {
+
+        //        if(gOutput == null || gList ==null || gNeedsUpdating)
+        //            (gOutput, gList) = GenerateOutput();
+
+        //        if (gOutput is null || gList is null)
+        //            return;
+
+        //        if ((gSummary == null && gCombineInfo == null) || gNeedsUpdating)
+        //        {
+        //            (gSummary, gCombineInfo) = CreateUsageTable(gOutput);
+        //            CreateSummarySheet(gSummary);
+
+        //            //CreateCombinedSheet(lCombined);          
+        //        }
+
+        //        if (gpValueUpdate) // add fccheck
+        //        {
+        //            SysData.DataTable lCombined = CreateCombinedTable(gCombineInfo, gList);
+        //            CreateCombinedSheet(lCombined);
+
+        //            if(gOperonOutput)
+        //            {
+        //                SysData.DataTable tblOperon = CreateOperonTable(gCombineInfo, gList);
+        //                CreateOperonSheet(tblOperon);
+        //            }    
+
+        //            gpValueUpdate = false;
+        //        }
+
+        //        gNeedsUpdating = false;
+        //    }
+
+        //    gApplication.EnableEvents = true;
+        //    gApplication.DisplayAlerts = true;
+        //}
+        private void SetFlags(UPDATE_FLAGS f)
+        {
+            gNeedsUpdate = (byte) (gNeedsUpdate | (byte)f);
+        }
+
+        private void UnSetFlags(UPDATE_FLAGS f)
+        {
+            gNeedsUpdate = (byte)(gNeedsUpdate & (byte)~f);
+        }
+
+        private bool NeedsUpdate(UPDATE_FLAGS f)
+        {
+            return gNeedsUpdate.Check(f);
+        }
+
+        private bool AnyUpdate()
+        {
+            return gNeedsUpdate.Any();
+        }
+
+        private bool NoUpdate()
+        {
+            return gNeedsUpdate.None();
+        }
+
+
         private void btApply_Click(object sender, RibbonControlEventArgs e)
         {
+
+
+            if( !(Properties.Settings.Default.tblMap || Properties.Settings.Default.tblSummary || Properties.Settings.Default.tblCombine || Properties.Settings.Default.tblOperon))
+            {
+                MessageBox.Show("Please select at least one output table to generate");
+                return;
+            }
+            
             gApplication.EnableEvents = false;
             gApplication.DisplayAlerts = false;
 
-            if (gNeedsUpdating || gOutput == null || gSummary == null)
+            if (NoUpdate())
+                return;
+            
+            //if ( (gOutput == null || gList == null) || NeedsUpdate(UPDATE_FLAGS.TMapped))
+            //{
+            //    (gOutput, gList) = GenerateOutput();
+
+            //    if (gOutput is null || gList is null)
+            //        return;
+
+            //    UnSetFlags(UPDATE_FLAGS.TMapped);
+            //}
+            if(Properties.Settings.Default.tblMap)
+                CreateMappingSheet(gList);
+                         
+            if ((gSummary == null && gCombineInfo == null) || NeedsUpdate(UPDATE_FLAGS.TSummary)) 
             {
-                (gOutput, gList) = GenerateOutput();
+                (gSummary, gCombineInfo) = CreateUsageTable(gOutput);              
+                UnSetFlags(UPDATE_FLAGS.TSummary);                
+            }
+            
+            if (gSummary != null && Properties.Settings.Default.tblSummary)
+                CreateSummarySheet(gSummary);
+            
+
+            if (Properties.Settings.Default.tblCombine) // can combine table/sheet because it's a quick routine
+            {
+                SysData.DataTable lCombined = CreateCombinedTable(gCombineInfo, gList);
+                CreateCombinedSheet(lCombined);
+                UnSetFlags(UPDATE_FLAGS.TCombined);                
+              
+            }            
                 
 
-                if (gOutput != null && gList!=null)
-                {
-                    (gSummary, gCombineInfo) = CreateUsageTable(gOutput);
-                    CreateSummarySheet(gSummary);
-                    SysData.DataTable lCombined = CreateCombinedTable(gCombineInfo, gList);
-                    CreateCombinedSheet(lCombined);          
-                }
-
-                gNeedsUpdating = false;
+            if ( Properties.Settings.Default.tblOperon && gOperonOutput) // can combine table/sheet because it's a quick routine
+            {
+                SysData.DataTable tblOperon = CreateOperonTable(gCombineInfo, gList);
+                CreateOperonSheet(tblOperon);
+                UnSetFlags(UPDATE_FLAGS.TOperon);                
             }
-
+            
             gApplication.EnableEvents = true;
             gApplication.DisplayAlerts = true;
         }
+
+
+
         private List<element_fc> CatElements2ElementsFC(SysData.DataView dataView, List<cat_elements> cat_Elements)
         {
 
@@ -2036,7 +2483,7 @@ namespace GINtool
                 SysData.DataTable _dt = dataView.ToTable(true, "Gene", "FC");
 
                 element_fc element_Fc;
-                element_Fc.catName = ce.catName;
+                element_Fc.catName = string.Format("{0}({1})",ce.catName,_dt.Rows.Count);
                 List<float> _fcs = new List<float>();
                 foreach(DataRow _row in _dt.Rows)
                 {
@@ -2047,22 +2494,31 @@ namespace GINtool
                 {
                     element_Fc.average = 0;
                     element_Fc.fc = null;
+                    element_Fc.sd = 0;
+                    element_Fc.mad = 0;
                 }
                 else
                 {
                     element_Fc.average = _fcs.Average();
                     element_Fc.fc = _fcs.ToArray();
+                    element_Fc.sd = _fcs.sd();
+                    element_Fc.mad = _fcs.mad();
                 }
                 element_Fcs.Add(element_Fc);                               
             }
 
-            float[] __values = element_Fcs.Select(x => x.average).ToArray();
-            var sortedElements = (!gOrderFC) ? __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderByDescending(x => x.Key).ToList();
+            if (Properties.Settings.Default.useSort)
+            {
+                float[] __values = element_Fcs.Select(x => x.average).ToArray();
+                var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderByDescending(x => x.Key).ToList();
 
-            //List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
-            //return (element_Fcs, sortedIndex);
+                //List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
+                //return (element_Fcs, sortedIndex);
 
-            element_Fcs = sortedElements.Select(x => element_Fcs[x.Value]).ToList();
+                element_Fcs = sortedElements.Select(x => element_Fcs[x.Value]).ToList();
+            }
+
+
             return element_Fcs;
         }
 
@@ -2075,35 +2531,43 @@ namespace GINtool
             {                
                 dataView.RowFilter = String.Format("Regulon='{0}'", el.catName);
                 element_fc element_Fc;
-                element_Fc.catName = el.catName;
+                //element_Fc.catName = el.catName;
+                
                 SysData.DataTable _dataTable = dataView.ToTable();
+                element_Fc.catName = string.Format("{0}({1})", el.catName, _dataTable.Rows.Count);
                 if (_dataTable.Rows.Count > 0)
                 {
-                    float[] _fcs = new float[_dataTable.Rows.Count];
+                    List<float> _fcs = new List<float>(_dataTable.Rows.Count);
                     for (int i = 0; i < _dataTable.Rows.Count; i++)
                     {
-                        _fcs[i] = float.Parse(_dataTable.Rows[i]["FC"].ToString());
+                        _fcs.Add(float.Parse(_dataTable.Rows[i]["FC"].ToString()));
                     }
 
                     element_Fc.average = _fcs.Average();
-                    element_Fc.fc = _fcs;
+                    element_Fc.fc = _fcs.ToArray();
+                    element_Fc.sd = _fcs.sd();
+                    element_Fc.mad = _fcs.mad();
                     element_Fcs.Add(element_Fc);
                 }
                 else
                 {
                     element_Fc.average = 0;
                     element_Fc.fc = new float[] { 0 };
+                    element_Fc.sd = 0;
+                    element_Fc.mad = 0;
                     element_Fcs.Add(element_Fc);
                 }
             }
 
+            if (Properties.Settings.Default.useSort)
+            {
+                float[] __values = element_Fcs.Select(x => x.average).ToArray();
+                var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderByDescending(x => x.Key).ToList();
 
-            float[] __values = element_Fcs.Select(x => x.average).ToArray();
-            var sortedElements = (!gOrderFC) ? __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderByDescending(x => x.Key).ToList();
-
-            //List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
-            //return (element_Fcs, sortedIndex);
-            element_Fcs = sortedElements.Select(x => element_Fcs[x.Value]).ToList();            
+                List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
+                //return (element_Fcs, sortedIndex);
+                element_Fcs = sortedElements.Select(x => element_Fcs[x.Value]).ToList();
+            }
             return element_Fcs;
         }
 
@@ -2118,7 +2582,7 @@ namespace GINtool
             }
 
             float[] __values = _values.ToArray();
-            var sortedGenes = (!gOrderFC) ? __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderByDescending(x => x.Key).ToList();
+            var sortedGenes = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderByDescending(x => x.Key).ToList();
 
             
             List<float> sortedGenesValues = sortedGenes.Select(x => x.Key).ToList();
@@ -2307,7 +2771,7 @@ namespace GINtool
             
             SysData.DataView dataView = _fc_BSU.AsDataView();
             List<element_fc> catPlotData = null;            
-            if (gUseCatOutput)
+            if (Properties.Settings.Default.useCat)
             {
                 catPlotData = CatElements2ElementsFC(dataView, cat_Elements);                
             }
@@ -2315,8 +2779,8 @@ namespace GINtool
                 catPlotData = Regulons2ElementsFC(dataView, cat_Elements);
            
 
-            int chartNr = gUseCatOutput ? nextWorksheet("CategoryPlot"): nextWorksheet("RegulonPlot");            
-            string chartName = (gUseCatOutput ? "CategoryPlot_" : "RegulonPlot_") + chartNr.ToString();
+            int chartNr = Properties.Settings.Default.useCat ? nextWorksheet("CategoryPlot"): nextWorksheet("RegulonPlot");            
+            string chartName = (Properties.Settings.Default.useCat ? "CategoryPlot_" : "RegulonPlot_") + chartNr.ToString();
 
 
             
@@ -2326,6 +2790,92 @@ namespace GINtool
 
             gApplication.EnableEvents = true;
             gApplication.DisplayAlerts = true;            
+        }
+
+
+        private void RegulonPlotData(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements)
+        {
+            gApplication.EnableEvents = false;
+            gApplication.DisplayAlerts = false;
+
+            SysData.DataTable _fc_BSU = ReformatResults(aOutput);
+
+
+            List<element_fc> element_Fcs = new List<element_fc>();
+
+            // HashSet ensures unique list
+            HashSet<string> lRegulons = new HashSet<string>();
+
+            foreach (SysData.DataRow row in aSummary.Rows)
+                lRegulons.Add(row.ItemArray[0].ToString());
+
+            SysData.DataView dataView = _fc_BSU.AsDataView();
+            List<element_fc> catPlotData = null;
+            if (Properties.Settings.Default.useCat)
+            {
+                catPlotData = CatElements2ElementsFC(dataView, cat_Elements);
+            }
+            else
+                catPlotData = Regulons2ElementsFC(dataView, cat_Elements);
+
+            CreateRegulonPlotDataSheet(catPlotData);
+
+            gApplication.EnableEvents = true;
+            gApplication.DisplayAlerts = true;
+        }
+
+
+        private DataTable ElementsToTable(List<element_fc> elements)
+        {
+
+            SysData.DataTable lTable = new SysData.DataTable("Elements");
+            SysData.DataColumn regColumn = new SysData.DataColumn("Name", Type.GetType("System.String"));
+            SysData.DataColumn avgColumn = new SysData.DataColumn("Average", Type.GetType("System.Single"));
+            SysData.DataColumn madColumn = new SysData.DataColumn("Mad", Type.GetType("System.Single"));
+            SysData.DataColumn stdColumn = new SysData.DataColumn("Std", Type.GetType("System.Single"));
+            
+
+
+            lTable.Columns.Add(regColumn);
+            lTable.Columns.Add(avgColumn);
+            lTable.Columns.Add(madColumn);
+            lTable.Columns.Add(stdColumn);
+            
+
+            for (int r = 0; r < elements.Count; r++)
+            {
+                SysData.DataRow lRow = lTable.Rows.Add();
+                lRow["Name"] = elements[r].catName;
+                lRow["Average"] = elements[r].average;
+                lRow["Mad"] = elements[r].mad;
+                lRow["Std"] = elements[r].sd;
+                
+            }
+
+            return lTable;
+
+        }
+
+
+        private void CreateRegulonPlotDataSheet(List<element_fc> theElements)
+        {
+            Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
+            renameWorksheet(lNewSheet, "RegulonImp_");
+
+            DataTable lTable = ElementsToTable(theElements);
+
+
+            lNewSheet.Cells[1, 1] = "Regulon/Category";
+            lNewSheet.Cells[1, 2] = "Average FC";
+            lNewSheet.Cells[1, 3] = "MAD FC";
+
+            lNewSheet.Cells[1, 4] = "STD FC";
+            
+            // starting from row 2
+
+
+            FastDtToExcel(lTable, lNewSheet, 2, 1, lTable.Rows.Count + 1, lTable.Columns.Count);
+
         }
 
 
@@ -2427,7 +2977,7 @@ namespace GINtool
         private void ddGene_SelectionChanged(object sender, RibbonControlEventArgs e)
         {
             Properties.Settings.Default.referenceGene = ddGene.SelectedItem.Label;
-
+            SetFlags(UPDATE_FLAGS.ALL);
         }
        
         private void editMinPval_TextChanged(object sender, RibbonControlEventArgs e)
@@ -2436,7 +2986,10 @@ namespace GINtool
             {
                 // set the text value to what is parsed
                 editMinPval.Text = val.ToString();                
-                Properties.Settings.Default.pvalue_cutoff = val;                
+                Properties.Settings.Default.pvalue_cutoff = val;
+                
+                SetFlags(UPDATE_FLAGS.P_dependent);
+                //gpValueUpdate = true;
             }
             else            
                 editMinPval.Text = Properties.Settings.Default.pvalue_cutoff.ToString();                            
@@ -2444,16 +2997,18 @@ namespace GINtool
 
         private void button1_Click_1(object sender, RibbonControlEventArgs e)
         {
-            splitButton3.Label = but_pvalues.Label;
-            splitButton3.Image = but_pvalues.Image;
+            //splitButton3.Label = but_pvalues.Label;
+            //splitButton3.Image = but_pvalues.Image;
             Properties.Settings.Default.use_pvalues = true;
+            SetFlags(UPDATE_FLAGS.P_dependent);
         }
 
         private void but_fc_Click(object sender, RibbonControlEventArgs e)
         {
-            splitButton3.Label = but_fc.Label;
-            splitButton3.Image = but_fc.Image;
+            //splitButton3.Label = but_fc.Label;
+            //splitButton3.Image = but_fc.Image;
             Properties.Settings.Default.use_pvalues = false;
+            SetFlags(UPDATE_FLAGS.FC_dependent);
         }
 
         private void tglTaskPane_Click(object sender, RibbonControlEventArgs e)
@@ -2473,6 +3028,11 @@ namespace GINtool
             Properties.Settings.Default.operonFile = "";
             Properties.Settings.Default.operonSheet = "";
             btnOperonFile.Label = "No file selected";
+           
+            gOperonOutput = false;
+            cbOperon.Checked = false;
+            cbOperon.Enabled = false;
+            Properties.Settings.Default.tblOperon = false;
         }
 
         private void btnEA_Click(object sender, RibbonControlEventArgs e)
@@ -2560,8 +3120,8 @@ namespace GINtool
 
         private void cbOrderFC_Click(object sender, RibbonControlEventArgs e)
         {
-            Properties.Settings.Default.useFCorder = cbOrderFC.Checked;
-            gOrderFC = cbOrderFC.Checked;
+            Properties.Settings.Default.useSort= cbOrderFC.Checked;
+            //gOrderAscending = cbOrderFC.Checked;
         }
 
         private void btnSelectCatFile_Click(object sender, RibbonControlEventArgs e)
@@ -2590,19 +3150,47 @@ namespace GINtool
 
         private void cbUseCategories_Click(object sender, RibbonControlEventArgs e)
         {
-            gUseCatOutput = cbUseCategories.Checked;
+            Properties.Settings.Default.useCat = cbUseCategories.Checked;
+            
         }
 
         private void cbClustered_Click(object sender, RibbonControlEventArgs e)
         {
-            gPlotClustered = cbClustered.Checked;
+            Properties.Settings.Default.catPlot = cbClustered.Checked;
         }
 
         private void cbDistribution_Click(object sender, RibbonControlEventArgs e)
         {
-            gPlotDistribution = cbDistribution.Checked;
+            Properties.Settings.Default.distPlot = cbDistribution.Checked;
         }
 
+        // data for regulon plot
+        private void checkBox1_Click(object sender, RibbonControlEventArgs e)
+        {
+            Properties.Settings.Default.regPlot = chkRegulon.Checked;            
+        }
+
+        private void toggleButton1_Click(object sender, RibbonControlEventArgs e)
+        {
+            ShowSettingPannels(toggleButton1.Checked);
+            grpPlot.Visible = !toggleButton1.Checked;
+            grpTable.Visible = !toggleButton1.Checked;
+            grpDta.Visible = !toggleButton1.Checked;
+        }
+
+        private void ShowSettingPannels(bool show)
+        {
+            grpReference.Visible = show;
+            grpMap.Visible = show;
+            grpUpDown.Visible = show;
+            grpFC.Visible = show;
+            grpCutOff.Visible = show;
+            grpDirection.Visible = show;
+            //grpTables.Visible = show;
+
+        }
+
+        
 
 
         //private void cbQplot_Click(object sender, RibbonControlEventArgs e)
@@ -2641,6 +3229,109 @@ namespace GINtool
         //    btnPalette.Image = clrChocolate.Image;
         //    Properties.Settings.Default.defaultPalette = (int)System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Chocolate;
         //}
+        public enum UPDATE_FLAGS:byte
+        {     
+            TSummary  = 0b_0000_0001,
+            TCombined = 0b_0000_0010,
+            TOperon   = 0b_0000_0100,
+            TMapped   = 0b_0000_1000,
+            PRegulon  = 0b_0001_0000,
+            PDist     = 0b_0010_0000,
+            PCat      = 0b_0100_0000,
+            POperon   = 0b_1000_0000,
+            
+            FC_dependent = TCombined | POperon,
+            P_dependent = TCombined | POperon,
+            
+            ALL = 0b_1111_1111,
+            NONE = 0b_0000_0000
+        };
+
+
+        public enum FLAG_BITS : int
+        {
+            TSummary = 0,
+            TCombined = 1,
+            TOperon = 2,
+            TMapped = 3,
+            PRegulon = 4,
+            PDist = 5,
+            PCat = 6,
+            POperon = 7,                        
+        };
+
+        private void cbMapping_Click(object sender, RibbonControlEventArgs e)
+        {
+            Properties.Settings.Default.tblMap = cbMapping.Checked;
+        }
+
+        private void cbSummary_Click(object sender, RibbonControlEventArgs e)
+        {
+            Properties.Settings.Default.tblSummary = cbSummary.Checked;
+        }
+
+        private void cbCombined_Click(object sender, RibbonControlEventArgs e)
+        {
+            Properties.Settings.Default.tblCombine = cbCombined.Checked;
+        }
+
+        private void cbOperon_Click(object sender, RibbonControlEventArgs e)
+        {
+            Properties.Settings.Default.tblOperon = cbOperon.Checked;
+        }
+
+        private void btnClearCatFile_Click(object sender, RibbonControlEventArgs e)
+        {
+            gCatOutput = false;
+            cbUseCategories.Checked = false;
+            cbUseCategories.Enabled = false;
+            Properties.Settings.Default.useCat = false;
+        }
+
+        private void cbUsePValues_Click(object sender, RibbonControlEventArgs e)
+        {
+            cbUseFoldChanges.Checked = !cbUsePValues.Checked;
+            Properties.Settings.Default.use_pvalues = cbUsePValues.Checked;
+        }
+
+        private void cbUseFoldChanges_Click(object sender, RibbonControlEventArgs e)
+        {
+            cbUsePValues.Checked = !cbUseFoldChanges.Checked;
+            Properties.Settings.Default.use_pvalues = cbUsePValues.Checked;        
+        }
+
+        private void btnSelect_Click(object sender, RibbonControlEventArgs e)
+        {
+            //gApplication.EnableEvents = false;
+            //gApplication.DisplayAlerts = false;
+
+            (gOutput, gList) = GenerateOutput();
+
+            if (gOutput is null || gList is null)
+                return;
+
+            btApply.Enabled = true;
+            btPlot.Enabled = true;                 
+            EnableOutputOptions(true);
+            
+            UnSetFlags(UPDATE_FLAGS.TMapped);            
+
+            //gApplication.EnableEvents = true;
+            //gApplication.DisplayAlerts = true;
+
+        }
+
+        private void cbDescending_Click(object sender, RibbonControlEventArgs e)
+        {
+            Properties.Settings.Default.sortAscending = !cbDescending.Checked;            
+            cbAscending.Checked = !cbDescending.Checked;
+        }
+
+        private void cbAscending_Click(object sender, RibbonControlEventArgs e)
+        {
+            Properties.Settings.Default.sortAscending = cbAscending.Checked;
+            cbDescending.Checked = !cbAscending.Checked;
+        }
     }
 
 

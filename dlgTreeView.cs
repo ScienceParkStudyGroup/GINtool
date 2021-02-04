@@ -230,6 +230,11 @@ namespace GINtool
         // select button pressed
         private void button1_Click(object sender, EventArgs e)
         {
+            if (treeView1.SelectedNode.Parent == null)
+            {
+                MessageBox.Show("Cannot select top node");
+                return;
+            }
 
             TreeNode treeNode = treeView1.SelectedNode;
             if (treeNode == null)
@@ -250,7 +255,7 @@ namespace GINtool
                 treeView2.Nodes.Add(treeNode);
                 addToSelection(treeNode);
             }
-
+            UpdateCounter();
         }
 
         // button unselect pressed
@@ -273,6 +278,8 @@ namespace GINtool
                 else // check if main nodes are correctly placed
                     checkParentNodes();
             }
+
+            UpdateCounter();
         }
 
         // check integrity of tree if new (sub) head node is added
@@ -417,6 +424,7 @@ namespace GINtool
         {
             List<TreeNode> selection = new List<TreeNode>();
 
+
             foreach (TreeNode node in treeView1.TopNode.Nodes)
                 selection.Add(node);
 
@@ -440,8 +448,13 @@ namespace GINtool
                 }
 
             }
+            UpdateCounter();
         }
 
+        void UpdateCounter()
+        {
+            textBox1.Text = treeView2.Nodes.Count.ToString();
+        }
 
         private void btnAllBack_Click(object sender, EventArgs e)
         {
@@ -460,6 +473,8 @@ namespace GINtool
                 else // check if main nodes are correctly placed
                     checkParentNodes();
             }
+
+            UpdateCounter();
         }
     }
 
@@ -477,6 +492,10 @@ namespace GINtool
         public string catName;        
         public float[] fc;
         public float average;
+        public float sd;
+        public float mad;
     };
+
+      
 
 }
