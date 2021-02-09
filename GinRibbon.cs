@@ -1,4 +1,6 @@
-﻿using Microsoft.Office.Tools.Ribbon;
+﻿#undef CLICK_CHART // check to include clickable chart and events.. only if object storage is an option.
+
+using Microsoft.Office.Tools.Ribbon;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -21,6 +23,8 @@ namespace GINtool
         bool gCatOutput = false;
         //bool gpValueUpdate = true;
         //bool gRegulonPlot = true;
+
+        List<chart_info> gCharts = new List<chart_info>();
 
         byte gNeedsUpdate = (byte)UPDATE_FLAGS.ALL;
 
@@ -620,6 +624,19 @@ namespace GINtool
         {
             return RangeAddress(sht.Cells[row, col]);
         }
+
+
+
+        private void AddTask()
+        {
+
+        }
+
+        private void RemoveTask()
+        {
+
+        }
+
 
         // the main routine after mouse selection update // generates mapping output.. should be de-coupled (update data & mapping output)
         private (List<FC_BSU>, List<BsuRegulons>) GenerateOutput(bool suppressOutput=false)
@@ -2496,6 +2513,7 @@ namespace GINtool
                     element_Fc.fc = null;
                     element_Fc.sd = 0;
                     element_Fc.mad = 0;
+                    element_Fc.genes = null;
                 }
                 else
                 {
@@ -2503,6 +2521,7 @@ namespace GINtool
                     element_Fc.fc = _fcs.ToArray();
                     element_Fc.sd = _fcs.sd();
                     element_Fc.mad = _fcs.mad();
+                    element_Fc.genes = null;
                 }
                 element_Fcs.Add(element_Fc);                               
             }
@@ -2517,7 +2536,12 @@ namespace GINtool
 
                 element_Fcs = sortedElements.Select(x => element_Fcs[x.Value]).ToList();
             }
+            else // don't sort but possibly reverse direction
+            {
+                if(Properties.Settings.Default.sortAscending)
+                    element_Fcs.Reverse();
 
+            }
 
             return element_Fcs;
         }
@@ -2538,8 +2562,10 @@ namespace GINtool
                 if (_dataTable.Rows.Count > 0)
                 {
                     List<float> _fcs = new List<float>(_dataTable.Rows.Count);
+                    List<string> _genes = new List<string>(_dataTable.Rows.Count);
                     for (int i = 0; i < _dataTable.Rows.Count; i++)
                     {
+                        _genes.Add(_dataTable.Rows[i]["Gene"].ToString());
                         _fcs.Add(float.Parse(_dataTable.Rows[i]["FC"].ToString()));
                     }
 
@@ -2547,12 +2573,14 @@ namespace GINtool
                     element_Fc.fc = _fcs.ToArray();
                     element_Fc.sd = _fcs.sd();
                     element_Fc.mad = _fcs.mad();
+                    element_Fc.genes = _genes.ToArray();
                     element_Fcs.Add(element_Fc);
                 }
                 else
                 {
                     element_Fc.average = 0;
                     element_Fc.fc = new float[] { 0 };
+                    element_Fc.genes = new string[] { "" };
                     element_Fc.sd = 0;
                     element_Fc.mad = 0;
                     element_Fcs.Add(element_Fc);
@@ -2567,6 +2595,12 @@ namespace GINtool
                 List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
                 //return (element_Fcs, sortedIndex);
                 element_Fcs = sortedElements.Select(x => element_Fcs[x.Value]).ToList();
+            }
+            else // don't sort but possibly reverse direction
+            {
+                if (Properties.Settings.Default.sortAscending)
+                    element_Fcs.Reverse();
+
             }
             return element_Fcs;
         }
@@ -2713,8 +2747,6 @@ namespace GINtool
             }
 
 
-
-
             chartPage.Axes(Excel.XlAxisType.xlValue).TickLabelPosition = Excel.XlTickLabelPosition.xlTickLabelPositionNone;
             chartPage.Axes(Excel.XlAxisType.xlValue).MajorGridLines.Delete();            
             chartPage.Axes(Excel.XlAxisType.xlValue).Format.Line.Weight = 0.25;
@@ -2753,6 +2785,7 @@ namespace GINtool
             gApplication.DisplayAlerts = true;
         }
 
+
         private void CategoryPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements )
         {
             gApplication.EnableEvents = false;
@@ -2783,8 +2816,13 @@ namespace GINtool
             string chartName = (Properties.Settings.Default.useCat ? "CategoryPlot_" : "RegulonPlot_") + chartNr.ToString();
 
 
-            
-            Excel.Chart aChart = PlotRoutines.CreateCategoryPlot(catPlotData,chartName);            
+#if CLICK_CHART
+            PlotRoutines.CreateCategoryPlot(catPlotData,chartName);
+            Excel.Chart aChart = gApplication.ActiveChart;
+            aChart.MouseDown += new Excel.ChartEvents_MouseDownEventHandler(AChart_MouseDown);
+            gCharts.Add(new chart_info(aChart, catPlotData));
+#endif
+
             this.RibbonUI.ActivateTab("TabGINtool");
             
 
@@ -2792,6 +2830,30 @@ namespace GINtool
             gApplication.DisplayAlerts = true;            
         }
 
+#if CLICK_CHART
+
+        private void AChart_MouseDown(int Button, int Shift, int x, int y)
+        {
+            var aChart = gApplication.ActiveChart;
+            chart_info cI = gCharts.isFound(aChart);
+            if(!cI.Equals(ClassExtensions.Empty))
+            {
+                System.Console.WriteLine("yes");
+                int elementId = 0;
+                int arg1 = 0, arg2 = 0;
+                cI.chart.GetChartElement(x, y, ref elementId, ref arg1, ref arg2);
+            }
+
+        }
+#endif
+
+
+        private void AChart_MouseMove(int Button, int Shift, int x, int y)
+        {
+            System.Console.WriteLine("Hello World");
+                
+                //throw new NotImplementedException();
+        }
 
         private void RegulonPlotData(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements)
         {
@@ -2887,7 +2949,7 @@ namespace GINtool
             Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
             renameWorksheet(lNewSheet, "QPlot");
 
-            #region format_data
+#region format_data
             SysData.DataTable _fc_BSU = ReformatResults(aOutput);
             HashSet<string> lRegulons = new HashSet<string>();
 
@@ -2907,7 +2969,7 @@ namespace GINtool
             SysData.DataView dataView = _fc_BSU.AsDataView();
             dataView.RowFilter = String.Format("Regulon in ({0})", subsets);
             dataTable = dataView.ToTable();
-            #endregion
+#endregion
 
 
             //Excel.Shape qPlot = enrichmentAnalysis1.DrawQPlot(lRegulons, dataTable);
@@ -2934,7 +2996,7 @@ namespace GINtool
             gApplication.DisplayAlerts = true;
         }
 
-        #endregion
+#endregion
 
         private void button1_Click(object sender, RibbonControlEventArgs e)
         {

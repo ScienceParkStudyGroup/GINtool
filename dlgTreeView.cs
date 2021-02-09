@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using SysData = System.Data;
+using Excel = Microsoft.Office.Interop.Excel;
 
 namespace GINtool
 {
@@ -230,6 +231,9 @@ namespace GINtool
         // select button pressed
         private void button1_Click(object sender, EventArgs e)
         {
+            if(treeView1.SelectedNode is null)
+                return;
+
             if (treeView1.SelectedNode.Parent == null)
             {
                 MessageBox.Show("Cannot select top node");
@@ -494,8 +498,20 @@ namespace GINtool
         public float average;
         public float sd;
         public float mad;
+        public string[] genes;
     };
 
       
+    public struct chart_info
+    {
+    
+        public chart_info(Excel.Chart cht, List<element_fc> els)
+        {
+            chart = cht;
+            chartData = els;
+        }
+        public Excel.Chart chart;
+        public List<element_fc> chartData;
+    }
 
 }

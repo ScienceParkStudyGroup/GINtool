@@ -18,7 +18,8 @@ using System.Threading;
 namespace GINtool
 {
     public static class PlotRoutines
-    {
+    {        
+
         //Chart distributionChart = null;
         //Chart enrichmentChart = null;
         //Chart scoreChart = null;
@@ -118,6 +119,21 @@ namespace GINtool
 
         //}
 
+        static double  estimatedFontSize(int nritems)
+        {
+            return -Math.Log10(nritems) + 2.6021;
+        }
+
+        static int fontsize(int nritems)
+        {
+            int size = (int)Math.Pow(10,estimatedFontSize(nritems));
+            if (size < 2)
+                size = 2;
+            if (size > 10)
+                size = 10;
+            return size;
+        }
+
         public static Excel.Chart CreateDistributionPlot(List<float> sortedFC, List<int> sortedIndex, string chartName)
         {
             if (theApp == null)
@@ -129,7 +145,8 @@ namespace GINtool
             Excel.ChartObject myChart = (Excel.ChartObject)xlCharts.Add(10, 80, 500, 500);
             Excel.Chart chartPage = myChart.Chart;
 
-            chartPage.ChartType = Excel.XlChartType.xlXYScatter;
+            //chartPage.ChartType = Excel.XlChartType.xlXYScatter;
+            chartPage.ChartType = Excel.XlChartType.xlColumnClustered ;
 
             var series = (Excel.SeriesCollection)chartPage.SeriesCollection();
 
@@ -352,7 +369,25 @@ namespace GINtool
                             break;
                     }
 
-                   
+
+                    Excel.Points sPoints = xy1.Points();
+
+                    //xy1.HasDataLabels = true;
+                    
+                    //For every row in the values table, plot the date against the variable value
+                    for(int p=0;p< element_Fc.value.fc.Count(); p++)
+                    {
+                        Excel.Point lPoint = sPoints.Item(p+1);
+                        //lPoint.Name = "P" + p.ToString();
+                        
+                        //myChart.Series[Variable].Points.AddXY(Convert.ToDateTime(row["Date"].ToString()), row["Variable"].ToString());
+                        lPoint.HasDataLabel = true;
+                        lPoint.DataLabel.Text = "P" + p.ToString(); // " = #VALY \r\nDate = #VALX{d} \r\np = "+ p.ToString();
+                        lPoint.DataLabel.Font.Size =2;
+                        //Excel.Point lPoint = sPoints.Item(p);
+                        //points += 1;
+                    }
+
                 }
                 var yAxis = (Excel.Axis)chartPage.Axes(Excel.XlAxisType.xlValue, Excel.XlAxisGroup.xlPrimary);
                 //yAxis.AxisTitle.Text = "Regulon";
@@ -365,7 +400,7 @@ namespace GINtool
 
             // as a last step, add the axis labels series
 
-            if (true)
+            if (false)
             {
 
                 var xy2 = series.NewSeries();
@@ -392,6 +427,7 @@ namespace GINtool
                 }
 
                 xy2.DataLabels().Position = Excel.XlDataLabelPosition.xlLabelPositionLeft;
+                xy2.DataLabels().Font().Size = fontsize(element_Fcs.Count);
 
             }
 

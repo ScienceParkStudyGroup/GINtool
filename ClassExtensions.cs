@@ -141,5 +141,25 @@ namespace GINtool
             return (b & (1 << bitNumber)) != 0;
         }
 
+
+        public static string getPoint(this chart_info chart, int serie, int point)
+        {
+            return "";
+        }
+
+        public static readonly chart_info Empty = new chart_info();
+
+
+        public static chart_info isFound(this List<chart_info> chart_Infos, object chart)
+        {
+           
+            foreach(chart_info cinfo in chart_Infos)
+            {
+                if (cinfo.chart.Equals(chart))
+                    return cinfo;                                
+            }
+            return Empty;
+        }
+
     }
 }
