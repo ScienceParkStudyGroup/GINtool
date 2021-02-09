@@ -150,7 +150,7 @@
             // 
             this.tglTaskPane.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
             this.tglTaskPane.Image = global::GINtool.Properties.Resources.clipboard;
-            this.tglTaskPane.Label = "show/hide steps";
+            this.tglTaskPane.Label = "show/hide manual";
             this.tglTaskPane.Name = "tglTaskPane";
             this.tglTaskPane.ShowImage = true;
             this.tglTaskPane.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.tglTaskPane_Click);

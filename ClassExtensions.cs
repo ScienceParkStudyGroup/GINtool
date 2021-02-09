@@ -141,11 +141,12 @@ namespace GINtool
             return (b & (1 << bitNumber)) != 0;
         }
 
-
+#if CLICK_CHART
         public static string getPoint(this chart_info chart, int serie, int point)
         {
             return "";
         }
+
 
         public static readonly chart_info Empty = new chart_info();
 
@@ -160,6 +161,7 @@ namespace GINtool
             }
             return Empty;
         }
+#endif
 
     }
 }

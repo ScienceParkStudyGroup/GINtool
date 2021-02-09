@@ -501,7 +501,8 @@ namespace GINtool
         public string[] genes;
     };
 
-      
+#if CLICK_CHART
+
     public struct chart_info
     {
     
@@ -513,5 +514,6 @@ namespace GINtool
         public Excel.Chart chart;
         public List<element_fc> chartData;
     }
+#endif
 
 }

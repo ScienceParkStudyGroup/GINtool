@@ -24,9 +24,14 @@ namespace GINtool
         //bool gpValueUpdate = true;
         //bool gRegulonPlot = true;
 
+#if CLICK_CHART
         List<chart_info> gCharts = new List<chart_info>();
+#endif
 
         byte gNeedsUpdate = (byte)UPDATE_FLAGS.ALL;
+
+
+        List<TASKS> gTasks = new List<TASKS>();
 
         // int[] updateFlags = new int[3] { 1, 1, 1 };
 
@@ -78,9 +83,9 @@ namespace GINtool
 
         //PlotRoutines gEnrichmentAnalysis;
 
-        #endregion
+#endregion
 
-        #region database_utils
+#region database_utils
         private List<string> propertyItems(string property)
         {
             StringCollection myCol = (StringCollection)Properties.Settings.Default[property];
@@ -118,16 +123,18 @@ namespace GINtool
             SysData.DataTable dt_unique = GetDistinctRecords(dt, gColNames);
             return dt_unique.Select();
         }
-        #endregion
+#endregion
 
         private bool LoadCategoryData()
         {
             if (Properties.Settings.Default.categoryFile.Length == 0 || Properties.Settings.Default.catSheet.Length == 0)
                 return false;
 
-            gApplication.StatusBar = "Load category data";
+            //gApplication.StatusBar = "Load category data";
+            //gApplication.EnableEvents = false;
 
-            gApplication.EnableEvents = false;
+            AddTask(TASKS.LOAD_CATEGORY_DATA);
+
 
             SysData.DataTable _tmp = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.catSheet, Properties.Settings.Default.categoryFile, 1, 1);
             gCategories = new SysData.DataTable("Categories");
@@ -197,8 +204,10 @@ namespace GINtool
 
                 }
             }
-            gApplication.EnableEvents = true;
-            gApplication.StatusBar = "Ready";            
+            //gApplication.EnableEvents = true;
+            //gApplication.StatusBar = "Ready";
+
+            RemoveTask(TASKS.LOAD_CATEGORY_DATA);
 
             return gCategories.Rows.Count > 0;
         }
@@ -207,10 +216,11 @@ namespace GINtool
         {
           
             if (Properties.Settings.Default.operonFile.Length == 0 || Properties.Settings.Default.operonSheet.Length == 0)            
-                return false;            
+                return false;
 
-            gApplication.EnableEvents = false;
-            gApplication.StatusBar = "Load operon data";
+            AddTask(TASKS.LOAD_OPERON_DATA);
+            //gApplication.EnableEvents = false;
+            //gApplication.StatusBar = "Load operon data";
 
             SysData.DataTable _tmp = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.operonSheet, Properties.Settings.Default.operonFile, 1, 1);
             gRefOperons = new SysData.DataTable("OPERONS");
@@ -232,15 +242,20 @@ namespace GINtool
                     lNewRow["gene"] = lItems[i];
                 }
             }
-            gApplication.EnableEvents = true;
-            gApplication.StatusBar = "Ready";
+            //gApplication.EnableEvents = true;
+            //gApplication.StatusBar = "Ready";
+
+            RemoveTask(TASKS.LOAD_OPERON_DATA);
             return gRefOperons.Rows.Count>0;
         }
 
         private bool LoadData()
         {
-            gApplication.StatusBar = "Load regulon/gene mappings";
-            gApplication.EnableEvents = false;
+            //gApplication.StatusBar = "Load regulon/gene mappings";
+            //gApplication.EnableEvents = false;
+
+            AddTask(TASKS.LOAD_REGULON_DATA);
+
             gRefWB = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.referenceSheetName, Properties.Settings.Default.referenceFile, 1, 1);
             if (gRefWB != null)
             {
@@ -253,8 +268,10 @@ namespace GINtool
                 // generate database frequency table
                 CreateTableStatistics();
             }
-            gApplication.EnableEvents = true;
-            gApplication.StatusBar = "Ready";
+            //gApplication.EnableEvents = true;
+            //gApplication.StatusBar = "Ready";
+
+            RemoveTask(TASKS.LOAD_REGULON_DATA);
             return gRefWB != null ? true : false;
         }
 
@@ -305,7 +322,7 @@ namespace GINtool
 
             cbClustered.Checked = Properties.Settings.Default.catPlot;
             cbDistribution.Checked = Properties.Settings.Default.distPlot;
-            chkRegulon.Checked = Properties.Settings.Default.regPlot;
+            //chkRegulon.Checked = Properties.Settings.Default.regPlot;
 
             //cbOrderFC.Checked = Properties.Settings.Default.useFCorder;
             cbUseCategories.Checked = Properties.Settings.Default.useCat;
@@ -338,6 +355,7 @@ namespace GINtool
             toggleButton1.Enabled = true;
             cbAscending.Enabled = false;
             cbDescending.Enabled = false;
+            //grpDirection.Visible = false;
 
             //gOrderAscending = cbOrderFC.Checked;
             //edtMaxGroups.Enabled = false;
@@ -401,7 +419,7 @@ namespace GINtool
 
             cbClustered.Enabled = enable;
             cbDistribution.Enabled = enable;
-            chkRegulon.Enabled= enable && gOperonOutput;
+            chkRegulon.Enabled= enable;
 
             cbOrderFC.Enabled = enable;
             cbUseCategories.Enabled = enable && gCatOutput;
@@ -484,7 +502,9 @@ namespace GINtool
 
         private List<BsuRegulons> QueryResultTable(Excel.Range theCells)
         {
-            gApplication.StatusBar = "Mapping genes to regulons";
+            
+            AddTask(TASKS.MAPPING_GENES_TO_REGULONS);
+
             List<BsuRegulons> lList = new List<BsuRegulons>();
 
             foreach (Excel.Range c in theCells.Rows)
@@ -544,7 +564,7 @@ namespace GINtool
                 lList.Add(lMap);
             }
 
-            gApplication.StatusBar = "Ready";
+            RemoveTask(TASKS.MAPPING_GENES_TO_REGULONS);
             return lList;
 
         }
@@ -626,69 +646,70 @@ namespace GINtool
         }
 
 
-
-        private void AddTask()
+        private string GetStatusTask(TASKS task)
         {
+            return taks_strings[(int)task];
+        }
+
+        
+
+        private void SetStatus(TASKS activeTask)
+        {
+            gApplication.StatusBar = GetStatusTask(activeTask);
+            if (activeTask != TASKS.READY)
+            {
+                gApplication.ScreenUpdating = false;
+                gApplication.DisplayAlerts = false;
+                gApplication.EnableEvents = false;
+            }
+            else
+            {
+                gApplication.ScreenUpdating = true;
+                gApplication.DisplayAlerts = true;
+                gApplication.EnableEvents = true;
+            }
 
         }
 
-        private void RemoveTask()
+        private void AddTask(TASKS newTask)
         {
+            gTasks.Add(newTask);
+            SetStatus(newTask);
+        }
 
+        private void RemoveTask(TASKS taskReady)
+        {
+            gTasks.Remove(taskReady);
+            if (gTasks.Count == 0 || gTasks[0] == TASKS.READY)
+                SetStatus(TASKS.READY);
+            else
+                SetStatus(gTasks.Last());
         }
 
 
         // the main routine after mouse selection update // generates mapping output.. should be de-coupled (update data & mapping output)
         private (List<FC_BSU>, List<BsuRegulons>) GenerateOutput(bool suppressOutput=false)
         {
-            gApplication.StatusBar = "Formatting output results";
 
-            gApplication.ScreenUpdating = false;
-            gApplication.DisplayAlerts = false;
-            gApplication.EnableEvents = false;
-
+            AddTask(TASKS.READ_SHEET_DATA);
+            
             Excel.Range theInputCells = GetActiveCell();
 
 
             Excel.Worksheet theSheet = GetActiveSheet();
 
             if (theSheet == null)
-                return (null,null);
-
-            if (theSheet.Name.Contains("Plot_"))
             {
-                MessageBox.Show("Please select 3 columns (first P-Value, second FC, third BSU)");
-                return (null, null);             
-            }
-
-            if (theSheet.Name.Contains("CongruenceData_"))
-            {
-                MessageBox.Show("Please select 3 columns (first P-Value, second FC, third BSU)");
+                MessageBox.Show("Please select a worksheet with data first");
+                RemoveTask(TASKS.READ_SHEET_DATA);                
                 return (null, null);
             }
 
-            if (theSheet.Name.Contains("CongruencePlot_"))
+            if (theSheet.Name.Contains("Plot_") || theSheet.Name.Contains("CongruenceData_") || theSheet.Name.Contains("CongruencePlot_") || theSheet.Name.Contains("Summary_") ||
+                theSheet.Name.Contains("Combined_") || theSheet.Name.Contains("Mapped_") || theInputCells.Columns.Count != 3 )                                        
             {
                 MessageBox.Show("Please select 3 columns (first P-Value, second FC, third BSU)");
-                return (null, null);
-            }
-
-            if (theSheet.Name.Contains("Summary_"))
-            {
-                MessageBox.Show("Please select 3 columns (first P-Value, second FC, third BSU)");
-                return (null, null);
-            }
-
-            if (theSheet.Name.Contains("Combined_"))
-            {
-                MessageBox.Show("Please select 3 columns (first P-Value, second FC, third BSU)");
-                return (null, null);
-            }
-
-
-            if (theSheet.Name.Contains("Mapped_"))
-            {
-                MessageBox.Show("Please select 3 columns (first P-Value, second FC, third BSU)");
+                RemoveTask(TASKS.READ_SHEET_DATA);
                 return (null, null);
             }
 
@@ -696,15 +717,11 @@ namespace GINtool
             if (RangeAddress(theInputCells) != gInputRange || (gOutput == null || gList == null))
             {
                 gInputRange = RangeAddress(theInputCells);
-                gNeedsUpdate = (byte)UPDATE_FLAGS.ALL;
-                //gNeedsUpdating = true;                
+                gNeedsUpdate = (byte)UPDATE_FLAGS.ALL;                   
             }
             else
             {
-                gApplication.ScreenUpdating = true;
-                gApplication.DisplayAlerts = true;
-                gApplication.EnableEvents = true;
-                gApplication.StatusBar = "Ready";
+                RemoveTask(TASKS.READ_SHEET_DATA);
                 return (gOutput, gList);
             }
             
@@ -713,57 +730,10 @@ namespace GINtool
             int startR = theInputCells.Row;
 
             // from now always assume 3 columns.. p-value, fc, bsu
-           // int offsetColumn = 1;
-
-            if(theInputCells.Columns.Count !=3)
-            {
-                MessageBox.Show("Please select 3 columns (first P-Value, second FC, third BSU)");
-                return (null, null);
-
-            }                       
-
+                     
             // generate the results for outputting the data and summary
             List<BsuRegulons> lResults = QueryResultTable(theInputCells);
-            // output the data
-            //var lOut = PrepareResultTable(lResults);
-
-            //SysData.DataTable lTable = lOut.Item1;
-            //SysData.DataTable clrTbl;
-
-            //if (!suppressOutput)
-            //{
-            //    gApplication.StatusBar = "Creating mapping sheet";
-
-            //    Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
-            //    renameWorksheet(lNewSheet, "Mapped_");
-
-
-            //    lNewSheet.Cells[1, 1] = "BSU";
-            //    lNewSheet.Cells[1, 2] = "GENE";
-            //    lNewSheet.Cells[1, 3] = "FC";
-            //    lNewSheet.Cells[1, 4] = "PVALUE";
-            //    lNewSheet.Cells[1, 5] = "TOT REGULONS";
-
-            //    string lastColumn = lTable.Columns[lTable.Columns.Count - 1].ColumnName;
-            //    lastColumn = lastColumn.Replace("col_", "");
-            //    int maxreg = Int16.Parse(lastColumn);
-
-            //    for (int i = 0; i < maxreg; i++)
-            //        lNewSheet.Cells[1, i + 6] = string.Format("Regulon_{0}", i + 1);
-
-            //    FastDtToExcel(lTable, lNewSheet, startR, offsetColumn, startR + nrRows - 1, offsetColumn + lTable.Columns.Count - 1);
-
-            //    Excel.Range top = lNewSheet.Cells[1, 1];
-            //    Excel.Range bottom = lNewSheet.Cells[lTable.Rows.Count + 1, lTable.Columns.Count];
-            //    Excel.Range all = (Excel.Range)lNewSheet.get_Range(top, bottom);
-
-            //    all.Columns.AutoFit();
-
-            //    clrTbl = lOut.Item2;
-            //    ColorCells(clrTbl, lNewSheet, startR, offsetColumn + 5, startR + nrRows - 1, offsetColumn + lTable.Columns.Count - 1);
-
-            //}
-
+         
             List<FC_BSU> lOutput = new List<FC_BSU>();
 
             for (int r = 0; r < nrRows; r++)
@@ -779,15 +749,7 @@ namespace GINtool
                 }
 
 
-
-            gApplication.ScreenUpdating = true;
-            gApplication.DisplayAlerts = true;
-            gApplication.EnableEvents = true;
-
-
-            gApplication.StatusBar = "Ready";
-            
-
+            RemoveTask(TASKS.READ_SHEET_DATA);
 
             return (lOutput, lResults);
            
@@ -800,9 +762,9 @@ namespace GINtool
 
             SysData.DataTable lTable = lOut.Item1;
             SysData.DataTable clrTbl;
-            
 
-            gApplication.StatusBar = "Creating mapping sheet";
+            AddTask(TASKS.UPDATE_MAPPED_TABLE);
+            //gApplication.StatusBar = "Creating mapping sheet";
 
             int nrRows = lTable.Rows.Count;
             //int startC = 1;
@@ -839,6 +801,8 @@ namespace GINtool
             clrTbl = lOut.Item2;
             ColorCells(clrTbl, lNewSheet, startR, offsetColumn + 5, startR + nrRows - 1, offsetColumn + lTable.Columns.Count - 1);
             
+            RemoveTask(TASKS.UPDATE_MAPPED_TABLE);
+            
         }
 
         private void FastDtToExcel(System.Data.DataTable dt, Excel.Worksheet sheet, int firstRow, int firstCol, int lastRow, int lastCol)
@@ -857,10 +821,8 @@ namespace GINtool
 
         private void ColorCells(System.Data.DataTable dt, Excel.Worksheet sheet, int firstRow, int firstCol, int lastRow, int lastCol)
         {
-            gApplication.ScreenUpdating = false;
-            gApplication.DisplayAlerts = false;
-            gApplication.EnableEvents = false;
-
+            AddTask(TASKS.COLOR_CELLS);
+                
             Excel.Range top = sheet.Cells[firstRow, firstCol];
             Excel.Range bottom = sheet.Cells[lastRow, lastCol];
             Excel.Range all = (Excel.Range)sheet.get_Range(top, bottom);
@@ -883,15 +845,15 @@ namespace GINtool
                 }
             }
 
-            gApplication.ScreenUpdating = true;
-            gApplication.DisplayAlerts = true;
-            gApplication.EnableEvents = true;
-
+            RemoveTask(TASKS.COLOR_CELLS);
         }
 
 
         private void CreateSummarySheet(SysData.DataTable theTable)
         {
+
+            AddTask(TASKS.UPDATE_SUMMARY_TABLE);
+
             Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
             renameWorksheet(lNewSheet, "Summary_");
 
@@ -982,6 +944,9 @@ namespace GINtool
             all = (Excel.Range)lNewSheet.get_Range(top, bottom);
 
             all.Columns.AutoFit();
+
+
+            RemoveTask(TASKS.UPDATE_SUMMARY_TABLE);
 
         }
 
@@ -2251,7 +2216,7 @@ namespace GINtool
             validateTextBoxData(ebHigh);
         }
 
-        #region main_routines
+#region main_routines
         private void btPlot_Click(object sender, RibbonControlEventArgs e)
         {
             if(!(Properties.Settings.Default.catPlot ||Properties.Settings.Default.regPlot  || Properties.Settings.Default.distPlot))
@@ -2788,8 +2753,10 @@ namespace GINtool
 
         private void CategoryPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements )
         {
-            gApplication.EnableEvents = false;
-            gApplication.DisplayAlerts = false;
+            //gApplication.EnableEvents = false;
+            //gApplication.DisplayAlerts = false;
+
+            AddTask(TASKS.CATEGORY_CHART);
                        
             SysData.DataTable _fc_BSU = ReformatResults(aOutput);
 
@@ -2812,22 +2779,25 @@ namespace GINtool
                 catPlotData = Regulons2ElementsFC(dataView, cat_Elements);
            
 
-            int chartNr = Properties.Settings.Default.useCat ? nextWorksheet("CategoryPlot"): nextWorksheet("RegulonPlot");            
-            string chartName = (Properties.Settings.Default.useCat ? "CategoryPlot_" : "RegulonPlot_") + chartNr.ToString();
+            int chartNr = Properties.Settings.Default.useCat ? nextWorksheet("CategoryPlot"): nextWorksheet("RegulonChart");            
+            string chartName = (Properties.Settings.Default.useCat ? "CategoryChart_" : "RegulonChart_") + chartNr.ToString();
 
+
+            PlotRoutines.CreateCategoryPlot(catPlotData, chartName);
 
 #if CLICK_CHART
-            PlotRoutines.CreateCategoryPlot(catPlotData,chartName);
+            
             Excel.Chart aChart = gApplication.ActiveChart;
             aChart.MouseDown += new Excel.ChartEvents_MouseDownEventHandler(AChart_MouseDown);
             gCharts.Add(new chart_info(aChart, catPlotData));
 #endif
 
             this.RibbonUI.ActivateTab("TabGINtool");
-            
 
-            gApplication.EnableEvents = true;
-            gApplication.DisplayAlerts = true;            
+            RemoveTask(TASKS.CATEGORY_CHART);
+
+            //gApplication.EnableEvents = true;
+            //gApplication.DisplayAlerts = true;            
         }
 
 #if CLICK_CHART
@@ -2857,8 +2827,10 @@ namespace GINtool
 
         private void RegulonPlotData(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements)
         {
-            gApplication.EnableEvents = false;
-            gApplication.DisplayAlerts = false;
+            //gApplication.EnableEvents = false;
+            //gApplication.DisplayAlerts = false;
+
+            AddTask(TASKS.REGULON_CHART);
 
             SysData.DataTable _fc_BSU = ReformatResults(aOutput);
 
@@ -2882,8 +2854,10 @@ namespace GINtool
 
             CreateRegulonPlotDataSheet(catPlotData);
 
-            gApplication.EnableEvents = true;
-            gApplication.DisplayAlerts = true;
+            RemoveTask(TASKS.REGULON_CHART);
+
+            //gApplication.EnableEvents = true;
+            //gApplication.DisplayAlerts = true;
         }
 
 
@@ -3291,6 +3265,28 @@ namespace GINtool
         //    btnPalette.Image = clrChocolate.Image;
         //    Properties.Settings.Default.defaultPalette = (int)System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Chocolate;
         //}
+
+        public enum TASKS : int
+        {
+            READY = 0,
+            LOAD_REGULON_DATA,
+            LOAD_OPERON_DATA,
+            LOAD_CATEGORY_DATA,
+            MAPPING_GENES_TO_REGULONS,
+            READ_SHEET_DATA,
+            READ_SHEET_CAT_DATA,
+            UPDATE_MAPPED_TABLE,
+            UPDATE_SUMMARY_TABLE,
+            UDPATE_COMBINED_TABLE,
+            UPDATE_OPERON_TABLE,  // a table for now.. should become table & graph           
+            COLOR_CELLS,
+            CATEGORY_CHART,
+            REGULON_CHART
+        };
+
+        public string[] taks_strings = new string[] { "Ready", "Load regulon data", "Load operon data", "Load category data", "Mapping genes to regulons",  "Read sheet data", "Read sheet categorized data", "Update mapping table", "Update summary table", "Update combined table", "Update operon table" , "Color cells", "Create category chart", "Create regulon chart" };
+
+
         public enum UPDATE_FLAGS:byte
         {     
             TSummary  = 0b_0000_0001,
