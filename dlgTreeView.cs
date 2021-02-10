@@ -494,10 +494,11 @@ namespace GINtool
     public struct element_fc
     {
         public string catName;        
-        public float[] fc;
-        public float average;
-        public float sd;
-        public float mad;
+        public double[] fc;
+        public double[] pvalues;
+        public double average;
+        public double sd;
+        public double mad;
         public string[] genes;
     };
 

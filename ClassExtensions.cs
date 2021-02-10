@@ -80,7 +80,7 @@ namespace GINtool
             return 2.0 * Gauss(-y); // ACM algorithm 209
         }
 
-        public static float sd(this List<float> list)
+        public static double sd(this List<double> list)
         {
             if (list.Count == 1)
                 return 0;
@@ -92,10 +92,10 @@ namespace GINtool
                 sd += Math.Pow(list[i] - avg, 2.0);
             }
 
-            return (float)Math.Sqrt(sd / (list.Count - 1));
+            return Math.Sqrt(sd / (list.Count - 1));
         }
 
-        public static float median(this List<float> list)
+        public static double median(this List<double> list)
         {
             int n = list.Count;
 
@@ -107,13 +107,13 @@ namespace GINtool
             return list[m];
         }
 
-        public static float mad(this List<float> list)
+        public static double mad(this List<double> list)
         {
             if (list.Count == 1)
                 return 0;
 
-            float median = list.median();
-            List<float> md = new List<float>(list.Count);
+            double median = list.median();
+            List<double> md = new List<double>(list.Count);
             for (int i = 0; i < list.Count; i++)
                 md.Add(Math.Abs(list[i] - median));
 

@@ -18,7 +18,7 @@ using System.Threading;
 namespace GINtool
 {
     public static class PlotRoutines
-    {        
+    {
 
         //Chart distributionChart = null;
         //Chart enrichmentChart = null;
@@ -36,7 +36,7 @@ namespace GINtool
         //public void UpdateFigures()
         //{
         //    SetNrRegulons(nrRegulons);
-        
+
         //}
 
         //public PlotRoutines(Excel.Application app)
@@ -57,7 +57,7 @@ namespace GINtool
         //    //if (nr <= 10) multiplier = 25;
         //    if (nr > 10 & nr <= 20) multiplier = 20;
         //    if (nr > 20) multiplier = 15;
-            
+
 
         //}
 
@@ -112,21 +112,21 @@ namespace GINtool
         //{
         //    if (theApp == null)
         //        return null;
-            
+
         //    IntPtr hWnd = (IntPtr)theApp.Hwnd;
 
         //    return null;
 
         //}
 
-        static double  estimatedFontSize(int nritems)
+        static double estimatedFontSize(int nritems)
         {
             return -Math.Log10(nritems) + 2.6021;
         }
 
         static int fontsize(int nritems)
         {
-            int size = (int)Math.Pow(10,estimatedFontSize(nritems));
+            int size = (int)Math.Pow(10, estimatedFontSize(nritems));
             if (size < 2)
                 size = 2;
             if (size > 10)
@@ -134,7 +134,7 @@ namespace GINtool
             return size;
         }
 
-        public static Excel.Chart CreateDistributionPlot(List<float> sortedFC, List<int> sortedIndex, string chartName)
+        public static Excel.Chart CreateDistributionPlot(List<double> sortedFC, List<int> sortedIndex, string chartName)
         {
             if (theApp == null)
                 return null;
@@ -146,25 +146,25 @@ namespace GINtool
             Excel.Chart chartPage = myChart.Chart;
 
             //chartPage.ChartType = Excel.XlChartType.xlXYScatter;
-            chartPage.ChartType = Excel.XlChartType.xlColumnClustered ;
+            chartPage.ChartType = Excel.XlChartType.xlColumnClustered;
 
             var series = (Excel.SeriesCollection)chartPage.SeriesCollection();
 
             var aSerie = series.NewSeries();
-            aSerie.Name = String.Format("Serie {0}", 1);            
+            aSerie.Name = String.Format("Serie {0}", 1);
             //aSerie.ChartType = Excel.XlChartType.xlXYScatter;
 
 
             //aSerie.XValues = sortedIndex.ToArray();
             aSerie.Values = sortedFC.ToArray();
-            
+
 
             //distributionChart.Palette = (ChartColorPalette)Properties.Settings.Default.defaultPalette;
             //distributionChart.Titles.Add("distribution plot");
 
             var yAxis = (Excel.Axis)chartPage.Axes(Excel.XlAxisType.xlCategory, Excel.XlAxisGroup.xlPrimary);
             yAxis.HasTitle = true;
-            yAxis.AxisTitle.Text = "index (sorted)"; 
+            yAxis.AxisTitle.Text = "index (sorted)";
 
             var xAxis = (Excel.Axis)chartPage.Axes(Excel.XlAxisType.xlValue, Excel.XlAxisGroup.xlPrimary);
             xAxis.HasTitle = true;
@@ -177,13 +177,13 @@ namespace GINtool
             chartPage.ChartTitle.Delete();
 
             chartPage.Location(Excel.XlChartLocation.xlLocationAsNewSheet, chartName);
-        
+
 
             aSheet.Delete();
 
             return chartPage;
 
-         
+
 
         }
 
@@ -316,8 +316,8 @@ namespace GINtool
 
             int nrCategories = element_Fcs.Count;
 
-            float MMAX = 0;
-            float MMIN = 0;
+            double  MMAX = 0;
+            double MMIN = 0;
 
             for (int _i = 0; _i < nrCategories; _i++)
             {
@@ -330,7 +330,7 @@ namespace GINtool
                 }
             }
 
-            foreach(var element_Fc in element_Fcs.Select((value,index) => new {value, index}))
+            foreach (var element_Fc in element_Fcs.Select((value, index) => new { value, index }))
             {
                 var xy1 = series.NewSeries();
                 xy1.Name = element_Fc.value.catName;
@@ -373,17 +373,17 @@ namespace GINtool
                     Excel.Points sPoints = xy1.Points();
 
                     //xy1.HasDataLabels = true;
-                    
+
                     //For every row in the values table, plot the date against the variable value
-                    for(int p=0;p< element_Fc.value.fc.Count(); p++)
+                    for (int p = 0; p < element_Fc.value.fc.Count(); p++)
                     {
-                        Excel.Point lPoint = sPoints.Item(p+1);
+                        Excel.Point lPoint = sPoints.Item(p + 1);
                         //lPoint.Name = "P" + p.ToString();
-                        
+
                         //myChart.Series[Variable].Points.AddXY(Convert.ToDateTime(row["Date"].ToString()), row["Variable"].ToString());
                         lPoint.HasDataLabel = true;
                         lPoint.DataLabel.Text = "P" + p.ToString(); // " = #VALY \r\nDate = #VALX{d} \r\np = "+ p.ToString();
-                        lPoint.DataLabel.Font.Size =2;
+                        lPoint.DataLabel.Font.Size = 2;
                         //Excel.Point lPoint = sPoints.Item(p);
                         //points += 1;
                     }
@@ -418,9 +418,9 @@ namespace GINtool
 
                 xy2.Values = yv;
 
-                xy2.MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleNone;                
+                xy2.MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleNone;
                 xy2.HasDataLabels = true;
-                
+
                 for (int _i = 0; _i < nrCategories; _i++)
                 {
                     xy2.DataLabels(_i + 1).Text = element_Fcs[_i].catName;
@@ -444,7 +444,7 @@ namespace GINtool
             chartPage.Location(Excel.XlChartLocation.xlLocationAsNewSheet, chartName);
 
             aSheet.Delete();
-            
+
             return chartPage;
 
         }
@@ -456,8 +456,8 @@ namespace GINtool
         //    if (theApp == null)
         //        return (null, null);
 
-           
-            
+
+
         //    Excel.Worksheet aSheet = theApp.Worksheets.Add();
 
         //    var missing = System.Type.Missing;
@@ -642,7 +642,7 @@ namespace GINtool
         //    theApp.EnableEvents = false;
         //    theApp.DisplayAlerts = false;
         //    theApp.ScreenUpdating =false;
-            
+
 
         //    Excel.ChartObjects xlCharts = (Excel.ChartObjects)aSheet.ChartObjects(Type.Missing);
         //    Excel.ChartObject myChart = (Excel.ChartObject)xlCharts.Add(10, 80, 500, 500);            
@@ -667,7 +667,7 @@ namespace GINtool
         //        serie.MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleCircle;
         //    }
 
-            
+
 
 
         //    //CultureInfo MyCulture = new CultureInfo("en-US"); // your culture here 
@@ -854,14 +854,14 @@ namespace GINtool
 
         //    //Excel.Range oRng = newSheet.get_Range("A1");
         //    //Excel.Chart ct = newSheet.Shapes.AddChart().Chart;
-           
-            
+
+
         //    ct.ChartType = Excel.XlChartType.xlXYScatterSmooth;
         //    //ct.ChartWizard(oRng, Excel.XlChartType.xlXYScatterSmooth, missing, missing, missing, missing, missing, missing, "x axis", missing, missing);
         //    Excel.SeriesCollection theCollection = ct.SeriesCollection();
-            
-            
-            
+
+
+
         //    nrGenes = aTable.Rows.Count;
         //    nrRegulons = aRegulons.Count;
 
@@ -1016,23 +1016,23 @@ namespace GINtool
         //    }
 
 
-            
+
         //    enrichmentChart = new Chart();
         //    enrichmentChart.Legends.Clear();
         //    ChartArea chartArea = new ChartArea("enrichmentChart");
-            
+
         //    enrichmentChart.Height = nrRegulons*40; 
         //    enrichmentChart.Width = 400;
 
         //    chartArea.AxisX.MajorGrid.Enabled = false;
         //    chartArea.AxisY.MajorGrid.Enabled = false;
-            
+
 
         //    chartArea.AxisY.Minimum = 0;
         //    chartArea.AxisY.Maximum = nrRegulons + 1;
 
         //    //enrichmentChart.ChartAreas.Add(chartArea);
-            
+
         //    //float stepsize = CalculateStepSize((float)(MMAX - MMIN), 5);
 
         //    //double lMin = Math.Sign(MMIN) * Math.Ceiling(Math.Abs(MMIN));
@@ -1061,7 +1061,7 @@ namespace GINtool
         //        System.Windows.Forms.DataVisualization.Charting.Series aSerie = enrichmentChart.Series.Add(String.Format("{0}", regulon));
         //        aSerie.ChartType = SeriesChartType.ErrorBar;
         //        DataPointCollection dataPoints = aSerie.Points;
-                
+
         //        for (int p = 0; p < fc[nrRegulon].Length; p++)
         //        {
 
@@ -1076,7 +1076,7 @@ namespace GINtool
 
         //    }
 
-          
+
         //    enrichmentChart.Titles.Add("enrichment plot");
 
         //    chartArea.AxisX.Title = "fold change";
@@ -1094,7 +1094,7 @@ namespace GINtool
 
 
 
-        public static (float,float) CalculateStepSize(float range, float targetSteps)
+        public static (float, float) CalculateStepSize(float range, float targetSteps)
         {
             // calculate an initial guess at step size
             float tempStep = range / targetSteps;

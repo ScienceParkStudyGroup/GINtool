@@ -26,13 +26,13 @@
     <Setting Name="directionMapDown" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="fcLOW" Type="System.Single" Scope="User">
+    <Setting Name="fcLOW" Type="System.Double" Scope="User">
       <Value Profile="(Default)">1.5</Value>
     </Setting>
-    <Setting Name="fcMID" Type="System.Single" Scope="User">
+    <Setting Name="fcMID" Type="System.Double" Scope="User">
       <Value Profile="(Default)">2</Value>
     </Setting>
-    <Setting Name="fcHIGH" Type="System.Single" Scope="User">
+    <Setting Name="fcHIGH" Type="System.Double" Scope="User">
       <Value Profile="(Default)">4</Value>
     </Setting>
     <Setting Name="referenceGene" Type="System.String" Scope="User">
@@ -41,7 +41,7 @@
     <Setting Name="operonFile" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="pvalue_cutoff" Type="System.Single" Scope="User">
+    <Setting Name="pvalue_cutoff" Type="System.Double" Scope="User">
       <Value Profile="(Default)">0.05</Value>
     </Setting>
     <Setting Name="use_pvalues" Type="System.Boolean" Scope="User">

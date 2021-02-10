@@ -119,9 +119,9 @@ namespace GINtool.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("1.5")]
-        public float fcLOW {
+        public double fcLOW {
             get {
-                return ((float)(this["fcLOW"]));
+                return ((double)(this["fcLOW"]));
             }
             set {
                 this["fcLOW"] = value;
@@ -131,9 +131,9 @@ namespace GINtool.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("2")]
-        public float fcMID {
+        public double fcMID {
             get {
-                return ((float)(this["fcMID"]));
+                return ((double)(this["fcMID"]));
             }
             set {
                 this["fcMID"] = value;
@@ -143,9 +143,9 @@ namespace GINtool.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("4")]
-        public float fcHIGH {
+        public double fcHIGH {
             get {
-                return ((float)(this["fcHIGH"]));
+                return ((double)(this["fcHIGH"]));
             }
             set {
                 this["fcHIGH"] = value;
@@ -179,9 +179,9 @@ namespace GINtool.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0.05")]
-        public float pvalue_cutoff {
+        public double pvalue_cutoff {
             get {
-                return ((float)(this["pvalue_cutoff"]));
+                return ((double)(this["pvalue_cutoff"]));
             }
             set {
                 this["pvalue_cutoff"] = value;

@@ -957,8 +957,8 @@ namespace GINtool
             SysData.DataTable lTable = new SysData.DataTable("FC_BSU");
             SysData.DataColumn regColumn = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
             SysData.DataColumn geneColumn = new SysData.DataColumn("Gene", Type.GetType("System.String"));
-            SysData.DataColumn pvalColumn = new SysData.DataColumn("Pvalue", Type.GetType("System.Double"));
-            SysData.DataColumn fcColumn = new SysData.DataColumn("FC", Type.GetType("System.Double"));
+            SysData.DataColumn pvalColumn = new SysData.DataColumn("Pvalue", Type.GetType("System.Single"));
+            SysData.DataColumn fcColumn = new SysData.DataColumn("FC", Type.GetType("System.Single"));
             SysData.DataColumn dirColumn = new SysData.DataColumn("DIR", Type.GetType("System.Int32"));
 
 
@@ -990,9 +990,9 @@ namespace GINtool
             // aRow from an FC_BSU table
             for (int i = 0; i < aRow.Length; i++)
             {                
-                double fcGene = (double)aRow[i]["FC"];
+                float fcGene = (float)aRow[i]["FC"];
                 int dirBSU = (int)aRow[i]["DIR"];
-                double lowValue = Properties.Settings.Default.fcLOW;
+                float lowValue = Properties.Settings.Default.fcLOW;
 
                 // if upregulated
                 if (dirBSU < 0)
@@ -1084,7 +1084,89 @@ namespace GINtool
                 ((Excel.Worksheet)(aSheet)).Name = string.Format("{0}_{1}", wsBase, s);
 
             return s;
-        }        
+        }
+
+
+        //private Excel.Worksheet CreateCongruenceDataSheet(HashSet<string> aRegulons, SysData.DataTable aTable)
+        //{
+
+        //    gApplication.StatusBar = "Generating sheet for plotting data";
+        //    gApplication.ScreenUpdating = false;
+        //    gApplication.DisplayAlerts = false;
+        //    gApplication.EnableEvents = false;
+
+        //    Excel.Worksheet aSheet = gApplication.Worksheets.Add();
+            
+                        
+
+        //    int nrGenes = aTable.Rows.Count;
+        //    int nrRegulons = aRegulons.Count;
+
+        //    List<float[]> fc = new List<float[]>();
+
+        //    SysData.DataView dataView = aTable.AsDataView();
+
+        //    double MMAX = (double)(float)aTable.Rows[0]["FC"];
+        //    double MMIN = (double)(float)aTable.Rows[0]["FC"];
+        //    List<double> meanFC = new List<double>();
+
+        //    foreach (string regulon in aRegulons)
+        //    {
+        //        dataView.RowFilter = String.Format("Regulon = '{0}'", regulon);
+        //        SysData.DataTable dataTable = dataView.ToTable();
+        //        int nrRows = dataTable.Rows.Count;
+        //        float[] vs = new float[nrRows];
+        //        int[] ys = new int[nrRows];
+        //        for (int _r = 0; _r < nrRows; _r++)
+        //        {
+        //            double _val = (double)(float)dataTable.Rows[_r]["FC"];
+        //            if (_val > MMAX) { MMAX = _val; }
+        //            if (_val < MMIN) { MMIN = _val; }
+        //            vs[_r] = (float)_val;
+        //            ys[_r] = fc.Count;
+
+        //        }
+        //        meanFC.Add(vs.Average());
+        //        fc.Add(vs);
+        //    }
+
+        //    int[] sortedEntries = Enumerable.Range(0, nrRegulons).ToArray();
+
+        //    if (gOrderAscending)
+        //    {
+        //        double[] __values = meanFC.ToArray();                
+        //        var sortedEntriesPairs = __values
+        //            .Select((x, i) => new KeyValuePair<double, int>(x, i))
+        //            .OrderBy(x => x.Key)
+        //            .ToList();
+
+        //        sortedEntries = sortedEntriesPairs.Select(x => x.Value).ToArray();
+        //    }
+
+
+        //    int totrow = 2;
+        //    for (int i = 0; i < nrRegulons; i++)
+        //    {
+        //        aSheet.Cells[1, 1] = "yoffset";
+        //        aSheet.Cells[1, i + 2] = aRegulons.ToArray()[sortedEntries[i]];
+
+        //        for (int j = 0; j < fc[sortedEntries[i]].Length; j++)
+        //        {
+        //            aSheet.Cells[totrow, 1] = i + 0.5;
+        //            aSheet.Cells[totrow++, i + 2] = fc[sortedEntries[i]][j];
+        //        }
+        //    }
+
+
+        //    gApplication.ScreenUpdating = true;
+        //    gApplication.DisplayAlerts = true;
+        //    gApplication.EnableEvents = true;
+
+        //    gApplication.StatusBar = "Ready";
+
+        //    return aSheet;
+
+        //}
 
         // from https://stackoverflow.com/questions/665754/inner-join-of-datatables-in-c-sharp
         private DataTable JoinDataTables(DataTable t1, DataTable t2, params Func<DataRow, DataRow, bool>[] joinOn)
@@ -1652,9 +1734,9 @@ namespace GINtool
                 SysData.DataTable lTableCombine = new SysData.DataTable(); // table for combined summary
 
 
-                double lFClow = Properties.Settings.Default.fcLOW;
-                double lFCmid = Properties.Settings.Default.fcMID;
-                double lFChigh = Properties.Settings.Default.fcHIGH;
+                float lFClow = Properties.Settings.Default.fcLOW;
+                float lFCmid = Properties.Settings.Default.fcMID;
+                float lFChigh = Properties.Settings.Default.fcHIGH;
 
                 // find number of unique regulons
                 HashSet<string> lUnique = new HashSet<string>();
@@ -1756,7 +1838,7 @@ namespace GINtool
 
                     for (int _r = 0; _r < _tmp.Length; _r++)
                     {
-                        double fc = (double)_tmp[_r]["FC"];
+                        float fc = (float)_tmp[_r]["FC"];
                         if (fc > 0 & fc <= lFClow)
                             up1 += 1;
                         if (fc > lFClow & fc <= lFCmid)
@@ -2095,7 +2177,7 @@ namespace GINtool
 
             // can still add range checks e.g. high > mid > low  
 
-            if (double.TryParse(bx.Text, out double val))
+            if (float.TryParse(bx.Text, out float val))
             {
                 // set the text value to what is parsed
                 bx.Text = val.ToString();
@@ -2193,7 +2275,7 @@ namespace GINtool
                         if (Properties.Settings.Default.regPlot)
                         {
                             // data for now.. to be changed in plot
-                            RegulonPlotData(gOutput, gSummary, dlg.GetSelection()); // wordt optie in category plot hierboven
+                            RegulonPlotData(gOutput, gSummary, dlg.GetSelection());
                             //UnSetFlags(UPDATE_FLAGS.PRegulon);
                             //gNeedsUpdate.UnSet(UPDATE_FLAGS.PRegulon);
                         }
@@ -2227,7 +2309,52 @@ namespace GINtool
 
 
         }
-        
+        //private void btApply_Click(object sender, RibbonControlEventArgs e)
+        //{
+        //    gApplication.EnableEvents = false;
+        //    gApplication.DisplayAlerts = false;
+
+        //    if(gNeedsUpdate.None())            
+        //        return;            
+
+
+        //    if (gOutput == null || gSummary == null)
+        //    {
+
+        //        if(gOutput == null || gList ==null || gNeedsUpdating)
+        //            (gOutput, gList) = GenerateOutput();
+
+        //        if (gOutput is null || gList is null)
+        //            return;
+
+        //        if ((gSummary == null && gCombineInfo == null) || gNeedsUpdating)
+        //        {
+        //            (gSummary, gCombineInfo) = CreateUsageTable(gOutput);
+        //            CreateSummarySheet(gSummary);
+
+        //            //CreateCombinedSheet(lCombined);          
+        //        }
+
+        //        if (gpValueUpdate) // add fccheck
+        //        {
+        //            SysData.DataTable lCombined = CreateCombinedTable(gCombineInfo, gList);
+        //            CreateCombinedSheet(lCombined);
+
+        //            if(gOperonOutput)
+        //            {
+        //                SysData.DataTable tblOperon = CreateOperonTable(gCombineInfo, gList);
+        //                CreateOperonSheet(tblOperon);
+        //            }    
+
+        //            gpValueUpdate = false;
+        //        }
+
+        //        gNeedsUpdating = false;
+        //    }
+
+        //    gApplication.EnableEvents = true;
+        //    gApplication.DisplayAlerts = true;
+        //}
         private void SetFlags(UPDATE_FLAGS f)
         {
             gNeedsUpdate = (byte) (gNeedsUpdate | (byte)f);
@@ -2335,29 +2462,23 @@ namespace GINtool
                 genesFormat = string.Join(",", genesFormat.Split(',').Select(x => $"'{x}'"));
                 dataView.RowFilter = String.Format("Gene in ({0})", genesFormat);
 
-                SysData.DataTable _dt = dataView.ToTable(true, "Gene", "FC", "Pvalue");
+                SysData.DataTable _dt = dataView.ToTable(true, "Gene", "FC");
 
                 element_fc element_Fc;
-                element_Fc.catName = string.Format("{0} ({1})",ce.catName,_dt.Rows.Count);
-                List<double> _fcs = new List<double>();
-                List<string> _genes = new List<string>();
-                List<double> _pvalues = new List<double>();
-
-                foreach (DataRow _row in _dt.Rows)
+                element_Fc.catName = string.Format("{0}({1})",ce.catName,_dt.Rows.Count);
+                List<float> _fcs = new List<float>();
+                foreach(DataRow _row in _dt.Rows)
                 {
-                    _fcs.Add((double)_row["FC"]);
-                    _pvalues.Add((double)_row["Pvalue"]);
-                    _genes.Add(_row["Gene"].ToString());
+                    _fcs.Add((float)_row["FC"]);
                 }
 
                 if (_fcs.Count == 0)
                 {
-                    element_Fc.average = 0; // double.NaN;
+                    element_Fc.average = 0;
                     element_Fc.fc = null;
-                    element_Fc.sd = 0; // double.NaN;
-                    element_Fc.mad = 0; // double.NaN;
+                    element_Fc.sd = 0;
+                    element_Fc.mad = 0;
                     element_Fc.genes = null;
-                    element_Fc.pvalues = null;
                 }
                 else
                 {
@@ -2365,16 +2486,15 @@ namespace GINtool
                     element_Fc.fc = _fcs.ToArray();
                     element_Fc.sd = _fcs.sd();
                     element_Fc.mad = _fcs.mad();
-                    element_Fc.genes = _genes.ToArray();
-                    element_Fc.pvalues = _pvalues.ToArray();
+                    element_Fc.genes = null;
                 }
                 element_Fcs.Add(element_Fc);                               
             }
 
             if (Properties.Settings.Default.useSort)
             {
-                double[] __values = element_Fcs.Select(x => x.average).ToArray();
-                var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
+                float[] __values = element_Fcs.Select(x => x.average).ToArray();
+                var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderByDescending(x => x.Key).ToList();
 
                 //List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
                 //return (element_Fcs, sortedIndex);
@@ -2403,17 +2523,15 @@ namespace GINtool
                 //element_Fc.catName = el.catName;
                 
                 SysData.DataTable _dataTable = dataView.ToTable();
-                element_Fc.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+                element_Fc.catName = string.Format("{0}({1})", el.catName, _dataTable.Rows.Count);
                 if (_dataTable.Rows.Count > 0)
                 {
-                    List<double> _fcs = new List<double>(_dataTable.Rows.Count);
+                    List<float> _fcs = new List<float>(_dataTable.Rows.Count);
                     List<string> _genes = new List<string>(_dataTable.Rows.Count);
-                    List<double> _pvalues = new List<double>();
                     for (int i = 0; i < _dataTable.Rows.Count; i++)
                     {
                         _genes.Add(_dataTable.Rows[i]["Gene"].ToString());
-                        _fcs.Add(double.Parse(_dataTable.Rows[i]["FC"].ToString()));
-                        _pvalues.Add(double.Parse(_dataTable.Rows[i]["Pvalue"].ToString()));
+                        _fcs.Add(float.Parse(_dataTable.Rows[i]["FC"].ToString()));
                     }
 
                     element_Fc.average = _fcs.Average();
@@ -2421,25 +2539,23 @@ namespace GINtool
                     element_Fc.sd = _fcs.sd();
                     element_Fc.mad = _fcs.mad();
                     element_Fc.genes = _genes.ToArray();
-                    element_Fc.pvalues = _pvalues.ToArray();
                     element_Fcs.Add(element_Fc);
                 }
                 else
                 {
                     element_Fc.average = 0;
-                    element_Fc.fc = new double[] { 0 };
+                    element_Fc.fc = new float[] { 0 };
                     element_Fc.genes = new string[] { "" };
                     element_Fc.sd = 0;
                     element_Fc.mad = 0;
-                    element_Fc.pvalues = new double[] { 0 };
                     element_Fcs.Add(element_Fc);
                 }
             }
 
             if (Properties.Settings.Default.useSort)
             {
-                double[] __values = element_Fcs.Select(x => x.average).ToArray();
-                var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
+                float[] __values = element_Fcs.Select(x => x.average).ToArray();
+                var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderByDescending(x => x.Key).ToList();
 
                 List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
                 //return (element_Fcs, sortedIndex);
@@ -2456,24 +2572,24 @@ namespace GINtool
 
     
         // output of all genes in table
-        private (List<double>, List<int>) SortedFoldChanges(SysData.DataTable dataTable)
+        private (List<float>, List<int>) SortedFoldChanges(SysData.DataTable dataTable)
         {
-            List<double> _values = new List<double>();
+            List<float> _values = new List<float>();
             foreach (SysData.DataRow row in dataTable.Rows)
             {
-                _values.Add(row.Field<double>("FC"));
+                _values.Add(row.Field<float>("FC"));
             }
 
-            double[] __values = _values.ToArray();
-            var sortedGenes = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
+            float[] __values = _values.ToArray();
+            var sortedGenes = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<float, int>(x, i)).OrderByDescending(x => x.Key).ToList();
 
             
-            List<double> sortedGenesValues = sortedGenes.Select(x => x.Key).ToList();
+            List<float> sortedGenesValues = sortedGenes.Select(x => x.Key).ToList();
             List<int> sortedGenesInt = sortedGenes.Select(x => x.Value).ToList();
             return (sortedGenesValues, sortedGenesInt);
         }
 
-#region toberemoved
+
         public Excel.Chart MyTmpPlot(List<element_fc> element_Fcs)
         {
             
@@ -2496,8 +2612,8 @@ namespace GINtool
 
             int nrCategories = element_Fcs.Count;
 
-            double MMAX = 0;
-            double MMIN = 0;
+            float MMAX = 0;
+            float MMIN = 0;
 
             for (int _i = 0; _i < nrCategories; _i++)
             {
@@ -2575,7 +2691,7 @@ namespace GINtool
                 xy2.XValues = Enumerable.Repeat(MMIN, nrCategories).ToArray();
 
                 //rng = (Excel.Range)_tmpSheet.Range[_tmpSheet.Cells[3, (i * 2) + 2], _tmpSheet.Cells[6, (i * 2) + 2]];
-                double[] yv = new double[nrCategories];
+                float[] yv = new float[nrCategories];
                 for (int _i = 0; _i < nrCategories; _i++)
                 {
                     yv[_i] = ((float)_i) + 0.5f;
@@ -2610,7 +2726,7 @@ namespace GINtool
             return chartPage;
 
         }
-#endregion
+
 
         private void DistributionPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary)
         {
@@ -2620,7 +2736,7 @@ namespace GINtool
             SysData.DataTable _fc_BSU_ = ReformatResults(aOutput);
             SysData.DataTable _fc_BSU = GetDistinctRecords(_fc_BSU_, new string[] { "Gene","FC"});
 
-            (List<double> sFC, List<int> sIdx) = SortedFoldChanges(_fc_BSU);
+            (List<float> sFC, List<int> sIdx) = SortedFoldChanges(_fc_BSU);
 
 
             int chartNr = nextWorksheet("DistributionPlot");
@@ -2663,18 +2779,11 @@ namespace GINtool
                 catPlotData = Regulons2ElementsFC(dataView, cat_Elements);
            
 
-            int chartNr = Properties.Settings.Default.useCat ? nextWorksheet("CategoryPlot"): nextWorksheet("RegulonPlot");            
-            string chartName = (Properties.Settings.Default.useCat ? "CategoryPlot_" : "RegulonPlot_") + chartNr.ToString();
+            int chartNr = Properties.Settings.Default.useCat ? nextWorksheet("CategoryPlot"): nextWorksheet("RegulonChart");            
+            string chartName = (Properties.Settings.Default.useCat ? "CategoryChart_" : "RegulonChart_") + chartNr.ToString();
 
-            try
-            {
 
-                Excel.Chart aChart = PlotRoutines.CreateCategoryPlot(catPlotData, chartName);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+            PlotRoutines.CreateCategoryPlot(catPlotData, chartName);
 
 #if CLICK_CHART
             
@@ -2743,8 +2852,7 @@ namespace GINtool
             else
                 catPlotData = Regulons2ElementsFC(dataView, cat_Elements);
 
-            CreateExtendedRegulonCategoryDataSheet(catPlotData);
-            //CreateRegulonPlotDataSheet(catPlotData);
+            CreateRegulonPlotDataSheet(catPlotData);
 
             RemoveTask(TASKS.REGULON_CHART);
 
@@ -2752,46 +2860,15 @@ namespace GINtool
             //gApplication.DisplayAlerts = true;
         }
 
-        private DataTable ElementsToExtendedTable(List<element_fc> elements)
-        {
-            SysData.DataTable lTable = new SysData.DataTable("ExtElements");
-
-            string catRegLabel = Properties.Settings.Default.useCat ? "Category" : "Regulon";
-            
-            SysData.DataColumn regColumn = new SysData.DataColumn(catRegLabel, Type.GetType("System.String"));                        
-            SysData.DataColumn geneColumn = new SysData.DataColumn("Gene", Type.GetType("System.String"));
-            SysData.DataColumn fcColumn = new SysData.DataColumn("FC", Type.GetType("System.Double"));
-            SysData.DataColumn pvColumn = new SysData.DataColumn("Pvalue", Type.GetType("System.Double"));
-
-            lTable.Columns.Add(regColumn);
-            lTable.Columns.Add(geneColumn);
-            lTable.Columns.Add(fcColumn);
-            lTable.Columns.Add(pvColumn);
-
-            for (int r = 0; r < elements.Count; r++)
-            {
-                
-                for(int g=0;g<elements[r].genes.Count();g++)
-                {
-                    SysData.DataRow lRow = lTable.Rows.Add();
-                    lRow[catRegLabel] = elements[r].catName;
-                    lRow["Gene"] = elements[r].genes[g];
-                    lRow["FC"] = elements[r].fc[g];
-                    lRow["Pvalue"] = elements[r].pvalues[g];
-                }                                
-            }
-
-            return lTable;
-        }
 
         private DataTable ElementsToTable(List<element_fc> elements)
         {
 
             SysData.DataTable lTable = new SysData.DataTable("Elements");
             SysData.DataColumn regColumn = new SysData.DataColumn("Name", Type.GetType("System.String"));
-            SysData.DataColumn avgColumn = new SysData.DataColumn("Average", Type.GetType("System.Double"));
-            SysData.DataColumn madColumn = new SysData.DataColumn("Mad", Type.GetType("System.Double"));
-            SysData.DataColumn stdColumn = new SysData.DataColumn("Std", Type.GetType("System.Double"));
+            SysData.DataColumn avgColumn = new SysData.DataColumn("Average", Type.GetType("System.Single"));
+            SysData.DataColumn madColumn = new SysData.DataColumn("Mad", Type.GetType("System.Single"));
+            SysData.DataColumn stdColumn = new SysData.DataColumn("Std", Type.GetType("System.Single"));
             
 
 
@@ -2815,30 +2892,6 @@ namespace GINtool
 
         }
 
-
-        private void CreateExtendedRegulonCategoryDataSheet(List<element_fc> theElements)
-        {
-
-
-            string catRegLabel = Properties.Settings.Default.useCat ? "Category" : "Regulon";
-
-            Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
-            renameWorksheet(lNewSheet, catRegLabel+"_");
-
-            DataTable lTable = ElementsToExtendedTable(theElements);
-
-            lNewSheet.Cells[1, 1] = catRegLabel;
-            lNewSheet.Cells[1, 2] = "Gene";
-            lNewSheet.Cells[1, 3] = "FC";
-            lNewSheet.Cells[1, 4] = "p-value";
-
-
-            // starting from row 2
-
-
-            FastDtToExcel(lTable, lNewSheet, 2, 1, lTable.Rows.Count + 1, lTable.Columns.Count);
-
-        }
 
         private void CreateRegulonPlotDataSheet(List<element_fc> theElements)
         {
@@ -2965,7 +3018,7 @@ namespace GINtool
        
         private void editMinPval_TextChanged(object sender, RibbonControlEventArgs e)
         {
-            if (double.TryParse(editMinPval.Text, out double val))
+            if (float.TryParse(editMinPval.Text, out float val))
             {
                 // set the text value to what is parsed
                 editMinPval.Text = val.ToString();                
