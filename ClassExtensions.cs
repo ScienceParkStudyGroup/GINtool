@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
+using System.Drawing.Imaging;
 
 namespace GINtool
 {
-    public static class ClassExtensions
+    internal static class ClassExtensions
     {
         public static DateTime Tomorrow(this DateTime date)
         {
@@ -163,5 +165,109 @@ namespace GINtool
         }
 #endif
 
+    //}
+
+
+
+    // from https://csharp.hotexamples.com/site/file?hash=0xe190e190f18b65d6b60ebe89ec697dff1cbe929ec830ef4f083e491a767f7c31&fullName=Source/EmfHelper.cs&project=LudovicT/NShape
+    //internal static class EmfHelper
+    //{
+        #region Methods
+
+        /// <summary>
+        /// Copies the given <see cref="T:System.Drawing.Imaging.MetaFile" /> to the clipboard.
+        /// The given <see cref="T:System.Drawing.Imaging.MetaFile" /> is set to an invalid state inside this function.
+        /// </summary>
+        public static bool PutEnhMetafileOnClipboard(IntPtr hWnd, Metafile metafile)
+        {
+            return PutEnhMetafileOnClipboard(hWnd, metafile, true);
+        }
+
+        /// <summary>
+        /// Copies the given <see cref="T:System.Drawing.Imaging.MetaFile" /> to the clipboard.
+        /// The given <see cref="T:System.Drawing.Imaging.MetaFile" /> is set to an invalid state inside this function.
+        /// </summary>
+        public static bool PutEnhMetafileOnClipboard(IntPtr hWnd, Metafile metafile, bool clearClipboard)
+        {
+            if (metafile == null) throw new ArgumentNullException("metafile");
+            bool bResult = false;
+            IntPtr hEMF, hEMF2;
+            hEMF = metafile.GetHenhmetafile(); // invalidates mf
+            if (!hEMF.Equals(IntPtr.Zero))
+            {
+                try
+                {
+                    hEMF2 = CopyEnhMetaFile(hEMF, null);
+                    if (!hEMF2.Equals(IntPtr.Zero))
+                    {
+                        if (OpenClipboard(hWnd))
+                        {
+                            try
+                            {
+                                if (clearClipboard)
+                                {
+                                    if (!EmptyClipboard())
+                                        return false;
+                                }
+                                IntPtr hRes = SetClipboardData(14 /*CF_ENHMETAFILE*/, hEMF2);
+                                bResult = hRes.Equals(hEMF2);
+                            }
+                            finally
+                            {
+                                CloseClipboard();
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    DeleteEnhMetaFile(hEMF);
+                }
+            }
+            return bResult;
+        }
+
+        /// <summary>
+        /// Copies the given <see cref="T:System.Drawing.Imaging.MetaFile" /> to the specified file. If the file does not exist, it will be created.
+        /// The given <see cref="T:System.Drawing.Imaging.MetaFile" /> is set to an invalid state inside this function.
+        /// </summary>
+        public static bool SaveEnhMetaFile(string fileName, Metafile metafile)
+        {
+            if (metafile == null) throw new ArgumentNullException("metafile");
+            bool result = false;
+            IntPtr hEmf = metafile.GetHenhmetafile();
+            if (hEmf != IntPtr.Zero)
+            {
+                IntPtr resHEnh = CopyEnhMetaFile(hEmf, fileName);
+                if (resHEnh != IntPtr.Zero)
+                {
+                    DeleteEnhMetaFile(resHEnh);
+                    result = true;
+                }
+                DeleteEnhMetaFile(hEmf);
+                metafile.Dispose();
+            }
+            return result;
+        }
+
+        [DllImport("user32.dll")]
+        static extern bool CloseClipboard();
+
+        [DllImport("gdi32.dll")]
+        static extern IntPtr CopyEnhMetaFile(IntPtr hemfSrc, string fileName);
+
+        [DllImport("gdi32.dll")]
+        static extern bool DeleteEnhMetaFile(IntPtr hemf);
+
+        [DllImport("user32.dll")]
+        static extern bool EmptyClipboard();
+
+        [DllImport("user32.dll")]
+        static extern bool OpenClipboard(IntPtr hWndNewOwner);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
+
+        #endregion Methods
     }
 }

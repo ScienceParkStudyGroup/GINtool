@@ -2352,7 +2352,7 @@ namespace GINtool
 
                 if (_fcs.Count == 0)
                 {
-                    element_Fc.average = 0; // double.NaN;
+                    element_Fc.average = 0; // double.NaN; // crucial not use NaN here.. The plots give memory errors otherwise
                     element_Fc.fc = null;
                     element_Fc.sd = 0; // double.NaN;
                     element_Fc.mad = 0; // double.NaN;
@@ -3133,7 +3133,7 @@ namespace GINtool
 
         private void cbUseCategories_Click(object sender, RibbonControlEventArgs e)
         {
-            Properties.Settings.Default.useCat = cbUseCategories.Checked;
+            Properties.Settings.Default.catPlot = cbUseCategories.Checked;
             
         }
 
