@@ -19,6 +19,8 @@ namespace GINtool
         string[] regColumn = new string[] { Properties.Settings.Default.referenceRegulon };
         //string[] refColumn = null;
         bool catMode = true;
+        bool tableOutput = false;
+        bool enableTableOutput = true;
 
         List<cat_elements> gSelection = new List<cat_elements>();
 
@@ -27,9 +29,18 @@ namespace GINtool
             return gSelection;
         }
 
-        public dlgTreeView()
+        public dlgTreeView(bool categoryView = false, bool enableTable = true)
         {
             InitializeComponent();
+            udCat.SelectedItem = udCat.Items[0];
+            cbTopFC.Checked = false;
+            cbTopP.Checked = false;
+            udTopFC.Enabled = false;
+            udTOPP.Enabled = false;
+            cbCat.Checked = false;
+            cbCat.Enabled = categoryView;
+            udCat.Enabled = false;
+            cbTableOutput.Enabled = enableTable;
         }
 
         // utility to select unique records
@@ -72,6 +83,24 @@ namespace GINtool
             }
 
         }
+
+        public bool selectTableOutput()
+        {
+            return tableOutput;
+        }
+
+
+        public int getTopFC()
+        {
+            return cbTopFC.Checked ? (int)udTopFC.Value : -1;
+        }
+
+        public int getTopP()
+        {
+            return cbTopP.Checked ? (int)udTOPP.Value : -1;
+        }
+
+
 
         private DataTable GetDistinctRegulons(DataTable dataTable, string[] regColumn)
         {
@@ -266,7 +295,7 @@ namespace GINtool
         private void button2_Click(object sender, EventArgs e)
         {
             TreeNode treeNode = treeView2.SelectedNode;
-            if (treeNode.Parent != null)
+            if (treeNode==null  || treeNode.Parent != null)
             {
                 MessageBox.Show("Only main-nodes are allowed");
                 return;
@@ -301,8 +330,15 @@ namespace GINtool
                         treeView1.Nodes.Remove(tnode);
 
                         TreeNode _tnode = headNode.Nodes[Int32.Parse(lvl[0]) - 1];
-                        for (int i = 1; i < lvl.Count() - 1; i++)
-                            _tnode = _tnode.Nodes[Int32.Parse(lvl[i]) - 1];
+                        for (int i = 1; i < lvl.Count() - 1; i++) // need to fix this here... should check that nodes do not contain genes then this check is not necessary.
+                            try
+                            {
+                                _tnode = _tnode.Nodes[Int32.Parse(lvl[i]) - 1];
+                            }
+                            catch
+                            {
+
+                            }
 
                         _tnode.Nodes.Insert(Int32.Parse(lvl[lvl.Count() - 1]) - 1, tnode);
                     }
@@ -367,8 +403,28 @@ namespace GINtool
 
         private void button3_Click(object sender, EventArgs e)
         {
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+            if (gSelection.Count() > 255 && (!cbTopFC.Checked && !cbTopP.Checked))
+            {
+                DialogResult dialogResult = MessageBox.Show("The number of series is larger than 255 and cannot be plotted, the output will be redirected to a table. Continue?", "Warning", MessageBoxButtons.YesNo);
+                if (dialogResult == DialogResult.Yes)
+                {
+                    this.cbTableOutput.Checked = true;
+                    //do something
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
+                }
+                else if (dialogResult == DialogResult.No)
+                {
+                    //do something else
+                }
+            }
+            else
+            {
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            }
+
+            
         }
 
         private void button4_Click(object sender, EventArgs e)
@@ -424,14 +480,73 @@ namespace GINtool
             }
         }
 
+
+        private List<TreeNode> SelectCategoryLevel(int level)
+        {
+            List<TreeNode> selection = new List<TreeNode>();
+            List<TreeNode> tmp_Selection1 = new List<TreeNode>();
+            List<TreeNode> tmp_Selection2 = new List<TreeNode>();
+
+            // start of with the default top level
+            
+            foreach (TreeNode node in treeView1.TopNode.Nodes)
+                tmp_Selection1.Add(node);
+            selection = tmp_Selection1;
+            
+            
+            // alternating tmp_selection1/tmp_selection2 for increasing levels.. to prevent nested loops
+
+            if (level>0)
+            {
+                foreach (TreeNode subnode in tmp_Selection1)
+                {
+                    foreach(TreeNode subsubnode in subnode.Nodes)
+                        tmp_Selection2.Add(subsubnode);
+                }
+                selection = tmp_Selection2;
+            }
+
+            if (level >1)
+            {
+                tmp_Selection1 = new List<TreeNode>();
+                foreach (TreeNode subnode in tmp_Selection2)
+                {
+                    foreach (TreeNode subsubnode in subnode.Nodes)
+                        tmp_Selection1.Add(subsubnode);
+                }
+                selection = tmp_Selection1;
+
+            }
+            if(level>2)
+            {
+                tmp_Selection2 = new List<TreeNode>();
+                foreach (TreeNode subnode in tmp_Selection1)
+                {
+                    foreach (TreeNode subsubnode in subnode.Nodes)
+                        tmp_Selection2.Add(subsubnode);
+                }
+                selection = tmp_Selection2;
+            }          
+
+            return selection;
+
+        }
+
+
         private void btnAllSel_Click(object sender, EventArgs e)
         {
             List<TreeNode> selection = new List<TreeNode>();
 
+            if (!cbCat.Checked)
 
-            foreach (TreeNode node in treeView1.TopNode.Nodes)
-                selection.Add(node);
-
+            {
+                foreach (TreeNode node in treeView1.TopNode.Nodes)
+                    selection.Add(node);
+            }
+            else
+            {
+                selection = SelectCategoryLevel(udCat.SelectedIndex);
+            }            
 
             foreach (TreeNode node in selection)
             {
@@ -480,6 +595,36 @@ namespace GINtool
 
             UpdateCounter();
         }
+
+        private void cbTableOutput_CheckedChanged(object sender, EventArgs e)
+        {
+            tableOutput = cbTableOutput.Checked;
+        }
+
+        private void cbCat_CheckedChanged(object sender, EventArgs e)
+        {
+            udCat.Enabled = cbCat.Checked;
+        }
+
+        private void cbTopFC_CheckedChanged(object sender, EventArgs e)
+        {
+            udTopFC.Enabled = cbTopFC.Checked;
+            if (cbTopFC.Checked)
+            {
+                udTOPP.Enabled = false;
+                cbTopP.Checked = false;
+            }
+        }
+
+        private void cbTopP_CheckedChanged(object sender, EventArgs e)
+        {
+            udTOPP.Enabled = cbTopP.Checked;
+            if (cbTopP.Checked)
+            {
+                udTopFC.Enabled = false;
+                cbTopFC.Checked = false;
+            }
+        }
     }
 
 
@@ -496,11 +641,23 @@ namespace GINtool
         public string catName;        
         public double[] fc;
         public double[] pvalues;
+        public double averagep;
+        public double madp;
         public double average;
         public double sd;
         public double mad;
         public string[] genes;
     };
+
+    public struct element_rank
+    {
+        public double[] average_fc;
+        public double[] mad_fc;
+        public string catName;
+        public int[] nr_genes;
+        public string[] genes;
+    }
+
 
 #if CLICK_CHART
 

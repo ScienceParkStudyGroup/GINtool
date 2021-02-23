@@ -18,9 +18,9 @@ using System.Threading;
 namespace GINtool
 {
     public static class PlotRoutines
-    {      
+    {
         public static Excel.Application theApp = null;
-     
+
         static double estimatedFontSize(int nritems)
         {
             return -Math.Log10(nritems) + 2.6021;
@@ -89,6 +89,67 @@ namespace GINtool
 
         }
 
+
+
+        public static Excel.Chart CreateRankingPlot(Excel.Worksheet aSheet, List<element_rank> element_Ranks, string chartName, bool tableOutput=true)
+        {
+            if (theApp == null)
+                return null;
+                       
+            string sheetName = chartName.Replace("Plot_", "Tab_");
+            aSheet.Name = sheetName;            
+
+            Excel.ChartObjects xlCharts = (Excel.ChartObjects)aSheet.ChartObjects(Type.Missing);
+            Excel.ChartObject myChart = (Excel.ChartObject)xlCharts.Add(10, 80, 500, 500);
+            Excel.Chart chartPage = myChart.Chart;
+
+            chartPage.ChartType = Excel.XlChartType.xlXYScatter;
+
+            var series = (Excel.SeriesCollection)chartPage.SeriesCollection();
+
+            int offset = 2;
+            foreach (var element_rank in element_Ranks.Select((value, index) => new { value, index }))
+            {
+                var xy1 = series.NewSeries();
+                xy1.Name = element_rank.value.catName;
+                xy1.ChartType = Excel.XlChartType.xlBubble3DEffect;
+                int nrGenes = element_rank.value.nr_genes.Length;
+                if (element_rank.value.mad_fc != null && nrGenes>0)
+                {
+                    xy1.XValues = string.Format("={0}!$C${1}:$C${2}", sheetName, offset, nrGenes + offset); //element_rank.value.average_fc;
+                    xy1.Values = string.Format("={0}!$D${1}:$D${2}", sheetName, offset, nrGenes + offset);  //element_rank.value.mad_fc;
+                    xy1.BubbleSizes = string.Format("={0}!$B${1}:$B${2}", sheetName, offset, nrGenes + offset); //element_rank.value.nr_genes;
+
+                    xy1.HasDataLabels = true;
+                    dynamic dataLabels = xy1.DataLabels();
+                    dataLabels.Format.TextFrame2.TextRange.InsertChartField(MsoChartFieldType.msoChartFieldRange, string.Format("={0}!$A${1}:$A${2}", sheetName, offset, nrGenes + offset));
+
+                    dataLabels.ShowRange = true;
+                    dataLabels.ShowValue = false;
+                    
+                    offset += nrGenes;                  
+                }                
+            }
+
+
+            chartPage.Axes(Excel.XlAxisType.xlValue).TickLabelPosition = Excel.XlTickLabelPosition.xlTickLabelPositionNone;
+            chartPage.Axes(Excel.XlAxisType.xlValue).MajorGridLines.Delete();
+
+            chartPage.Axes(Excel.XlAxisType.xlValue).Format.Line.Weight = 0.25;
+            chartPage.Axes(Excel.XlAxisType.xlValue).Format.Line.DashStyle = Excel.XlLineStyle.xlDashDot;
+            chartPage.Legend.Delete();
+
+            chartPage.ChartColor = 22;
+            chartPage.Location(Excel.XlChartLocation.xlLocationAsNewSheet, chartName);
+
+            //if(!tableOutput)
+//                aSheet.Delete();
+
+            return chartPage;
+
+        }
+
+
         public static Excel.Chart CreateCategoryPlot(List<element_fc> element_Fcs, string chartName)
         {
             if (theApp == null)
@@ -131,7 +192,8 @@ namespace GINtool
                     xy1.Values = Enumerable.Repeat(element_Fc.index + 0.5, element_Fc.value.fc.Length).ToArray();
                     xy1.MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleNone;
                     xy1.MarkerSize = 2;
-                    xy1.ErrorBar(Excel.XlErrorBarDirection.xlY, Excel.XlErrorBarInclude.xlErrorBarIncludeBoth, Excel.XlErrorBarType.xlErrorBarTypeFixedValue, 0.1);
+                    //xy1.ErrorBar(Excel.XlErrorBarDirection.xlY, Excel.XlErrorBarInclude.xlErrorBarIncludeBoth, Excel.XlErrorBarType.xlErrorBarTypeFixedValue, 0.1);
+                    xy1.ErrorBar(Excel.XlErrorBarDirection.xlY, Excel.XlErrorBarInclude.xlErrorBarIncludeBoth, Excel.XlErrorBarType.xlErrorBarTypeFixedValue, 0.4);
                     Excel.ErrorBars errorBars = xy1.ErrorBars;
                     errorBars.EndStyle = Excel.XlEndStyleCap.xlNoCap;
                     errorBars.Format.Line.Weight = 1.25f;
