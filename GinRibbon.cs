@@ -816,20 +816,7 @@ namespace GINtool
 
             Excel.Worksheet theSheet = GetActiveSheet();
 
-            //if (theSheet == null)
-            //{
-            //    MessageBox.Show("Please select a worksheet with data first");
-            //    RemoveTask(TASKS.READ_SHEET_DATA);                
-            //    return (null, null);
-            //}
-
-            //if (theSheet.Name.Contains("Plot_") || theSheet.Name.Contains("CongruenceData_") || theSheet.Name.Contains("CongruencePlot_") || theSheet.Name.Contains("Summary_") ||
-            //    theSheet.Name.Contains("Combined_") || theSheet.Name.Contains("Mapped_") || theInputCells.Columns.Count != 3 )                                        
-            //{
-            //    MessageBox.Show("Please select 3 columns (first P-Value, second FC, third BSU)");
-            //    RemoveTask(TASKS.READ_SHEET_DATA);
-            //    return (null, null);
-            //}
+         
 
 
             if (InputHasChanged() || gOutput == null || gList == null)
