@@ -143,6 +143,33 @@ namespace GINtool
             return (b & (1 << bitNumber)) != 0;
         }
 
+
+        public static summaryInfo GetCatValues(this List<summaryInfo> sis, string catName)
+        {
+            if (sis != null)
+                return sis.Where(x => x.catName == catName).ToArray()[0];
+
+            return new summaryInfo();
+        }
+
+        public static cat_elements GetCatElement(this List<cat_elements> el, string catName)
+        {
+            if (el!=null && el.Count > 0 )
+            {
+                if (el != null)
+                {
+                    IEnumerable<cat_elements> output = el.Where(x => x.catName == catName);
+                    if(output.Count()>0)
+                    {
+                        return output.First();                        
+                    }
+                    
+                }
+            }
+            return new cat_elements();
+        }
+        
+
 #if CLICK_CHART
         public static string getPoint(this chart_info chart, int serie, int point)
         {
@@ -165,13 +192,13 @@ namespace GINtool
         }
 #endif
 
-    //}
+        //}
 
 
 
-    // from https://csharp.hotexamples.com/site/file?hash=0xe190e190f18b65d6b60ebe89ec697dff1cbe929ec830ef4f083e491a767f7c31&fullName=Source/EmfHelper.cs&project=LudovicT/NShape
-    //internal static class EmfHelper
-    //{
+        // from https://csharp.hotexamples.com/site/file?hash=0xe190e190f18b65d6b60ebe89ec697dff1cbe929ec830ef4f083e491a767f7c31&fullName=Source/EmfHelper.cs&project=LudovicT/NShape
+        //internal static class EmfHelper
+        //{
         #region Methods
 
         /// <summary>

@@ -236,6 +236,9 @@ namespace GINtool
             gRefOperons.CaseSensitive = false;
             gRefOperons.Columns.Add("operon", Type.GetType("System.String"));
             gRefOperons.Columns.Add("gene", Type.GetType("System.String"));
+            gRefOperons.Columns.Add("op_id", Type.GetType("System.Int32"));
+
+            int _op_id = 0;
 
             foreach(SysData.DataRow lRow in _tmp.Rows)
             {
@@ -249,7 +252,10 @@ namespace GINtool
                     SysData.DataRow lNewRow = gRefOperons.Rows.Add();
                     lNewRow["operon"] = lItems[0];
                     lNewRow["gene"] = lItems[i];
+                    lNewRow["op_id"] = _op_id;
                 }
+
+                _op_id++;
             }
             //gApplication.EnableEvents = true;
             //gApplication.StatusBar = "Ready";
@@ -908,6 +914,7 @@ namespace GINtool
             Excel.Range all = (Excel.Range)lNewSheet.get_Range(top, bottom);
 
             all.Columns.AutoFit();
+            all.Select().Rows.AutoFit();
 
             clrTbl = lOut.Item2;
             ColorCells(clrTbl, lNewSheet, startR, offsetColumn + 5, startR + nrRows - 1, offsetColumn + lTable.Columns.Count - 1);
@@ -1394,9 +1401,13 @@ namespace GINtool
             Excel.Range all = (Excel.Range)lNewSheet.get_Range(top, bottom);
 
             int col = 1;
+            lNewSheet.Cells[1, col++] = "BSU";
+            lNewSheet.Cells[1, col++] = "FC";
+            lNewSheet.Cells[1, col++] = "P-Value";
 
             lNewSheet.Cells[1, col++] = "Gene";
             lNewSheet.Cells[1, col++] = "Operon Name";
+            lNewSheet.Cells[1, col++] = "Nr operons";
             lNewSheet.Cells[1, col++] = "Nr genes";
             lNewSheet.Cells[1, col++] = "Operon";
 
@@ -1407,6 +1418,14 @@ namespace GINtool
             }
 
             FastDtToExcel(table, lNewSheet, 2, 1, table.Rows.Count + 1, maxNrGenes + 4);
+
+
+            top = lNewSheet.Cells[1, 1];
+            bottom = lNewSheet.Cells[table.Rows.Count + 1, maxNrGenes + 4];
+            all = (Excel.Range)lNewSheet.get_Range(top, bottom);
+
+            all.Columns.AutoFit();
+            all.Rows.AutoFit();
 
 
             gApplication.ScreenUpdating = true;
@@ -1521,41 +1540,88 @@ namespace GINtool
         }
 
 
-        private (List<string>,List<double>) GetOperonGenesFC(string operon, List<BsuRegulons> lLst)
+        private (List<string>,List<double>) GetOperonGenesFC(/*string operon,*/ string opid, List<BsuRegulons> lLst)
         {
 
-            SysData.DataRow[] lquery = gRefOperons.Select(string.Format("Operon = '{0}'", operon));
 
-            List<string> lgenes = new List<string>();
-            List<double> lFCs = new List<double>();
-
-            int nrHits = lquery.Count();
+            //SysData.DataRow[] lquery = gRefOperons.Select(string.Format("Operon = '{0}'", operon));
+            SysData.DataRow[] lquery = gRefOperons.Select(string.Format("op_id = '{0}'", opid));
+                            
+            List<string> _genes = new List<string>();
+            List<double> _lfcs = new List<double>();
 
             foreach (DataRow row in lquery)
-            {                
-                string lgene = row["gene"].ToString();
-//                if (lgene == operon && nrHits>1)
-//                    continue;
-                lgenes.Add(lgene);
-                BsuRegulons result = lLst.Find(item => item.GENE == lgene );
-                if (result != null)
-                    lFCs.Add(result.FC);
-                else
-                    lFCs.Add(Double.NaN);
+            {
 
-            }   
+                string lgene = row["gene"].ToString();
+                _genes.Add(lgene);
+
+                BsuRegulons result = lLst.Find(item => item.GENE == lgene);
+                if (result != null)
+                    _lfcs.Add(result.FC);
+                else
+                    _lfcs.Add(Double.NaN);
+            }
+
+           
+//            int nrHits = lquery.Count();
+
+//            int __op_id = -1;
+//            foreach (DataRow row in lquery)
+//            {
+//                int _op_id;
+//                Int32.TryParse(row["op_id"].ToString(), out _op_id);
+
+//                List<string> _genes = new List<string>();
+//                List<double> _lfcs = new List<double>();
+
+//                if (_op_id != __op_id)
+//                {
+//                    __op_id = _op_id;
+                  
+//                    string lgene = row["gene"].ToString();
+//                    _genes.Add(lgene);
+
+//                    BsuRegulons result = lLst.Find(item => item.GENE == lgene);
+//                    if (result != null)
+//                        _lfcs.Add(result.FC);
+//                    else
+//                        _lfcs.Add(Double.NaN);
+//                }
+
+//                lgenes.Add(_genes);
+//                lFCs.Add(_lfcs);
+
+////                if (lgene == operon && nrHits>1)
+////                    continue;                                              
+//            }   
+
                                    
-            return (lgenes,lFCs);
+            return (_genes,_lfcs);
         }
 
         private SysData.DataTable CreateOperonTable(SysData.DataTable aUsageTbl, List<BsuRegulons> lLst)
         {
             SysData.DataTable lTable = new SysData.DataTable();
 
-            SysData.DataColumn col = new SysData.DataColumn("Gene", Type.GetType("System.String"));
+            #region newoutput
+            SysData.DataColumn col = new SysData.DataColumn("BSU", Type.GetType("System.String"));
+            lTable.Columns.Add(col);
+
+            col = new SysData.DataColumn("FC", Type.GetType("System.Double"));
+            lTable.Columns.Add(col);
+
+            col = new SysData.DataColumn("P-value", Type.GetType("System.Double"));
+            lTable.Columns.Add(col);
+            #endregion
+
+            col = new SysData.DataColumn("Gene", Type.GetType("System.String"));
             lTable.Columns.Add(col);
 
             col = new SysData.DataColumn("operon", Type.GetType("System.String"));
+            lTable.Columns.Add(col);
+
+            col = new SysData.DataColumn("nroperons", Type.GetType("System.Int16"));
             lTable.Columns.Add(col);
 
             col = new SysData.DataColumn("nrgenes", Type.GetType("System.Int16"));
@@ -1571,41 +1637,118 @@ namespace GINtool
             }
 
 
+            int noperons = 0;
+
             //SysData.DataTable uOperons = GetDistinctRecords(gRefOperons, new string[] { "Operon" });
             double lowVal = Properties.Settings.Default.fcLOW;
             for (int r = 0; r < lLst.Count; r++)
             {
+                                
                 string geneName = lLst[r].GENE;
+                double lFC = lLst[r].FC;
+                double lPval = lLst[r].PVALUE;
 
+
+#if false   // accept all items
                 bool accept = Properties.Settings.Default.use_pvalues ? lLst[r].PVALUE < Properties.Settings.Default.pvalue_cutoff : Math.Abs(lLst[r].FC) > lowVal;
                 if (!accept)
                     continue;
+#endif
 
-                HashSet<string> luOperons = new HashSet<string>();
+                List<string> luOperons = new List<string>();
 
-                SysData.DataRow[] lOperons = gRefOperons.Select(string.Format("gene='{0}'", lLst[r].GENE));
+                
+                // multiple operons for a single gene
+                SysData.DataRow[] lOperons = gRefOperons.Select(string.Format("gene='{0}'", geneName));
+
+
+                string operon = "";
+                List<string> lgenes = new List<string>();
+                List<double> lFCs = new List<double>();
+                string opgenes = "";
+                List<List<string>> llgenes = new List<List<string>>();
+
+                int _m = 0;
+                int _maxm = _m;
                 foreach (DataRow row in lOperons)
                 {
-                    string operon = row["operon"].ToString();
-                    luOperons.Add(operon);
+                    //if (operon.Length > 0)
+                    //    operon += "#" + row["operon"].ToString();
+                    //else
+                    //    operon = row["operon"].ToString();
+                    luOperons.Add(row["operon"].ToString());
+                    //operon = row["operon"].ToString();
+                    //operon = row["operon"].ToString();
+
+                    // multiple genes per operon
+                    //(List<List<string>> _lgenes, List<List<double>>  _lFCs) = GetOperonGenesFC(row["operon"].ToString(), row["op_id"], lLst);
+                    (List<string> _lgenes, List<double> _lFCs) = GetOperonGenesFC(row["op_id"].ToString(), lLst);
+                    llgenes.Add(_lgenes);
+
+
+                    if (_lgenes.Count > lgenes.Count)
+                    {
+                        _maxm = _m;
+                        operon = row["operon"].ToString();
+                        lgenes = new List<string>(_lgenes);
+                        lFCs = new List<double>(_lFCs);
+                    }
+
+                    _m++;
+
                 }
 
-                foreach(string operon in luOperons)
-                { 
-                    
-                    (List<string> lgenes, List<double> lFCs) = GetOperonGenesFC(operon, lLst);
+
+
+                noperons = luOperons.Count();
+
+                //luOperons.Sort((x, y) => x.Length.CompareTo(y.Length));
+
+                //luOperons.Select(x=>x.Length>luOperons[id].Length)
+
+                if(operon.Length>0)
+                //foreach(string operon in luOperons)
+                {
+                    operon = luOperons[_maxm];
+                    lgenes = llgenes[_maxm];
+                    opgenes = string.Join("-", lgenes.ToArray());
+                    llgenes.Remove(lgenes);
+
+                    foreach (List<string> _item in llgenes)
+                    {
+                        opgenes = opgenes + Environment.NewLine + string.Join("-", _item.ToArray());
+                    }
+
+
+
+                    //(List<string> lgenes, List<double> lFCs) = GetOperonGenesFC(luOperons[0], lLst);
                     int nrgenes = lgenes.Count;
-                    string opgenes = string.Join("-", lgenes.ToArray());
+                    //string opgenes = string.Join("-", lgenes.ToArray());
                     // addrow
                     SysData.DataRow lRow = lTable.Rows.Add();
+                    lRow["BSU"] = lLst[r].BSU;
+                    lRow["FC"] = lLst[r].FC;
+                    lRow["P-Value"] = lLst[r].PVALUE;
+
                     lRow["gene"] = geneName;
                     lRow["operon"] = operon;
+                    lRow["nroperons"] = noperons;
                     lRow["nrgenes"] = nrgenes;
                     lRow["operon_genes"] = opgenes;
                     for(int i=0;i<nrgenes;i++)
                     {
-                        lRow[string.Format("gene_{0}", i + 1)] = lFCs[i];
+                      if(!(lFCs[i] is Double.NaN))
+                            lRow[string.Format("gene_{0}", i + 1)] = lFCs[i];
                     }
+                }
+                else
+                {
+                    
+                    SysData.DataRow lRow = lTable.Rows.Add();
+                    lRow["BSU"] = lLst[r].BSU;
+                    lRow["FC"] = lLst[r].FC;
+                    lRow["P-Value"] = lLst[r].PVALUE;
+                    
                 }
                                 
             }
@@ -2260,7 +2403,7 @@ namespace GINtool
 
             if ((Properties.Settings.Default.catPlot || Properties.Settings.Default.regPlot)) //& gNeedsUpdate.Check(UPDATE_FLAGS.PCat))
             {
-                dlgTreeView dlg = new dlgTreeView(categoryView: cbUseCategories.Checked);
+                dlgTreeView dlg = new dlgTreeView(categoryView: cbUseCategories.Checked, spreadingOptions: Properties.Settings.Default.catPlot,rankingOptions: Properties.Settings.Default.regPlot);
 
                 if (gCategories != null && cbUseCategories.Checked)
                 {
@@ -2309,7 +2452,7 @@ namespace GINtool
                     //{ 
                         if (Properties.Settings.Default.regPlot)
                         {
-                            RankingPlot(gOutput, gSummary, dlg.GetSelection(),tableOutput:dlg.selectTableOutput()); // wordt optie in category plot hierboven
+                            RankingPlot(gOutput, gSummary, dlg.GetSelection(),tableOutput:dlg.selectTableOutput(),splitNP:dlg.GetSplitOption()); // wordt optie in category plot hierboven
                             //private void CreateRegulonPlotDataSheet(List<element_fc> theElements)
 
                             // data for now.. to be changed in plot
@@ -2434,11 +2577,19 @@ namespace GINtool
 
 
 
-        private List<element_fc> CatElements2ElementsFC(SysData.DataView dataView, List<cat_elements> cat_Elements, int topTenFC=-1, int topTenP=-1)
+        private element_fc CatElements2ElementsFC(SysData.DataView dataView, List<cat_elements> cat_Elements, int topTenFC=-1, int topTenP=-1)
         {
 
-            List<element_fc> element_Fcs = new List<element_fc>();
+            //List<element_fc> element_Fcs = new List<element_fc>();
+            element_fc element_Fcs = new element_fc();
             SysData.DataView dataViewCat = gCategories.AsDataView();
+
+
+            List<summaryInfo> _All = new List<summaryInfo>();
+            List<summaryInfo> _Pos = new List<summaryInfo>();
+            List<summaryInfo> _Neg = new List<summaryInfo>();
+            List<summaryInfo> _Com = new List<summaryInfo>();
+
             foreach (cat_elements ce in cat_Elements)
             {
                 string categories = string.Join(",", ce.elements.ToArray());
@@ -2446,171 +2597,481 @@ namespace GINtool
                 dataViewCat.RowFilter = String.Format("catid_short in ({0})", categories);
 
                 HashSet<string> genes = new HashSet<string>();
-                foreach(DataRow _row in dataViewCat.ToTable().Rows)
+                foreach (DataRow _row in dataViewCat.ToTable().Rows)
                 {
                     genes.Add(_row[gCategoryGeneColumn].ToString());
                 }
-                
+
                 string genesFormat = string.Join(",", genes.ToArray());
                 genesFormat = string.Join(",", genesFormat.Split(',').Select(x => $"'{x}'"));
                 dataView.RowFilter = String.Format("Gene in ({0})", genesFormat);
 
                 SysData.DataTable _dt = dataView.ToTable(true, "Gene", "FC", "Pvalue");
 
-                element_fc element_Fc;
-                element_Fc.catName = string.Format("{0} ({1})",ce.catName,_dt.Rows.Count);
-                List<double> _fcs = new List<double>();
-                List<string> _genes = new List<string>();
-                List<double> _pvalues = new List<double>();
+                //summaryInfo _All;
 
-                foreach (DataRow _row in _dt.Rows)
+                //element_fc element_Fc;
+                //element_Fc.catName = string.Format("{0} ({1})", ce.catName, _dt.Rows.Count);
+                //List<double> _fcs = new List<double>();
+                //List<string> _genes = new List<string>();
+                //List<double> _pvalues = new List<double>();
+
+
+
+                summaryInfo __All = new summaryInfo();
+                summaryInfo __Pos = new summaryInfo();
+                summaryInfo __Neg = new summaryInfo();
+                //summaryInfo __Com = new summaryInfo();
+
+                __All.catName = string.Format("{0} ({1})", ce.catName, _dt.Rows.Count);
+                __Pos.catName = string.Format("{0} ({1})", ce.catName, _dt.Rows.Count);
+                __Neg.catName = string.Format("{0} ({1})", ce.catName, _dt.Rows.Count);
+
+
+                List<double> _fcsA = new List<double>();
+                List<string> _genesA = new List<string>();
+                List<double> _pvaluesA = new List<double>();
+
+
+                List<double> _fcsP = new List<double>();
+                List<string> _genesP = new List<string>();
+                List<double> _pvaluesP = new List<double>();
+
+                List<double> _fcsN = new List<double>();
+                List<string> _genesN = new List<string>();
+                List<double> _pvaluesN = new List<double>();
+
+
+
+
+
+
+                if (_dt.Rows.Count > 0)
                 {
-                    _fcs.Add((double)_row["FC"]);
-                    _pvalues.Add((double)_row["Pvalue"]);
-                    _genes.Add(_row["Gene"].ToString());
+
+                    //List<double> _fcsT = new List<double>();
+                    //List<string> _genesT = new List<string>();
+                    //List<double> _pvaluesT = new List<double>();
+
+
+                    //List<double> _fcsP = new List<double>();
+                    //List<string> _genesP = new List<string>();
+                    //List<double> _pvaluesP = new List<double>();
+
+                    //List<double> _fcsN = new List<double>();
+                    //List<string> _genesN = new List<string>();
+                    //List<double> _pvaluesN = new List<double>();
+
+
+                    for (int i = 0; i < _dt.Rows.Count; i++)
+                    {
+
+                        double fc = (double)_dt.Rows[i]["FC"];
+
+                        _genesA.Add(_dt.Rows[i]["Gene"].ToString());
+                        _fcsA.Add(fc);
+                        _pvaluesA.Add(double.Parse(_dt.Rows[i]["Pvalue"].ToString()));
+
+                        if (fc >= 0)
+                        {
+                            _genesP.Add(_dt.Rows[i]["Gene"].ToString());
+                            _fcsP.Add(fc);
+                            _pvaluesP.Add(double.Parse(_dt.Rows[i]["Pvalue"].ToString()));
+                        }
+                        else if (fc < 0)
+                        {
+                            _genesN.Add(_dt.Rows[i]["Gene"].ToString());
+                            _fcsN.Add(fc);
+                            _pvaluesN.Add(double.Parse(_dt.Rows[i]["Pvalue"].ToString()));
+                        }
+                    }
                 }
 
-                if (_fcs.Count == 0)
+                //foreach (DataRow _row in _dt.Rows)
+                //    {
+
+                //        double fc = (double)_row["FC"];
+
+                //        _genesT.Add(_row["Gene"].ToString());
+                //        _fcsT.Add(fc);
+                //        _pvaluesT.Add(double.Parse(_row["Pvalue"].ToString()));
+
+                //        if (fc >= 0)
+                //        {
+                //            _genesP.Add(_row["Gene"].ToString());
+                //            _fcsP.Add(fc);
+                //            _pvaluesP.Add(double.Parse(_row["Pvalue"].ToString()));
+                //        }
+                //        else if (fc < 0)
+                //        {
+                //            _genesN.Add(_row["Gene"].ToString());
+                //            _fcsN.Add(fc);
+                //            _pvaluesN.Add(double.Parse(_row["Pvalue"].ToString()));
+                //        }
+
+                //        //_fcs.Add((double)_row["FC"]);
+                //        //_pvalues.Add((double)_row["Pvalue"]);
+                //        //_genes.Add(_row["Gene"].ToString());
+                //    }
+
+
+                __Pos.fc_average = _fcsP.Count > 0 ? _fcsP.Average() : 0;
+                __Neg.fc_average = _fcsN.Count > 0 ? _fcsN.Average() : 0;
+                __All.fc_average = _fcsA.Count > 0 ? _fcsA.Average() : 0;
+
+                __Pos.fc_values = _fcsP.Count > 0 ? _fcsP.ToArray() : new double[] { 0 };
+                __Neg.fc_values = _fcsN.Count > 0 ? _fcsN.ToArray() : new double[] { 0 };
+                __All.fc_values = _fcsA.Count > 0 ? _fcsA.ToArray() : new double[] { 0 };               
+
+#region toberemoved
+
+
+                //element_Fc.sd = _fcsP.Count>0?_fcsP.sd():0;
+
+                //element_Fc.madFC_P = _fcsP.Count>0?_fcsP.mad():0;                    
+                //element_Fc.madFC_N = _fcsN.Count>0?_fcsN.mad():0;
+                //element_Fc.madFC_T = _fcsT.Count>0?_fcsT.mad():0;
+
+#endregion
+
+                __Pos.genes = _genesP.Count > 0 ? _genesP.ToArray() : new string[] { "" };
+                __Neg.genes = _genesN.Count > 0 ? _genesN.ToArray() : new string[] { "" };
+                __All.genes = _genesA.Count > 0 ? _genesA.ToArray() : new string[] { "" };
+
+
+                __Pos.p_values = _pvaluesP.Count > 0 ? _pvaluesP.ToArray() : new double[] { };
+                __Neg.p_values = _pvaluesN.Count > 0 ? _pvaluesN.ToArray() : new double[] { };
+                __All.p_values = _pvaluesA.Count > 0 ? _pvaluesA.ToArray() : new double[] { };
+
+                __All.fc_mad = _fcsA.Count > 0 ? _fcsA.mad() : 0;
+                __Pos.fc_mad = _fcsP.Count > 0 ? _fcsP.mad() : 0;
+                __Neg.fc_mad = _fcsN.Count > 0 ? _fcsN.mad() : 0;
+
+
+                __Pos.p_average = _pvaluesP.Count > 0 ? _pvaluesP.Average() : 0;
+                __Neg.p_average = _pvaluesN.Count > 0 ? _pvaluesN.Average() : 0;
+                __All.p_average = _pvaluesA.Count > 0 ? _pvaluesA.Average() : 0;
+
+                __Pos.p_mad = _pvaluesP.Count > 0 ? _pvaluesP.mad() : 0;
+                __Neg.p_mad = _pvaluesN.Count > 0 ? _pvaluesN.mad() : 0;
+                __All.p_mad = _pvaluesA.Count > 0 ? _pvaluesA.mad() : 0;
+
+                _All.Add(__All);
+                _Pos.Add(__Pos);
+                _Neg.Add(__Neg);
+            }
+
+                element_Fcs.All = _All;
+                element_Fcs.Pos = _Pos;
+                element_Fcs.Neg = _Neg;
+
+                //if (_fcs.Count == 0)
+                //    {
+                //        element_Fc.averageFC_P = 0; // double.NaN; // crucial not use NaN here.. The plots give memory errors otherwise
+                //        element_Fc.fcP = null;
+                //        element_Fc.sd = 0; // double.NaN;
+                //        element_Fc.madFC_P = 0; // double.NaN;
+                //        element_Fc.genesP = null;
+                //        element_Fc.pvaluesP = null;
+                //        element_Fc.madp_P = 0;
+                //        element_Fc.averagep_P = 0;
+
+                //        element_Fc.madFC_N = 0;
+                //        element_Fc.madp_N = 0;
+                //        element_Fc.pvaluesN = null;
+                //        element_Fc.genesN = null;
+                //        element_Fc.averageFC_N = 0;
+                //        element_Fc.averagep_N = 0;
+                //        element_Fc.fcN = null;
+
+                //        element_Fc.madFC_T = 0;
+                //        element_Fc.madp_T = 0;
+                //        element_Fc.pvaluesT = null;
+                //        element_Fc.genesT = null;
+                //        element_Fc.averageFC_T = 0;
+                //        element_Fc.averagep_T = 0;
+                //        element_Fc.fcT = null;
+
+
+
+                //    }
+                //    else
+                //    {
+                //        element_Fc.averageFC_P = _fcs.Average();
+                //        element_Fc.fcP = _fcs.ToArray();
+                //        element_Fc.sd = _fcs.sd();
+                //        element_Fc.madFC_P = _fcs.mad();
+                //        element_Fc.genesP = _genes.ToArray();
+                //        element_Fc.pvaluesP = _pvalues.ToArray();
+                //        element_Fc.averagep_P = _pvalues.Average();
+                //        element_Fc.madp_P = _pvalues.mad();
+
+                //        element_Fc.madFC_N = 0;
+                //        element_Fc.madp_N = 0;
+                //        element_Fc.averageFC_N = 0;
+                //        element_Fc.averagep_N = 0;
+                //        element_Fc.pvaluesN = null;
+                //        element_Fc.genesN = null;
+                //        element_Fc.fcN = null;
+
+                //        element_Fc.madFC_T = 0;
+                //        element_Fc.madp_T = 0;
+                //        element_Fc.pvaluesT = null;
+                //        element_Fc.genesT = null;
+                //        element_Fc.averageFC_T = 0;
+                //        element_Fc.averagep_T = 0;
+                //        element_Fc.fcT = null;
+
+
+                //    }
+                //    element_Fcs.Add(element_Fc);
+                //}
+
+
+
+
+                if (Properties.Settings.Default.useSort)
                 {
-                    element_Fc.average = 0; // double.NaN; // crucial not use NaN here.. The plots give memory errors otherwise
-                    element_Fc.fc = null;
-                    element_Fc.sd = 0; // double.NaN;
-                    element_Fc.mad = 0; // double.NaN;
-                    element_Fc.genes = null;
-                    element_Fc.pvalues = null;
-                    element_Fc.madp = 0;
-                    element_Fc.averagep = 0;
+                    double[] __values = element_Fcs.All.Select(x => x.fc_average).ToArray();
+                    var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
+
+                    //List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
+                    //return (element_Fcs, sortedIndex);
+
+                    element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList();
                 }
-                else
+                else if (topTenFC > 0)
                 {
-                    element_Fc.average = _fcs.Average();
-                    element_Fc.fc = _fcs.ToArray();
-                    element_Fc.sd = _fcs.sd();
-                    element_Fc.mad = _fcs.mad();
-                    element_Fc.genes = _genes.ToArray();
-                    element_Fc.pvalues = _pvalues.ToArray();
-                    element_Fc.averagep = _pvalues.Average();
-                    element_Fc.madp = _pvalues.mad();
+                    double[] __values = element_Fcs.All.Select(x => x.fc_average).ToArray();
+                    var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => Math.Abs(x.Key)).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => Math.Abs(x.Key)).ToList();
+                    List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
+                    element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList();
+                    element_Fcs.All = element_Fcs.All.GetRange(0, topTenFC);
                 }
-                element_Fcs.Add(element_Fc);                               
-            }
+                else if (topTenP > 0)// too lazy.. just copy here
+                {
+                    double[] __values = element_Fcs.All.Select(x => -Math.Log(x.p_average)).ToArray();
+                    var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
+                    List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
+                    element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList();
+                    element_Fcs.All = element_Fcs.All.GetRange(0, topTenP);
+                }
+                else // don't sort but possibly reverse direction
+                {
+                    if (Properties.Settings.Default.sortAscending)
+                        element_Fcs.All.Reverse();
 
-            if (Properties.Settings.Default.useSort)
-            {
-                double[] __values = element_Fcs.Select(x => x.average).ToArray();
-                var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
-
-                //List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
-                //return (element_Fcs, sortedIndex);
-
-                element_Fcs = sortedElements.Select(x => element_Fcs[x.Value]).ToList();
-            }
-            else if (topTenFC > 0)
-            {
-                double[] __values = element_Fcs.Select(x => x.average).ToArray();
-                var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => Math.Abs(x.Key)).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => Math.Abs(x.Key)).ToList();
-                List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
-                element_Fcs = sortedElements.Select(x => element_Fcs[x.Value]).ToList();
-                element_Fcs = element_Fcs.GetRange(0, topTenFC);
-            }
-            else if (topTenP > 0)// too lazy.. just copy here
-            {
-                double[] __values = element_Fcs.Select(x => -Math.Log(x.averagep)).ToArray();
-                var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
-                List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
-                element_Fcs = sortedElements.Select(x => element_Fcs[x.Value]).ToList();
-                element_Fcs = element_Fcs.GetRange(0, topTenP);
-            }
-            else // don't sort but possibly reverse direction
-            {
-                if(Properties.Settings.Default.sortAscending)
-                    element_Fcs.Reverse();
-
-            }
+                }
+        
 
             return element_Fcs;
         }
 
 
-        private List<element_fc> Regulons2ElementsFC(SysData.DataView dataView, List<cat_elements> cat_Elements, int topTenFC = -1, int topTenP = -1) // HashSet<string> regulons)
+        private element_fc Regulons2ElementsFC(SysData.DataView dataView, List<cat_elements> cat_Elements, int topTenFC = -1, int topTenP = -1, bool splitNP=false) // HashSet<string> regulons)
         {
-            List<element_fc> element_Fcs = new List<element_fc>();
+            element_fc element_Fcs = new element_fc();
             
-            foreach(cat_elements el in cat_Elements)
+            List<summaryInfo> _All = new List<summaryInfo>();
+            List<summaryInfo> _Pos = new List<summaryInfo>();
+            List<summaryInfo> _Neg = new List<summaryInfo>();
+            List<summaryInfo> _Com = new List<summaryInfo>();
+
+            foreach (cat_elements el in cat_Elements)
             {                
                 dataView.RowFilter = String.Format("Regulon='{0}'", el.catName);
-                element_fc element_Fc;
+
+                 
+                
+                //element_fc element_Fc;
                 //element_Fc.catName = el.catName;
                 
+               
+
                 SysData.DataTable _dataTable = dataView.ToTable();
-                element_Fc.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+                //element_Fc.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+
+                // find genes for the regulon/category
+
+                summaryInfo __All = new summaryInfo();
+                summaryInfo __Pos = new summaryInfo();
+                summaryInfo __Neg = new summaryInfo();
+                //summaryInfo __Com = new summaryInfo();
+
+                __All.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+                __Pos.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+                __Neg.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+
+
+                List<double> _fcsA = new List<double>();
+                List<string> _genesA = new List<string>();
+                List<double> _pvaluesA = new List<double>();
+
+
+                List<double> _fcsP = new List<double>();
+                List<string> _genesP = new List<string>();
+                List<double> _pvaluesP = new List<double>();
+
+                List<double> _fcsN = new List<double>();
+                List<string> _genesN = new List<string>();
+                List<double> _pvaluesN = new List<double>();
+
+
                 if (_dataTable.Rows.Count > 0)
                 {
-                    List<double> _fcs = new List<double>(_dataTable.Rows.Count);
-                    List<string> _genes = new List<string>(_dataTable.Rows.Count);
-                    List<double> _pvalues = new List<double>();
+
+                    //__Com.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+
+
+
                     for (int i = 0; i < _dataTable.Rows.Count; i++)
                     {
-                        _genes.Add(_dataTable.Rows[i]["Gene"].ToString());
-                        _fcs.Add(double.Parse(_dataTable.Rows[i]["FC"].ToString()));
-                        _pvalues.Add(double.Parse(_dataTable.Rows[i]["Pvalue"].ToString()));
-                    }
 
-                    element_Fc.average = _fcs.Average();
-                    element_Fc.fc = _fcs.ToArray();
-                    element_Fc.sd = _fcs.sd();
-                    element_Fc.mad = _fcs.mad();
-                    element_Fc.genes = _genes.ToArray();
-                    element_Fc.pvalues = _pvalues.ToArray();
-                    element_Fc.averagep = _pvalues.Average();
-                    element_Fc.madp = _pvalues.mad();
-                    element_Fcs.Add(element_Fc);
+                        double fc = (double)_dataTable.Rows[i]["FC"];
+
+                        _genesA.Add(_dataTable.Rows[i]["Gene"].ToString());
+                        _fcsA.Add(fc);
+                        _pvaluesA.Add(double.Parse(_dataTable.Rows[i]["Pvalue"].ToString()));
+
+                        if (fc >= 0)
+                        {
+                            _genesP.Add(_dataTable.Rows[i]["Gene"].ToString());
+                            _fcsP.Add(fc);
+                            _pvaluesP.Add(double.Parse(_dataTable.Rows[i]["Pvalue"].ToString()));
+                        }
+                        else if (fc < 0)
+                        {
+                            _genesN.Add(_dataTable.Rows[i]["Gene"].ToString());
+                            _fcsN.Add(fc);
+                            _pvaluesN.Add(double.Parse(_dataTable.Rows[i]["Pvalue"].ToString()));
+                        }
+                    }
                 }
-                else
-                {
-                    element_Fc.average = 0;
-                    element_Fc.fc = new double[] { 0 };
-                    element_Fc.genes = new string[] { "" };
-                    element_Fc.sd = 0;
-                    element_Fc.mad = 0;
-                    element_Fc.madp = 0;
-                    element_Fc.averagep = 0;
-                    element_Fc.pvalues = new double[] { 0 };
-                    element_Fcs.Add(element_Fc);
-                }
+
+
+
+                __Pos.fc_average = _fcsP.Count>0?_fcsP.Average():0;                    
+                __Neg.fc_average = _fcsN.Count>0?_fcsN.Average():0;
+                __All.fc_average = _fcsA.Count>0?_fcsA.Average():0;
+
+                __Pos.fc_values = _fcsP.Count >0  ? _fcsP.ToArray() : new double[] { 0 };
+                __Neg.fc_values = _fcsN.Count > 0 ? _fcsN.ToArray() : new double[] { 0 };
+                __All.fc_values = _fcsA.Count > 0 ? _fcsA.ToArray() : new double[] { 0 };
+
+                __Pos.fc_mad = _fcsP.Count > 0 ? _fcsP.mad() : 0;
+                __Neg.fc_mad = _fcsN.Count > 0 ? _fcsN.mad() : 0;
+                __All.fc_mad = _fcsA.Count > 0 ? _fcsA.mad() : 0;
+
+#region toberemoved
+
+
+                //element_Fc.sd = _fcsP.Count>0?_fcsP.sd():0;
+
+                //element_Fc.madFC_P = _fcsP.Count>0?_fcsP.mad():0;                    
+                //element_Fc.madFC_N = _fcsN.Count>0?_fcsN.mad():0;
+                //element_Fc.madFC_T = _fcsT.Count>0?_fcsT.mad():0;
+
+#endregion
+
+                __Pos.genes= _genesP.Count>0 ?_genesP.ToArray():new string[] { "" };
+                __Neg.genes = _genesN.Count>0 ?_genesN.ToArray():new string[] { "" };
+                __All.genes = _genesA.Count > 0 ? _genesA.ToArray() : new string[] { "" };
+                    
+                    
+                __Pos.p_values = _pvaluesP.Count>0 ? _pvaluesP.ToArray() : new double[] { };
+                __Neg.p_values = _pvaluesN.Count>0 ? _pvaluesN.ToArray() : new double[] { };
+                __All.p_values = _pvaluesA.Count>0 ? _pvaluesA.ToArray() : new double[] { };
+
+                __Pos.p_average = _pvaluesP.Count>0 ? _pvaluesP.Average():0;
+                __Neg.p_average = _pvaluesN.Count>0 ? _pvaluesN.Average():0;
+                __All.p_average = _pvaluesA.Count>0 ? _pvaluesA.Average():0;
+
+                __Pos.p_mad = _pvaluesP.Count>0?_pvaluesP.mad():0;
+                __Neg.p_mad = _pvaluesN.Count>0?_pvaluesN.mad():0;
+                __All.p_mad = _pvaluesA.Count>0?_pvaluesA.mad():0;
+
+                _All.Add(__All);
+                _Pos.Add(__Pos);
+                _Neg.Add(__Neg);
+
+
+                element_Fcs.All = _All;
+                element_Fcs.Pos = _Pos;
+                element_Fcs.Neg = _Neg;
+
+                    //element_Fcs.Add(element_Fc);
+                    //}
+                    //else
+                    //{
+                    //    element_Fc.averageFC_P = 0;
+                    //    element_Fc.averageFC_N = 0;
+                    //    element_Fc.averageFC_T = 0;
+
+                //    element_Fc.fcP = new double[] { };
+                //    element_Fc.fcN = new double[] {  };
+                //    element_Fc.fcT = new double[] {  };
+
+                //    element_Fc.genesP = new string[] { "" };
+                //    element_Fc.genesN = new string[] { "" };
+                //    element_Fc.genesT = new string[] { "" };
+
+                //    #region toberemoved
+                //    element_Fc.sd = 0;
+                //    element_Fc.madp_P = 0;
+                //    element_Fc.madp_N = 0;
+                //    element_Fc.madp_T = 0;
+                //    #endregion
+
+                //    element_Fc.madFC_P = 0;
+                //    element_Fc.madFC_N = 0;
+                //    element_Fc.madFC_T = 0;
+
+                //    element_Fc.averagep_P = 0;
+                //    element_Fc.averagep_N = 0;
+                //    element_Fc.averagep_T = 0;
+
+                //    element_Fc.pvaluesP = new double[] {  };
+                //    element_Fc.pvaluesN = new double[] {  };
+                //    element_Fc.pvaluesT = new double[] {  };
+
+                //    element_Fcs.Add(element_Fc);
+                //}
             }
+
+
+
 
             if (Properties.Settings.Default.useSort)
             {
-                double[] __values = element_Fcs.Select(x => x.average).ToArray();
+                double[] __values = element_Fcs.All.Select(x => x.fc_average).ToArray();
                 var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
 
                 List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
                 //return (element_Fcs, sortedIndex);
-                element_Fcs = sortedElements.Select(x => element_Fcs[x.Value]).ToList();
+                element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList();
             }
-            else if (topTenFC > 0)
+            else if (topTenFC > 0 )
             {
-                double[] __values = element_Fcs.Select(x => x.average).ToArray();
+                double[] __values = element_Fcs.All.Select(x => x.fc_average).ToArray();
                 var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => Math.Abs(x.Key)).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => Math.Abs(x.Key)).ToList();
                 List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
                 //return (element_Fcs, sortedIndex);
-                element_Fcs = sortedElements.Select(x => element_Fcs[x.Value]).ToList();
-                element_Fcs = element_Fcs.GetRange(0, topTenFC);
+                element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList();
+                element_Fcs.All = element_Fcs.All.GetRange(0, topTenFC);
             }
-            else if(topTenP>0)// too lazy.. just copy here
+            else if(topTenP>0 )// too lazy.. just copy here
             {
-                double[] __values = element_Fcs.Select(x =>-Math.Log(x.averagep)).ToArray();
+                double[] __values = element_Fcs.All.Select(x =>-Math.Log(x.p_average)).ToArray();
                 var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x =>x.Key).ToList();
                 List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
                 //return (element_Fcs, sortedIndex);
-                element_Fcs = sortedElements.Select(x => element_Fcs[x.Value]).ToList();
-                element_Fcs = element_Fcs.GetRange(0, topTenP);
+                element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList();
+                element_Fcs.All = element_Fcs.All.GetRange(0, topTenP);
             }                                        
             else // don't sort but possibly reverse direction
             {
                 if (Properties.Settings.Default.sortAscending)
-                    element_Fcs.Reverse();
+                    element_Fcs.All.Reverse();
             }
             return element_Fcs;
         }
@@ -2635,142 +3096,142 @@ namespace GINtool
         }
 
 #region toberemoved
-        public Excel.Chart MyTmpPlot(List<element_fc> element_Fcs)
-        {
+        //public Excel.Chart MyTmpPlot(List<element_fc> element_Fcs)
+        //{
             
 
-            if (gApplication == null)
-                return null;
+        //    if (gApplication == null)
+        //        return null;
 
-            Excel.Worksheet aSheet = gApplication.Worksheets.Add();
+        //    Excel.Worksheet aSheet = gApplication.Worksheets.Add();
 
             
-            //var missing = System.Type.Missing;
+        //    //var missing = System.Type.Missing;
 
-            Excel.ChartObjects xlCharts = (Excel.ChartObjects)aSheet.ChartObjects(Type.Missing);
-            Excel.ChartObject myChart = (Excel.ChartObject)xlCharts.Add(10, 80, 500, 500);
-            Excel.Chart chartPage = myChart.Chart;            
+        //    Excel.ChartObjects xlCharts = (Excel.ChartObjects)aSheet.ChartObjects(Type.Missing);
+        //    Excel.ChartObject myChart = (Excel.ChartObject)xlCharts.Add(10, 80, 500, 500);
+        //    Excel.Chart chartPage = myChart.Chart;            
 
-            chartPage.ChartType = Excel.XlChartType.xlXYScatter;
+        //    chartPage.ChartType = Excel.XlChartType.xlXYScatter;
 
-            var series = (Excel.SeriesCollection)chartPage.SeriesCollection();
+        //    var series = (Excel.SeriesCollection)chartPage.SeriesCollection();
 
-            int nrCategories = element_Fcs.Count;
+        //    int nrCategories = element_Fcs.Count;
 
-            double MMAX = 0;
-            double MMIN = 0;
+        //    double MMAX = 0;
+        //    double MMIN = 0;
 
-            for (int _i = 0; _i < nrCategories; _i++)
-            {
-                if (element_Fcs[_i].fc != null)
-                {
-                    if (element_Fcs[_i].fc.Min() < MMIN)
-                        MMIN = element_Fcs[_i].fc.Min();
-                    if (element_Fcs[_i].fc.Max() > MMAX)
-                        MMAX = element_Fcs[_i].fc.Max();
-                }
-            }
-
-
-            foreach (var element_Fc in element_Fcs.Select((value, index) => new { value, index }))
-            {
-                var xy1 = series.NewSeries();
-                xy1.Name = element_Fc.value.catName;
-                xy1.ChartType = Excel.XlChartType.xlXYScatter;
-                if (element_Fc.value.fc != null)
-                {
-                    xy1.XValues = element_Fc.value.fc;
-                    xy1.Values = Enumerable.Repeat(element_Fc.index + 0.5, element_Fc.value.fc.Length).ToArray();
-                    xy1.MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleNone;
-                    xy1.MarkerSize = 2;
-                    xy1.ErrorBar(Excel.XlErrorBarDirection.xlY, Excel.XlErrorBarInclude.xlErrorBarIncludeBoth, Excel.XlErrorBarType.xlErrorBarTypeFixedValue, 0.1);
-                    Excel.ErrorBars errorBars = xy1.ErrorBars;
-                    errorBars.EndStyle = Excel.XlEndStyleCap.xlNoCap;
-                    errorBars.Format.Line.Weight = 1.25f;
-
-                    // give each serie different color
-                    switch (element_Fc.index % 6)
-                    {
-                        case 0:
-                            errorBars.Format.Line.ForeColor.ObjectThemeColor = Microsoft.Office.Core.MsoThemeColorIndex.msoThemeColorAccent1;
-                            break;
-                        case 1:
-                            errorBars.Format.Line.ForeColor.ObjectThemeColor = Microsoft.Office.Core.MsoThemeColorIndex.msoThemeColorAccent2;
-                            break;
-                        case 2:
-                            errorBars.Format.Line.ForeColor.ObjectThemeColor = Microsoft.Office.Core.MsoThemeColorIndex.msoThemeColorAccent3;
-                            break;
-                        case 3:
-                            errorBars.Format.Line.ForeColor.ObjectThemeColor = Microsoft.Office.Core.MsoThemeColorIndex.msoThemeColorAccent4;
-                            break;
-                        case 4:
-                            errorBars.Format.Line.ForeColor.ObjectThemeColor = Microsoft.Office.Core.MsoThemeColorIndex.msoThemeColorAccent5;
-                            break;
-                        case 5:
-                            errorBars.Format.Line.ForeColor.ObjectThemeColor = Microsoft.Office.Core.MsoThemeColorIndex.msoThemeColorAccent6;
-                            break;
-                    }
+        //    for (int _i = 0; _i < nrCategories; _i++)
+        //    {
+        //        if (element_Fcs[_i].fcP != null)
+        //        {
+        //            if (element_Fcs[_i].fcP.Min() < MMIN)
+        //                MMIN = element_Fcs[_i].fcP.Min();
+        //            if (element_Fcs[_i].fcP.Max() > MMAX)
+        //                MMAX = element_Fcs[_i].fcP.Max();
+        //        }
+        //    }
 
 
-                }
-                var yAxis = (Excel.Axis)chartPage.Axes(Excel.XlAxisType.xlValue, Excel.XlAxisGroup.xlPrimary);
-                //yAxis.AxisTitle.Text = "Regulon";
-                Excel.TickLabels labels = yAxis.TickLabels;
-                labels.Offset = 1;
-            }
+        //    foreach (var element_Fc in element_Fcs.Select((value, index) => new { value, index }))
+        //    {
+        //        var xy1 = series.NewSeries();
+        //        xy1.Name = element_Fc.value.catName;
+        //        xy1.ChartType = Excel.XlChartType.xlXYScatter;
+        //        if (element_Fc.value.fcP != null)
+        //        {
+        //            xy1.XValues = element_Fc.value.fcP;
+        //            xy1.Values = Enumerable.Repeat(element_Fc.index + 0.5, element_Fc.value.fcP.Length).ToArray();
+        //            xy1.MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleNone;
+        //            xy1.MarkerSize = 2;
+        //            xy1.ErrorBar(Excel.XlErrorBarDirection.xlY, Excel.XlErrorBarInclude.xlErrorBarIncludeBoth, Excel.XlErrorBarType.xlErrorBarTypeFixedValue, 0.1);
+        //            Excel.ErrorBars errorBars = xy1.ErrorBars;
+        //            errorBars.EndStyle = Excel.XlEndStyleCap.xlNoCap;
+        //            errorBars.Format.Line.Weight = 1.25f;
+
+        //            // give each serie different color
+        //            switch (element_Fc.index % 6)
+        //            {
+        //                case 0:
+        //                    errorBars.Format.Line.ForeColor.ObjectThemeColor = Microsoft.Office.Core.MsoThemeColorIndex.msoThemeColorAccent1;
+        //                    break;
+        //                case 1:
+        //                    errorBars.Format.Line.ForeColor.ObjectThemeColor = Microsoft.Office.Core.MsoThemeColorIndex.msoThemeColorAccent2;
+        //                    break;
+        //                case 2:
+        //                    errorBars.Format.Line.ForeColor.ObjectThemeColor = Microsoft.Office.Core.MsoThemeColorIndex.msoThemeColorAccent3;
+        //                    break;
+        //                case 3:
+        //                    errorBars.Format.Line.ForeColor.ObjectThemeColor = Microsoft.Office.Core.MsoThemeColorIndex.msoThemeColorAccent4;
+        //                    break;
+        //                case 4:
+        //                    errorBars.Format.Line.ForeColor.ObjectThemeColor = Microsoft.Office.Core.MsoThemeColorIndex.msoThemeColorAccent5;
+        //                    break;
+        //                case 5:
+        //                    errorBars.Format.Line.ForeColor.ObjectThemeColor = Microsoft.Office.Core.MsoThemeColorIndex.msoThemeColorAccent6;
+        //                    break;
+        //            }
+
+
+        //        }
+        //        var yAxis = (Excel.Axis)chartPage.Axes(Excel.XlAxisType.xlValue, Excel.XlAxisGroup.xlPrimary);
+        //        //yAxis.AxisTitle.Text = "Regulon";
+        //        Excel.TickLabels labels = yAxis.TickLabels;
+        //        labels.Offset = 1;
+        //    }
 
 
 
 
-            chartPage.ChartColor = 1; // Properties.Settings.Default.defaultPalette;
+        //    chartPage.ChartColor = 1; // Properties.Settings.Default.defaultPalette;
 
-            // as a last step, add the axis labels series
+        //    // as a last step, add the axis labels series
 
-            if (true)
-            {
+        //    if (true)
+        //    {
 
-                var xy2 = series.NewSeries();
+        //        var xy2 = series.NewSeries();
 
-                xy2.ChartType = Excel.XlChartType.xlXYScatter;
-                //# Excel.Range rng = (Excel.Range)_tmpSheet.Range[_tmpSheet.Cells[3, (i*2)+1], _tmpSheet.Cells[6, (i * 2) + 1]];
-                xy2.XValues = Enumerable.Repeat(MMIN, nrCategories).ToArray();
+        //        xy2.ChartType = Excel.XlChartType.xlXYScatter;
+        //        //# Excel.Range rng = (Excel.Range)_tmpSheet.Range[_tmpSheet.Cells[3, (i*2)+1], _tmpSheet.Cells[6, (i * 2) + 1]];
+        //        xy2.XValues = Enumerable.Repeat(MMIN, nrCategories).ToArray();
 
-                //rng = (Excel.Range)_tmpSheet.Range[_tmpSheet.Cells[3, (i * 2) + 2], _tmpSheet.Cells[6, (i * 2) + 2]];
-                double[] yv = new double[nrCategories];
-                for (int _i = 0; _i < nrCategories; _i++)
-                {
-                    yv[_i] = ((float)_i) + 0.5f;
-                }
+        //        //rng = (Excel.Range)_tmpSheet.Range[_tmpSheet.Cells[3, (i * 2) + 2], _tmpSheet.Cells[6, (i * 2) + 2]];
+        //        double[] yv = new double[nrCategories];
+        //        for (int _i = 0; _i < nrCategories; _i++)
+        //        {
+        //            yv[_i] = ((float)_i) + 0.5f;
+        //        }
 
-                xy2.Values = yv;
+        //        xy2.Values = yv;
 
-                xy2.MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleNone;
-                xy2.HasDataLabels = true;
+        //        xy2.MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleNone;
+        //        xy2.HasDataLabels = true;
 
-                for (int _i = 0; _i < nrCategories; _i++)
-                {
-                    xy2.DataLabels(_i + 1).Text = element_Fcs[_i].catName;
-                }
+        //        for (int _i = 0; _i < nrCategories; _i++)
+        //        {
+        //            xy2.DataLabels(_i + 1).Text = element_Fcs[_i].catName;
+        //        }
 
-                xy2.DataLabels().Position = Excel.XlDataLabelPosition.xlLabelPositionLeft;
+        //        xy2.DataLabels().Position = Excel.XlDataLabelPosition.xlLabelPositionLeft;
 
-            }
+        //    }
 
 
-            chartPage.Axes(Excel.XlAxisType.xlValue).TickLabelPosition = Excel.XlTickLabelPosition.xlTickLabelPositionNone;
-            chartPage.Axes(Excel.XlAxisType.xlValue).MajorGridLines.Delete();            
-            chartPage.Axes(Excel.XlAxisType.xlValue).Format.Line.Weight = 0.25;
-            chartPage.Axes(Excel.XlAxisType.xlValue).Format.Line.DashStyle = Excel.XlLineStyle.xlDashDot;
-            chartPage.Axes(Excel.XlAxisType.xlValue).MaximumScale = nrCategories;
-            chartPage.Axes(Excel.XlAxisType.xlValue).MinimumScale = 0;
+        //    chartPage.Axes(Excel.XlAxisType.xlValue).TickLabelPosition = Excel.XlTickLabelPosition.xlTickLabelPositionNone;
+        //    chartPage.Axes(Excel.XlAxisType.xlValue).MajorGridLines.Delete();            
+        //    chartPage.Axes(Excel.XlAxisType.xlValue).Format.Line.Weight = 0.25;
+        //    chartPage.Axes(Excel.XlAxisType.xlValue).Format.Line.DashStyle = Excel.XlLineStyle.xlDashDot;
+        //    chartPage.Axes(Excel.XlAxisType.xlValue).MaximumScale = nrCategories;
+        //    chartPage.Axes(Excel.XlAxisType.xlValue).MinimumScale = 0;
             
-            chartPage.Legend.Delete();
-            chartPage.Location(Excel.XlChartLocation.xlLocationAsNewSheet, Type.Missing);
+        //    chartPage.Legend.Delete();
+        //    chartPage.Location(Excel.XlChartLocation.xlLocationAsNewSheet, Type.Missing);
           
-            aSheet.Delete();
-            return chartPage;
+        //    aSheet.Delete();
+        //    return chartPage;
 
-        }
+        //}
 #endregion
 
         private void DistributionPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary)
@@ -2815,7 +3276,7 @@ namespace GINtool
                 lRegulons.Add(row.ItemArray[0].ToString());
             
             SysData.DataView dataView = _fc_BSU.AsDataView();
-            List<element_fc> catPlotData = null;            
+            element_fc catPlotData;            
             if (Properties.Settings.Default.useCat)
             {
                 catPlotData = CatElements2ElementsFC(dataView, cat_Elements, topTenFC, topTenP);                
@@ -2908,7 +3369,7 @@ namespace GINtool
         //}
 
 
-        private void RankingPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements, bool tableOutput=false)
+        private void RankingPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements, bool tableOutput=false, bool splitNP=false)
         {
             //gApplication.EnableEvents = false;
             //gApplication.DisplayAlerts = false;
@@ -2916,6 +3377,10 @@ namespace GINtool
             AddTask(TASKS.REGULON_CHART);
 
             SysData.DataTable _fc_BSU = ReformatResults(aOutput);
+
+
+
+            cat_Elements = GetUniqueElements(cat_Elements);
 
 
             List<element_fc> element_Fcs = new List<element_fc>();
@@ -2927,16 +3392,16 @@ namespace GINtool
                 lRegulons.Add(row.ItemArray[0].ToString());
 
             SysData.DataView dataView = _fc_BSU.AsDataView();
-            List<element_fc> catPlotData = null;
+            element_fc catPlotData;
             if (Properties.Settings.Default.useCat)
             {
                 catPlotData = CatElements2ElementsFC(dataView, cat_Elements);
             }
             else
-                catPlotData = Regulons2ElementsFC(dataView, cat_Elements);
+                catPlotData = Regulons2ElementsFC(dataView, cat_Elements,splitNP:splitNP);
 
             //CreateExtendedRegulonCategoryDataSheet(catPlotData);
-            List<element_rank> plotData = CreateRankingPlotData(catPlotData);
+            (List<element_rank> plotData,List<summaryInfo> _all, List<summaryInfo> _pos, List < summaryInfo > _neg, List <summaryInfo> _com) = CreateRankingPlotData(catPlotData);
 
 
             int chartNr = Properties.Settings.Default.useCat ? nextWorksheet("CatRankPlot") : nextWorksheet("RegRankPlot");
@@ -2944,9 +3409,9 @@ namespace GINtool
                         
 
             //if (tableOutput)
-            Excel.Worksheet lRankingSheet = CreateRankingDataSheet(catPlotData);
+            Excel.Worksheet lRankingSheet = CreateRankingDataSheet(catPlotData, _all,_pos,_neg,_com);
 
-            PlotRoutines.CreateRankingPlot(lRankingSheet, plotData, chartName,tableOutput:tableOutput);
+            PlotRoutines.CreateRankingPlot(lRankingSheet, plotData, chartName);
 
             this.RibbonUI.ActivateTab("TabGINtool");
 
@@ -2956,6 +3421,25 @@ namespace GINtool
             //gApplication.DisplayAlerts = true;
         }
 
+        
+        private List<cat_elements> GetUniqueElements(List<cat_elements> elements)
+        {
+            List<cat_elements> result = new List<cat_elements>();
+            foreach(cat_elements el in elements)
+            {
+                cat_elements elo = result.GetCatElement(el.catName);
+                if (elo.catName==null)
+                    result.Add(el);
+                else
+                {
+                    System.Console.WriteLine("Hallo");
+                }             
+
+            }
+
+            return result;
+        }
+
 
         private string StripText(string str)
         {
@@ -2963,64 +3447,127 @@ namespace GINtool
             string[] names = name.Split('(');
             int hit = names[0].ToUpper().IndexOf("REGULON");
             string newname = hit == -1 ? names[0] : names[0].Substring(0, hit);
-
             return newname;
-
         }
 
 
-        private List<element_rank> CreateRankingPlotData(List<element_fc> theElements)
+        private List<summaryInfo> SortedElements(List<summaryInfo> alist, SORTMODE mode = SORTMODE.FC, bool descending = true)
+        {
+            List<summaryInfo> _work = new List<summaryInfo>(alist.Where(x => x.genes[0] != ""));
+            List<summaryInfo> _skip = new List<summaryInfo>(alist.Where(x => x.genes[0] == ""));
+            
+
+            if (mode == SORTMODE.CATNAME)
+            {
+                string[] __values = _work.Select(x => x.catName).ToArray();
+                var sortedElements = descending ? __values.Select((x, i) => new KeyValuePair<string, int>(x, i)).OrderByDescending(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<string, int>(x, i)).OrderBy(x => x.Key).ToList();
+                List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
+
+                alist = sortedElements.Select(x => _work[x.Value]).ToList();
+                alist.AddRange(_skip);
+
+                return alist;
+            }
+            else
+            {
+                double[] __values = null;
+                switch (mode)
+                {
+                    case SORTMODE.FC:
+                        __values = _work.Select(x => x.fc_average).ToArray();
+                        break;
+                    case SORTMODE.P:
+                        __values = _work.Select(x => x.p_average).ToArray();
+                        break;
+                    default:
+                        __values = _work.Select(x => x.fc_average).ToArray();
+                        break;
+
+                }
+                var sortedElements = descending ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList();
+                List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
+
+                alist = sortedElements.Select(x => _work[x.Value]).ToList();
+                alist.AddRange(_skip);
+
+                return alist;
+            }
+        }
+
+        private (List<element_rank>, List<summaryInfo> , List<summaryInfo>, List<summaryInfo>, List<summaryInfo>) CreateRankingPlotData(element_fc theElements)
         {
 
-            List<element_fc> toRemove = new List<element_fc>();
+            //List<element_fc> toRemove = new List<element_fc>();
             //DataTable lTable = ElementsToTable(theElements);
             List<element_rank> element_Ranks = new List<element_rank>();
+            
+            // MAD values
             List<double> e1_m = new List<double>(), e2_m = new List<double>(), e3_m = new List<double>(), e4_m = new List<double>(), e5_m = new List<double>();
+            // FC values
             List<double> e1_fc = new List<double>(), e2_fc = new List<double>(), e3_fc = new List<double>(), e4_fc = new List<double>(), e5_fc = new List<double>();
+            // Counts
             List<int> e1_n = new List<int>(), e2_n = new List<int>(), e3_n = new List<int>(), e4_n = new List<int>(), e5_n = new List<int>();
+            // CATEGORY/REGULON NAMES
             List<string> e1_s = new List<string>(), e2_s = new List<string>(), e3_s = new List<string>(), e4_s = new List<string>(), e5_s = new List<string>();
 
-            foreach (element_fc efc in theElements)
+            
+
+            foreach (summaryInfo sInfo in theElements.All)
             {
-                if(efc.averagep<0.06125)
+                List<double> _workfc = null;
+                List<double> _workm = null;
+                List<int> _workn = null;
+                List<string> _works = null;
+
+                if (sInfo.p_average <0.06125 && sInfo.genes[0]!="" )
                 {
-                    e1_fc.Add(efc.average);
-                    e1_m.Add(efc.mad);
-                    e1_n.Add(efc.pvalues != null ? efc.pvalues.Length: 0);
-                    e1_s.Add(StripText(efc.catName));
+                    _workfc = e1_fc;
+                    _workm = e1_m;
+                    _workn = e1_n;
+                    _works = e1_s;
                 }
 
-                if (efc.averagep>= 0.06125 && efc.averagep < 0.125)
+                if (sInfo.p_average >= 0.06125 && sInfo.p_average < 0.125 && sInfo.genes[0] != "")
                 {
-                    e2_fc.Add(efc.average);
-                    e2_m.Add(efc.mad);
-                    e2_n.Add(efc.pvalues != null ? efc.pvalues.Length: 0);
-                    e2_s.Add(StripText(efc.catName));
+                    _workfc = e2_fc;
+                    _workm = e2_m;
+                    _workn = e2_n;
+                    _works = e2_s;
                 }
 
-                if (efc.averagep >= 0.125 && efc.averagep < 0.25)
+
+                if (sInfo.p_average >= 0.125 && sInfo.p_average < 0.25 && sInfo.genes[0] != "")
                 {
-                    e3_fc.Add(efc.average);
-                    e3_m.Add(efc.mad);
-                    e3_n.Add(efc.pvalues != null ? efc.pvalues.Length: 0);
-                    e3_s.Add(StripText(efc.catName));
+                    _workfc = e3_fc;
+                    _workm = e3_m;
+                    _workn = e3_n;
+                    _works = e3_s;
+                }
+                if (sInfo.p_average >= 0.25 && sInfo.p_average < 0.5 && sInfo.genes[0] != "")
+                {
+                    _workfc = e4_fc;
+                    _workm = e4_m;
+                    _workn = e4_n;
+                    _works = e4_s;
                 }
 
-                if (efc.averagep >= 0.25 && efc.averagep < 0.5)
+
+                if (sInfo.p_average >= 0.5 && sInfo.p_average <= 1 && sInfo.genes[0] != "")
                 {
-                    e4_fc.Add(efc.average);
-                    e4_m.Add(efc.mad);
-                    e4_n.Add(efc.pvalues != null ? efc.pvalues.Length: 0);
-                    e4_s.Add(StripText(efc.catName));
+                    _workfc = e5_fc;
+                    _workm = e5_m;
+                    _workn = e5_n;
+                    _works = e5_s;
                 }
 
-                if (efc.averagep >= 0.5 && efc.averagep <= 1)
+                if (_workfc != null)
                 {
-                    e5_fc.Add(efc.average);
-                    e5_m.Add(efc.mad);
-                    e5_n.Add(efc.pvalues != null ? efc.pvalues.Length: 0);
-                    e5_s.Add(StripText(efc.catName));
-                }
+
+                    _workfc.Add(sInfo.fc_average);
+                    _workm.Add(sInfo.fc_mad);
+                    _workn.Add(sInfo.p_values != null ? sInfo.p_values.Length : 0);
+                    _works.Add(StripText(sInfo.catName));
+                }              
             }
 
 
@@ -3031,7 +3578,7 @@ namespace GINtool
             e1.mad_fc = e1_m.ToArray();
             e1.nr_genes = e1_n.ToArray();
             e1.genes = e1_s.ToArray();
-
+            
             e2.catName = "0.0625>=p<0.125";
             e2.average_fc = e2_fc.ToArray();
             e2.mad_fc = e2_m.ToArray();
@@ -3062,14 +3609,17 @@ namespace GINtool
             element_Ranks.Add(e4);
             element_Ranks.Add(e5);
 
-            element_Ranks.Reverse();
 
-            return element_Ranks;
+            List<summaryInfo> all_elements = SortedElements(theElements.All,mode:SORTMODE.P,descending:false);
+            List<summaryInfo> pos_elements = SortedElements(theElements.Pos);
+            List<summaryInfo> neg_elements = SortedElements(theElements.Neg,descending:false);
+
+            return (element_Ranks, all_elements, pos_elements,neg_elements,null);
 
 
         }
 
-        private DataTable ElementsToExtendedTable(List<element_fc> elements)
+        private DataTable ElementsToExtendedTable(List<summaryInfo> sInfo)
         {
             SysData.DataTable lTable = new SysData.DataTable("ExtElements");
 
@@ -3085,34 +3635,137 @@ namespace GINtool
             lTable.Columns.Add(fcColumn);
             lTable.Columns.Add(pvColumn);
 
-            for (int r = 0; r < elements.Count; r++)
+            for (int r = 0; r < sInfo.Count; r++)
             {
                 
-                for(int g=0;g<elements[r].genes.Count();g++)
+                for(int g=0;g< sInfo[r].genes.Count();g++)
                 {
                     SysData.DataRow lRow = lTable.Rows.Add();
-                    lRow[catRegLabel] = elements[r].catName;
-                    lRow["Gene"] = elements[r].genes[g];
-                    lRow["FC"] = elements[r].fc[g];
-                    lRow["Pvalue"] = elements[r].pvalues[g];
+                    lRow[catRegLabel] = sInfo[r].catName;
+                    lRow["Gene"] = sInfo[r].genes[g];
+                    lRow["FC"] = sInfo[r].fc_values.Length>0? sInfo[r].fc_values[g]:Double.NaN;
+                    lRow["Pvalue"] = sInfo[r].p_values.Length>0?sInfo[r].p_values[g]:Double.NaN;
                 }                                
             }
 
             return lTable;
         }
 
-        private DataTable ElementsToTable(List<element_fc> elements)
+      
+
+        private DataTable UDElementsToTable(element_fc element_info)
+        {
+
+            List<summaryInfo> _tmp = SortedElements(element_info.All, mode: SORTMODE.CATNAME,descending:false);
+
+            SysData.DataTable lTable = new SysData.DataTable("Elements");
+
+            SysData.DataColumn regColumn = new SysData.DataColumn("Name", Type.GetType("System.String"));
+            SysData.DataColumn cntColumnA = new SysData.DataColumn("CountT", Type.GetType("System.Int16"));            
+            
+            SysData.DataColumn statColumn1 = new SysData.DataColumn("Mode1", Type.GetType("System.String"));
+            SysData.DataColumn cntColumn1 = new SysData.DataColumn("Count1", Type.GetType("System.Int16"));
+            SysData.DataColumn percColumn1 = new SysData.DataColumn("Perc1", Type.GetType("System.Double"));
+            SysData.DataColumn avgFCColumn1 = new SysData.DataColumn("AverageFC1", Type.GetType("System.Double"));
+            SysData.DataColumn madFCColumn1 = new SysData.DataColumn("MadFC1", Type.GetType("System.Double"));
+            SysData.DataColumn avgPColumn1 = new SysData.DataColumn("AverageP1", Type.GetType("System.Double"));
+
+
+            SysData.DataColumn statColumn2 = new SysData.DataColumn("Mode2", Type.GetType("System.String"));
+            SysData.DataColumn cntColumn2 = new SysData.DataColumn("Count2", Type.GetType("System.Int16"));
+            SysData.DataColumn percColumn2 = new SysData.DataColumn("Perc2", Type.GetType("System.Double"));
+            SysData.DataColumn avgFCColumn2 = new SysData.DataColumn("AverageFC2", Type.GetType("System.Double"));
+            SysData.DataColumn madFCColumn2 = new SysData.DataColumn("MadFC2", Type.GetType("System.Double"));
+            SysData.DataColumn avgPColumn2 = new SysData.DataColumn("AverageP2", Type.GetType("System.Double"));
+
+
+            lTable.Columns.Add(regColumn);
+            lTable.Columns.Add(cntColumnA);
+
+            lTable.Columns.Add(statColumn1);
+            lTable.Columns.Add(cntColumn1);
+            lTable.Columns.Add(percColumn1);
+            lTable.Columns.Add(avgFCColumn1);
+            lTable.Columns.Add(madFCColumn1);
+            lTable.Columns.Add(avgPColumn1);
+
+            lTable.Columns.Add(statColumn2);
+            lTable.Columns.Add(cntColumn2);
+            lTable.Columns.Add(percColumn2);
+            lTable.Columns.Add(avgFCColumn2);
+            lTable.Columns.Add(madFCColumn2);
+            lTable.Columns.Add(avgPColumn2);
+
+
+            for (int i=0;i<_tmp.Count;i++)
+            {
+                bool swapped = false;
+                SysData.DataRow lRow = lTable.Rows.Add();
+                string catName = _tmp[i].catName;
+                int totnrgenes = _tmp[i].genes[0]==""?0:_tmp[i].genes.Length;
+                summaryInfo _pos = element_info.Pos.GetCatValues(catName);
+                summaryInfo _neg = element_info.Neg.GetCatValues(catName);
+                summaryInfo _si1 = _pos;
+                summaryInfo _si2 = _neg;
+                
+                lRow["Name"] = StripText(catName);
+                lRow["CountT"] = totnrgenes;
+                
+                if(_pos.genes.Length < _neg.genes.Length)
+                {
+                    _si1 = _neg;
+                    _si2 = _pos;
+                    swapped = true;
+                    
+                }
+
+                int n1 = _si1.genes[0] == "" ? 0 : _si1.genes.Length;
+                int n2 = _si2.genes[0] == "" ? 0 : _si2.genes.Length;
+
+                if(n1==n2) // check for highest FC
+                {
+                    if(Math.Abs(_si2.fc_average) > Math.Abs(_si1.fc_average))
+                    {
+                        _si1 = _neg;
+                        _si2 = _pos;
+                        swapped = !swapped;
+                    }
+                }
+
+
+                lRow["Mode1"] = swapped ? "repressed" : "activated";
+                lRow["Count1"] = _si1.genes[0] == "" ? 0 : _si1.genes.Length;
+                lRow["Perc1"] = totnrgenes == 0 ? 0:Math.Round(((double)n1 / (double)totnrgenes) * 100, 0);
+                lRow["AverageFC1"] = _si1.fc_average;
+                lRow["MadFC1"] = _si1.fc_mad;
+                lRow["AverageP1"] = _si1.p_average;                
+
+                lRow["Mode2"] = swapped ? "activated" : "repressed";
+                lRow["Count2"] = _si2.genes[0]==""?0:_si2.genes.Length;
+                lRow["Perc2"] = totnrgenes==0?0:Math.Round(((double)n2 / (double)totnrgenes) * 100, 0);
+                lRow["AverageFC2"] = _si2.fc_average;
+                lRow["MadFC2"] = _si2.fc_mad;
+                lRow["AverageP2"] = _si2.p_average;
+            }
+            
+            return lTable;
+        }
+
+
+        private DataTable ElementsToTable(List<summaryInfo> elements)
         {
 
             SysData.DataTable lTable = new SysData.DataTable("Elements");
+            
             SysData.DataColumn regColumn = new SysData.DataColumn("Name", Type.GetType("System.String"));
             SysData.DataColumn cntColumn = new SysData.DataColumn("Count", Type.GetType("System.Int16"));
             SysData.DataColumn avgColumn = new SysData.DataColumn("Average", Type.GetType("System.Double"));
             SysData.DataColumn madColumn = new SysData.DataColumn("Mad", Type.GetType("System.Double"));
+
+
             //SysData.DataColumn stdColumn = new SysData.DataColumn("Std", Type.GetType("System.Double"));
             SysData.DataColumn avgPColumn = new SysData.DataColumn("P_Average", Type.GetType("System.Double"));
             //SysData.DataColumn madPColumn = new SysData.DataColumn("P_Mad", Type.GetType("System.Double"));
-
 
 
             lTable.Columns.Add(regColumn);
@@ -3132,15 +3785,15 @@ namespace GINtool
                 int hit = names[0].ToUpper().IndexOf("REGULON");
                 string newname = hit == -1 ? names[0] : names[0].Substring(0, hit);
 
+                //if (mode == ELTYPE.ALL)
+                {
 
-                lRow["Name"] = newname; // name.Substring(0, names[0].Length);
-                lRow["Count"] = elements[r].pvalues==null?0:elements[r].pvalues.Count();
-                lRow["Average"] = elements[r].average;
-                lRow["Mad"] = elements[r].mad;
-              //  lRow["Std"] = elements[r].sd;
-                lRow["P_Average"] = elements[r].averagep;
-                //lRow["P_Mad"] = elements[r].madp;
-                
+                    lRow["Name"] = newname; // name.Substring(0, names[0].Length);
+                    lRow["Count"] = elements[r].p_values == null ? 0 : elements[r].p_values.Count();
+                    lRow["Average"] = elements[r].fc_average;
+                    lRow["Mad"] = elements[r].fc_mad;                    
+                    lRow["P_Average"] = elements[r].p_average;                    
+                }             
             }
 
             return lTable;
@@ -3148,7 +3801,7 @@ namespace GINtool
         }
 
 
-        private void CreateExtendedRegulonCategoryDataSheet(List<element_fc> theElements)
+        private void CreateExtendedRegulonCategoryDataSheet(element_fc theElements)
         {
 
 
@@ -3157,7 +3810,7 @@ namespace GINtool
             Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
             renameWorksheet(lNewSheet, catRegLabel+"_");
 
-            DataTable lTable = ElementsToExtendedTable(theElements);
+            DataTable lTable = ElementsToExtendedTable(theElements.All);
 
             lNewSheet.Cells[1, 1] = catRegLabel;
             lNewSheet.Cells[1, 2] = "Gene";
@@ -3172,30 +3825,149 @@ namespace GINtool
 
         }
 
-        private Excel.Worksheet CreateRankingDataSheet(List<element_fc> theElements)
+        private Excel.Worksheet CreateRankingDataSheet(element_fc theElements, List<summaryInfo> all, List<summaryInfo> posSort, List<summaryInfo> negSort, List<summaryInfo> comSort) 
         {
             string catRegLabel = Properties.Settings.Default.useCat ? "CatRankTab_" : "RegRankTab_";
             Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
             renameWorksheet(lNewSheet, catRegLabel);
 
-            DataTable lTable = ElementsToTable(theElements);
+            DataTable lTable = ElementsToTable(all);
 
             string catRegHeader = Properties.Settings.Default.useCat ? "Category" : "Regulon";
 
-            lNewSheet.Cells[1, 1] = catRegHeader;
-            lNewSheet.Cells[1, 2] = "Nr Genes";
-            lNewSheet.Cells[1, 3] = "Average FC";
-            lNewSheet.Cells[1, 4] = "MAD FC";
+            int hdrRow = 2;
+
+
+            Excel.Range top = lNewSheet.Cells[1, 1];
+            Excel.Range bottom = lNewSheet.Cells[1, 5];
+            Excel.Range rall = (Excel.Range)lNewSheet.get_Range(top, bottom);
+            rall.Merge();
+            rall.Value = "PLOT DATA";
+            rall.HorizontalAlignment = Microsoft.Office.Interop.Excel.Constants.xlCenter;
+
+            lNewSheet.Cells[hdrRow, 1] = catRegHeader;
+            lNewSheet.Cells[hdrRow, 2] = "Nr Genes";
+            lNewSheet.Cells[hdrRow, 3] = "Average FC";
+            lNewSheet.Cells[hdrRow, 4] = "MAD FC";
             //lNewSheet.Cells[1, 5] = "STD FC";
-            lNewSheet.Cells[1, 5] = "Average P";
+            lNewSheet.Cells[hdrRow, 5] = "Average P";
             //lNewSheet.Cells[1, 7] = "MAD P";
 
             // Sort the data with ascending p-values
             DataView lView = lTable.DefaultView;
-            lView.Sort = "P_Average asc";
+            //lView.Sort = "P_Average asc";
 
             // starting from row 2
-            FastDtToExcel(lView.ToTable(), lNewSheet, 2, 1, lTable.Rows.Count + 1, lTable.Columns.Count);
+            FastDtToExcel(lView.ToTable(), lNewSheet, hdrRow+1, 1, lTable.Rows.Count + hdrRow, lTable.Columns.Count);
+
+            top = lNewSheet.Cells[1, 1];
+            bottom = lNewSheet.Cells[lTable.Rows.Count + hdrRow, 5];
+            rall = (Excel.Range)lNewSheet.get_Range(top, bottom);
+            rall.Interior.ThemeColor = Excel.XlThemeColor.xlThemeColorAccent4;
+            rall.Interior.TintAndShade = 0.8;
+            rall.Interior.PatternTintAndShade = 0;
+
+
+
+            top = lNewSheet.Cells[1, 7];
+            bottom = lNewSheet.Cells[1, 11];
+            rall = (Excel.Range)lNewSheet.get_Range(top, bottom);
+            rall.Merge();
+            rall.Value = "POSITIVE FC";
+            rall.HorizontalAlignment = Microsoft.Office.Interop.Excel.Constants.xlCenter;
+
+            lTable = ElementsToTable(posSort);
+
+            lNewSheet.Cells[hdrRow, 7] = catRegHeader;
+            lNewSheet.Cells[hdrRow, 8] = "Nr Genes Positive";
+            lNewSheet.Cells[hdrRow, 9] = "Average FC Positive";
+            lNewSheet.Cells[hdrRow, 10] = "MAD FC Positive";            
+            lNewSheet.Cells[hdrRow, 11] = "Average P Positive";            
+
+            // Sort the data with ascending p-values
+            lView = lTable.DefaultView;
+            //lView.Sort = "P_Average asc";
+
+            FastDtToExcel(lView.ToTable(), lNewSheet, hdrRow + 1, 7, lTable.Rows.Count + hdrRow, lTable.Columns.Count+6);
+
+            top = lNewSheet.Cells[1, 7];
+            bottom = lNewSheet.Cells[lTable.Rows.Count + hdrRow, 11];
+            rall = (Excel.Range)lNewSheet.get_Range(top, bottom);
+            rall.Interior.ThemeColor = Excel.XlThemeColor.xlThemeColorAccent1;
+            rall.Interior.TintAndShade = 0.8;
+            rall.Interior.PatternTintAndShade = 0;
+
+
+            lTable = ElementsToTable(negSort);
+
+
+            top = lNewSheet.Cells[1, 13];
+            bottom = lNewSheet.Cells[1, 17];
+            rall = (Excel.Range)lNewSheet.get_Range(top, bottom);
+            rall.Merge();
+            rall.Value = "NEGATIVE FC";
+            rall.HorizontalAlignment = Microsoft.Office.Interop.Excel.Constants.xlCenter;
+
+            lNewSheet.Cells[hdrRow, 13] = catRegHeader;
+            lNewSheet.Cells[hdrRow, 14] = "Nr Genes Negative";
+            lNewSheet.Cells[hdrRow, 15] = "Average FC Negative";
+            lNewSheet.Cells[hdrRow, 16] = "MAD FC Negative";
+            lNewSheet.Cells[hdrRow, 17] = "Average P Negative";
+
+            // Sort the data with ascending p-values
+            lView = lTable.DefaultView;
+            //lView.Sort = "P_Average asc";
+
+            FastDtToExcel(lView.ToTable(), lNewSheet, hdrRow + 1, 13, lTable.Rows.Count + hdrRow, lTable.Columns.Count + 12);
+
+            top = lNewSheet.Cells[1, 13];
+            bottom = lNewSheet.Cells[lTable.Rows.Count + hdrRow, 17];
+            rall = (Excel.Range)lNewSheet.get_Range(top, bottom);
+            rall.Interior.ThemeColor = Excel.XlThemeColor.xlThemeColorAccent4;
+            rall.Interior.TintAndShade = 0.8;
+            rall.Interior.PatternTintAndShade = 0;
+
+
+
+            top = lNewSheet.Cells[1, 19];
+            bottom = lNewSheet.Cells[1, 32];
+            rall = (Excel.Range)lNewSheet.get_Range(top, bottom);
+            rall.Merge();
+            rall.Value = "COMBINED RESULTS";
+
+            rall.HorizontalAlignment = Microsoft.Office.Interop.Excel.Constants.xlCenter;
+            lNewSheet.Cells[hdrRow, 19] = catRegHeader;
+            lNewSheet.Cells[hdrRow, 20] = "Total nr genes";
+            lNewSheet.Cells[hdrRow, 21] = "Status";
+            lNewSheet.Cells[hdrRow, 22] = "Nr of genes";
+            lNewSheet.Cells[hdrRow, 23] = "%";
+            lNewSheet.Cells[hdrRow, 24] = "Average FC";
+            lNewSheet.Cells[hdrRow, 25] = "MAD FC";
+            lNewSheet.Cells[hdrRow, 26] = "Average P";
+            lNewSheet.Cells[hdrRow, 27] = "Status";
+            lNewSheet.Cells[hdrRow, 28] = "Nr of genes";
+            lNewSheet.Cells[hdrRow, 29] = "%";
+            lNewSheet.Cells[hdrRow, 30] = "Average FC";
+            lNewSheet.Cells[hdrRow, 31] = "MAD FC";
+            lNewSheet.Cells[hdrRow, 32] = "Average P";
+
+
+            lTable = UDElementsToTable(theElements);
+            
+
+
+            FastDtToExcel(lTable, lNewSheet, hdrRow + 1, 19, lTable.Rows.Count + hdrRow, lTable.Columns.Count + 18);
+
+            top = lNewSheet.Cells[1, 19];
+            bottom = lNewSheet.Cells[lTable.Rows.Count + hdrRow, 32];
+            rall = (Excel.Range)lNewSheet.get_Range(top, bottom);
+            rall.Interior.ThemeColor = Excel.XlThemeColor.xlThemeColorAccent1;
+            rall.Interior.TintAndShade = 0.8;
+            rall.Interior.PatternTintAndShade = 0;
+
+
+
+
 
             return lNewSheet;
 
@@ -3616,6 +4388,15 @@ namespace GINtool
             PDist = 5,
             PCat = 6,
             POperon = 7,                        
+        };
+
+        private enum SORTMODE : int
+        {
+            FC = 0,
+            P = 1,
+            MADP = 2,
+            NGENES = 3,
+            CATNAME = 4,
         };
 
         private void cbMapping_Click(object sender, RibbonControlEventArgs e)

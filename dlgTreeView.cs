@@ -20,7 +20,7 @@ namespace GINtool
         //string[] refColumn = null;
         bool catMode = true;
         bool tableOutput = false;
-        bool enableTableOutput = true;
+        bool splitNP = false;
 
         List<cat_elements> gSelection = new List<cat_elements>();
 
@@ -29,7 +29,12 @@ namespace GINtool
             return gSelection;
         }
 
-        public dlgTreeView(bool categoryView = false, bool enableTable = true)
+
+        public bool GetSplitOption()
+        {
+            return splitNP;
+        }
+        public dlgTreeView(bool categoryView = false, bool spreadingOptions = true, bool rankingOptions=true)
         {
             InitializeComponent();
             udCat.SelectedItem = udCat.Items[0];
@@ -40,7 +45,11 @@ namespace GINtool
             cbCat.Checked = false;
             cbCat.Enabled = categoryView;
             udCat.Enabled = false;
-            cbTableOutput.Enabled = enableTable;
+            cbTableOutput.Enabled = spreadingOptions;
+            cbTopFC.Enabled = spreadingOptions;
+            cbTopP.Enabled = spreadingOptions;
+            cbSplit.Checked = false;
+            cbSplit.Enabled = rankingOptions;
         }
 
         // utility to select unique records
@@ -219,7 +228,7 @@ namespace GINtool
 
         private cat_elements createCategoryItem(TreeNode treeNode)
         {
-            cat_elements sel;
+            cat_elements sel = new cat_elements();
             List<string> codes = new List<string>();
             if (treeNode.Nodes.Count == 0)
             {
@@ -625,37 +634,109 @@ namespace GINtool
                 cbTopFC.Checked = false;
             }
         }
+
+        private void cbSplit_Click(object sender, EventArgs e)
+        {
+            splitNP = cbSplit.Checked;
+        }
     }
 
 
     public struct cat_elements
     {
+        public cat_elements(bool empty=true)
+        {
+            catName = "";
+            elTag = "";
+            elements = new string[] { "" };
+            isnull = empty;
+
+        }
+        //public bool IsNull
+        //{
+        //    get { return catName==""; }            
+        //    set { isnull = value; }
+        //}
+
+        private bool isnull;
         public string catName;
         public string elTag;
         public string[] elements;
     };
 
 
+
+    public struct summaryInfo
+    {
+        public string catName;
+        public double[] p_values;
+        public double[] fc_values;
+        public double p_average;
+        public double fc_average;
+        public double p_mad;
+        public double fc_mad;
+        public string[] genes;
+    }
+
     public struct element_fc
     {
-        public string catName;        
-        public double[] fc;
-        public double[] pvalues;
-        public double averagep;
-        public double madp;
-        public double average;
-        public double sd;
-        public double mad;
-        public string[] genes;
+        //public string catName;
+
+        public List<summaryInfo> All, Pos, Neg, Com;
+                
+        //public double[] fcP;
+        //public double[] fcN;
+        //public double[] fcT;
+        
+        
+        //public double[] pvaluesP;
+        //public double[] pvaluesN;
+        //public double[] pvaluesT;
+
+        
+        //public double averagep_P;                
+        //public double averagep_N;
+        //public double averagep_T;
+
+        //public double averageFC_P;
+        //public double averageFC_N;
+        //public double averageFC_T;
+
+        //#region toberemoved
+
+        //public double madp_P; 
+        //public double madp_N;
+        //public double madp_T;
+
+        //public double sd;
+
+        //#endregion
+
+        //public double madFC_P;
+        //public double madFC_N;
+        //public double madFC_T;
+
+        //public string[] genesP;
+        //public string[] genesN;
+        //public string[] genesT;
     };
 
     public struct element_rank
     {
+
+        public string catName;
+        
         public double[] average_fc;
         public double[] mad_fc;
-        public string catName;
+        //public double[] average_p;
         public int[] nr_genes;
         public string[] genes;
+
+        //public double[] averagen_fc;
+        //public double[] madn_fc;
+        //public int[] nrn_genes;
+        //public string[] ngenes;
+
     }
 
 

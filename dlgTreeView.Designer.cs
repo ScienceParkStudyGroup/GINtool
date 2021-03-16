@@ -43,22 +43,25 @@ namespace GINtool
             this.btnAllBack = new System.Windows.Forms.Button();
             this.cbTableOutput = new System.Windows.Forms.CheckBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.cbTopFC = new System.Windows.Forms.CheckBox();
-            this.cbTopP = new System.Windows.Forms.CheckBox();
             this.udTOPP = new System.Windows.Forms.NumericUpDown();
+            this.cbTopP = new System.Windows.Forms.CheckBox();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.udTopFC = new System.Windows.Forms.NumericUpDown();
-            this.groupBox6 = new System.Windows.Forms.GroupBox();
-            this.cbCat = new System.Windows.Forms.CheckBox();
+            this.cbTopFC = new System.Windows.Forms.CheckBox();
             this.udCat = new System.Windows.Forms.DomainUpDown();
+            this.cbCat = new System.Windows.Forms.CheckBox();
+            this.groupBox7 = new System.Windows.Forms.GroupBox();
+            this.groupBox8 = new System.Windows.Forms.GroupBox();
+            this.cbSplit = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
-            this.groupBox5.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.udTOPP)).BeginInit();
+            this.groupBox5.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.udTopFC)).BeginInit();
-            this.groupBox6.SuspendLayout();
+            this.groupBox7.SuspendLayout();
+            this.groupBox8.SuspendLayout();
             this.SuspendLayout();
             // 
             // treeView1
@@ -72,7 +75,7 @@ namespace GINtool
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(309, 28);
+            this.button1.Location = new System.Drawing.Point(302, 107);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 2;
@@ -82,7 +85,7 @@ namespace GINtool
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(309, 57);
+            this.button2.Location = new System.Drawing.Point(302, 136);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
             this.button2.TabIndex = 3;
@@ -138,9 +141,9 @@ namespace GINtool
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(713, 402);
+            this.button3.Location = new System.Drawing.Point(706, 398);
             this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(75, 23);
+            this.button3.Size = new System.Drawing.Size(155, 23);
             this.button3.TabIndex = 9;
             this.button3.Text = "Ok";
             this.button3.UseVisualStyleBackColor = true;
@@ -148,9 +151,9 @@ namespace GINtool
             // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(713, 373);
+            this.button4.Location = new System.Drawing.Point(706, 369);
             this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(75, 23);
+            this.button4.Size = new System.Drawing.Size(155, 23);
             this.button4.TabIndex = 10;
             this.button4.Text = "Cancel";
             this.button4.UseVisualStyleBackColor = true;
@@ -158,7 +161,7 @@ namespace GINtool
             // 
             // btnAllSel
             // 
-            this.btnAllSel.Location = new System.Drawing.Point(309, 105);
+            this.btnAllSel.Location = new System.Drawing.Point(302, 184);
             this.btnAllSel.Name = "btnAllSel";
             this.btnAllSel.Size = new System.Drawing.Size(75, 23);
             this.btnAllSel.TabIndex = 11;
@@ -168,7 +171,7 @@ namespace GINtool
             // 
             // btnAllBack
             // 
-            this.btnAllBack.Location = new System.Drawing.Point(309, 134);
+            this.btnAllBack.Location = new System.Drawing.Point(302, 213);
             this.btnAllBack.Name = "btnAllBack";
             this.btnAllBack.Size = new System.Drawing.Size(75, 23);
             this.btnAllBack.TabIndex = 12;
@@ -179,7 +182,7 @@ namespace GINtool
             // cbTableOutput
             // 
             this.cbTableOutput.AutoSize = true;
-            this.cbTableOutput.Location = new System.Drawing.Point(709, 28);
+            this.cbTableOutput.Location = new System.Drawing.Point(19, 29);
             this.cbTableOutput.Name = "cbTableOutput";
             this.cbTableOutput.Size = new System.Drawing.Size(94, 17);
             this.cbTableOutput.TabIndex = 13;
@@ -191,43 +194,11 @@ namespace GINtool
             // 
             this.groupBox4.Controls.Add(this.udTOPP);
             this.groupBox4.Controls.Add(this.cbTopP);
-            this.groupBox4.Location = new System.Drawing.Point(270, 312);
+            this.groupBox4.Location = new System.Drawing.Point(5, 124);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Size = new System.Drawing.Size(144, 51);
             this.groupBox4.TabIndex = 14;
             this.groupBox4.TabStop = false;
-            // 
-            // groupBox5
-            // 
-            this.groupBox5.Controls.Add(this.udTopFC);
-            this.groupBox5.Controls.Add(this.cbTopFC);
-            this.groupBox5.Location = new System.Drawing.Point(270, 253);
-            this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(144, 51);
-            this.groupBox5.TabIndex = 15;
-            this.groupBox5.TabStop = false;
-            // 
-            // cbTopFC
-            // 
-            this.cbTopFC.AutoSize = true;
-            this.cbTopFC.Location = new System.Drawing.Point(10, -1);
-            this.cbTopFC.Name = "cbTopFC";
-            this.cbTopFC.Size = new System.Drawing.Size(57, 17);
-            this.cbTopFC.TabIndex = 0;
-            this.cbTopFC.Text = "top FC";
-            this.cbTopFC.UseVisualStyleBackColor = true;
-            this.cbTopFC.CheckedChanged += new System.EventHandler(this.cbTopFC_CheckedChanged);
-            // 
-            // cbTopP
-            // 
-            this.cbTopP.AutoSize = true;
-            this.cbTopP.Location = new System.Drawing.Point(10, -1);
-            this.cbTopP.Name = "cbTopP";
-            this.cbTopP.Size = new System.Drawing.Size(85, 17);
-            this.cbTopP.TabIndex = 0;
-            this.cbTopP.Text = "top P-values";
-            this.cbTopP.UseVisualStyleBackColor = true;
-            this.cbTopP.CheckedChanged += new System.EventHandler(this.cbTopP_CheckedChanged);
             // 
             // udTOPP
             // 
@@ -256,6 +227,27 @@ namespace GINtool
             0,
             0});
             // 
+            // cbTopP
+            // 
+            this.cbTopP.AutoSize = true;
+            this.cbTopP.Location = new System.Drawing.Point(10, -1);
+            this.cbTopP.Name = "cbTopP";
+            this.cbTopP.Size = new System.Drawing.Size(85, 17);
+            this.cbTopP.TabIndex = 0;
+            this.cbTopP.Text = "top P-values";
+            this.cbTopP.UseVisualStyleBackColor = true;
+            this.cbTopP.CheckedChanged += new System.EventHandler(this.cbTopP_CheckedChanged);
+            // 
+            // groupBox5
+            // 
+            this.groupBox5.Controls.Add(this.udTopFC);
+            this.groupBox5.Controls.Add(this.cbTopFC);
+            this.groupBox5.Location = new System.Drawing.Point(5, 65);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Size = new System.Drawing.Size(144, 51);
+            this.groupBox5.TabIndex = 15;
+            this.groupBox5.TabStop = false;
+            // 
             // udTopFC
             // 
             this.udTopFC.Increment = new decimal(new int[] {
@@ -283,26 +275,16 @@ namespace GINtool
             0,
             0});
             // 
-            // groupBox6
+            // cbTopFC
             // 
-            this.groupBox6.Controls.Add(this.udCat);
-            this.groupBox6.Controls.Add(this.cbCat);
-            this.groupBox6.Location = new System.Drawing.Point(270, 199);
-            this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(144, 51);
-            this.groupBox6.TabIndex = 16;
-            this.groupBox6.TabStop = false;
-            // 
-            // cbCat
-            // 
-            this.cbCat.AutoSize = true;
-            this.cbCat.Location = new System.Drawing.Point(10, -1);
-            this.cbCat.Name = "cbCat";
-            this.cbCat.Size = new System.Drawing.Size(112, 17);
-            this.cbCat.TabIndex = 0;
-            this.cbCat.Text = "category selection";
-            this.cbCat.UseVisualStyleBackColor = true;
-            this.cbCat.CheckedChanged += new System.EventHandler(this.cbCat_CheckedChanged);
+            this.cbTopFC.AutoSize = true;
+            this.cbTopFC.Location = new System.Drawing.Point(10, -1);
+            this.cbTopFC.Name = "cbTopFC";
+            this.cbTopFC.Size = new System.Drawing.Size(57, 17);
+            this.cbTopFC.TabIndex = 0;
+            this.cbTopFC.Text = "top FC";
+            this.cbTopFC.UseVisualStyleBackColor = true;
+            this.cbTopFC.CheckedChanged += new System.EventHandler(this.cbTopFC_CheckedChanged);
             // 
             // udCat
             // 
@@ -310,20 +292,66 @@ namespace GINtool
             this.udCat.Items.Add("II");
             this.udCat.Items.Add("III");
             this.udCat.Items.Add("IV");
-            this.udCat.Location = new System.Drawing.Point(6, 20);
+            this.udCat.Location = new System.Drawing.Point(272, 316);
             this.udCat.Name = "udCat";
             this.udCat.Size = new System.Drawing.Size(132, 20);
             this.udCat.TabIndex = 1;
+            // 
+            // cbCat
+            // 
+            this.cbCat.AutoSize = true;
+            this.cbCat.Location = new System.Drawing.Point(276, 295);
+            this.cbCat.Name = "cbCat";
+            this.cbCat.Size = new System.Drawing.Size(112, 17);
+            this.cbCat.TabIndex = 0;
+            this.cbCat.Text = "category selection";
+            this.cbCat.UseVisualStyleBackColor = true;
+            this.cbCat.CheckedChanged += new System.EventHandler(this.cbCat_CheckedChanged);
+            // 
+            // groupBox7
+            // 
+            this.groupBox7.Controls.Add(this.cbTableOutput);
+            this.groupBox7.Controls.Add(this.groupBox5);
+            this.groupBox7.Controls.Add(this.groupBox4);
+            this.groupBox7.Location = new System.Drawing.Point(706, 12);
+            this.groupBox7.Name = "groupBox7";
+            this.groupBox7.Size = new System.Drawing.Size(155, 187);
+            this.groupBox7.TabIndex = 17;
+            this.groupBox7.TabStop = false;
+            this.groupBox7.Text = "spreading plot options";
+            // 
+            // groupBox8
+            // 
+            this.groupBox8.Controls.Add(this.cbSplit);
+            this.groupBox8.Location = new System.Drawing.Point(706, 238);
+            this.groupBox8.Name = "groupBox8";
+            this.groupBox8.Size = new System.Drawing.Size(155, 117);
+            this.groupBox8.TabIndex = 18;
+            this.groupBox8.TabStop = false;
+            this.groupBox8.Text = "ranking plot options";
+            this.groupBox8.Visible = false;
+            // 
+            // cbSplit
+            // 
+            this.cbSplit.AutoSize = true;
+            this.cbSplit.Location = new System.Drawing.Point(19, 35);
+            this.cbSplit.Name = "cbSplit";
+            this.cbSplit.Size = new System.Drawing.Size(87, 17);
+            this.cbSplit.TabIndex = 0;
+            this.cbSplit.Text = "split pos/neg";
+            this.cbSplit.UseVisualStyleBackColor = true;
+            this.cbSplit.Visible = false;
+            this.cbSplit.Click += new System.EventHandler(this.cbSplit_Click);
             // 
             // dlgTreeView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(815, 450);
-            this.Controls.Add(this.groupBox6);
-            this.Controls.Add(this.groupBox5);
-            this.Controls.Add(this.groupBox4);
-            this.Controls.Add(this.cbTableOutput);
+            this.ClientSize = new System.Drawing.Size(873, 450);
+            this.Controls.Add(this.udCat);
+            this.Controls.Add(this.groupBox8);
+            this.Controls.Add(this.cbCat);
+            this.Controls.Add(this.groupBox7);
             this.Controls.Add(this.btnAllBack);
             this.Controls.Add(this.btnAllSel);
             this.Controls.Add(this.button4);
@@ -345,12 +373,14 @@ namespace GINtool
             this.groupBox3.ResumeLayout(false);
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.udTOPP)).EndInit();
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.udTOPP)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.udTopFC)).EndInit();
-            this.groupBox6.ResumeLayout(false);
-            this.groupBox6.PerformLayout();
+            this.groupBox7.ResumeLayout(false);
+            this.groupBox7.PerformLayout();
+            this.groupBox8.ResumeLayout(false);
+            this.groupBox8.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -377,8 +407,10 @@ namespace GINtool
         private System.Windows.Forms.GroupBox groupBox5;
         private System.Windows.Forms.NumericUpDown udTopFC;
         private System.Windows.Forms.CheckBox cbTopFC;
-        private System.Windows.Forms.GroupBox groupBox6;
         private System.Windows.Forms.DomainUpDown udCat;
         private System.Windows.Forms.CheckBox cbCat;
+        private System.Windows.Forms.GroupBox groupBox7;
+        private System.Windows.Forms.GroupBox groupBox8;
+        private System.Windows.Forms.CheckBox cbSplit;
     }
 }
