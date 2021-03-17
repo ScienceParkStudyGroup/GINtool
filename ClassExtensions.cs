@@ -15,6 +15,20 @@ namespace GINtool
             return date.AddDays(1);
         }
 
+        public static double fisherz(double r)
+        {
+            // this is an approximation of course but otherwise inf and nan issues
+            if (Math.Abs(r - 1) < Double.Epsilon)
+                r = 0.99999; // 1 - Double.Epsilon; 
+            return 0.5 * Math.Log((1 + r) / (1 - r));
+        }
+
+        public static double fzBack(double avgZ_h)
+        {
+            return (Math.Exp(avgZ_h) - Math.Exp(-avgZ_h)) / (Math.Exp(avgZ_h) + Math.Exp(-avgZ_h));            
+        }
+
+
         public static double Gauss(double z)
         {
             // input = z-value (-inf to +inf)
@@ -80,6 +94,14 @@ namespace GINtool
               (0.8 * y * y + 100.0 + b) + y + 3.0) / b + 1.0) *
               Math.Sqrt(y);
             return 2.0 * Gauss(-y); // ACM algorithm 209
+        }
+
+
+        public static double paverage(this List<double> list)
+        {
+            List<double> _fz = list.Select(x => fisherz(x)).ToList();
+            double AvgP = _fz.Average();
+            return fzBack(AvgP);
         }
 
         public static double sd(this List<double> list)
