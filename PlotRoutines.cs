@@ -163,6 +163,89 @@ namespace GINtool
         }
 
 
+
+        public static Excel.Chart CreateRankingPlot2(List<element_rank> element_Ranks, string chartName, bool bestPlot=false)
+        {
+            if (theApp == null)
+                return null;
+
+
+            if (theApp == null)
+                return null;
+
+            Excel.Worksheet aSheet = theApp.Worksheets.Add();
+
+
+            //string sheetName = chartName.Replace("PlotBest_", "TabBest_");
+            //aSheet.Name = sheetName;
+
+
+            Excel.ChartObjects xlCharts = (Excel.ChartObjects)aSheet.ChartObjects(Type.Missing);
+            Excel.ChartObject myChart = (Excel.ChartObject)xlCharts.Add(10, 80, 500, 500);
+            Excel.Chart chartPage = myChart.Chart;
+
+            chartPage.ChartType = Excel.XlChartType.xlXYScatter;
+
+            var series = (Excel.SeriesCollection)chartPage.SeriesCollection();
+
+            int offset = 3;
+            List<int> __offset = new List<int>() { offset };
+
+            int[] _offset = element_Ranks.Select(w => offset += w.nr_genes.Length).ToArray();
+            __offset.AddRange(_offset);
+            int[] offsets = __offset.GetRange(0, element_Ranks.Count).ToArray();
+
+
+
+            for (int i = element_Ranks.Count - 1; i >= 0; i--)
+            {
+                element_rank eRank = element_Ranks[i];
+                var xy1 = series.NewSeries();
+                xy1.Name = eRank.catName;
+                xy1.ChartType = Excel.XlChartType.xlBubble3DEffect;
+
+                int nrGenes = eRank.nr_genes.Length;
+                if (eRank.mad_fc != null && nrGenes > 0)
+                {
+                    xy1.XValues = eRank.average_fc;
+                    xy1.Values = eRank.mad_fc;
+                    xy1.BubbleSizes = eRank.nr_genes;
+                        
+                    xy1.HasDataLabels = true;
+                    dynamic dataLabels = xy1.DataLabels();
+
+                    for (int g=0;g<eRank.nr_genes.Length;g++)
+                    {
+                        Excel.Point _point = xy1.Points(g+1);
+                        _point.DataLabel.Text = eRank.genes[g];
+                    }
+                    
+                    dataLabels.ShowRange = true;
+                    dataLabels.ShowValue = false;
+
+                    offset += nrGenes;
+                }
+            }
+
+
+            chartPage.Axes(Excel.XlAxisType.xlValue).TickLabelPosition = Excel.XlTickLabelPosition.xlTickLabelPositionNone;
+            chartPage.Axes(Excel.XlAxisType.xlValue).MajorGridLines.Delete();
+
+            chartPage.Axes(Excel.XlAxisType.xlValue).Format.Line.Weight = 0.25;
+            chartPage.Axes(Excel.XlAxisType.xlValue).Format.Line.DashStyle = Excel.XlLineStyle.xlDashDot;
+            chartPage.Legend.Delete();
+
+            chartPage.ChartColor = bestPlot ? 21 : 22;
+            chartPage.Location(Excel.XlChartLocation.xlLocationAsNewSheet, chartName);
+
+            aSheet.Delete();
+
+            return chartPage;
+
+        }
+
+
+
         public static Excel.Chart CreateCategoryPlot(element_fc element_Fcs, string chartName)
         {
             if (theApp == null)

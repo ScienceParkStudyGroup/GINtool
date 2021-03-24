@@ -371,9 +371,18 @@ namespace GINtool
 
             cbClustered.Checked = Properties.Settings.Default.catPlot;
             cbDistribution.Checked = Properties.Settings.Default.distPlot;
-                        
+
             cbUseCategories.Checked = Properties.Settings.Default.useCat;
             cbUseRegulons.Checked = !Properties.Settings.Default.useCat;
+
+            if (Properties.Settings.Default.categoryFile.Length ==  0)
+            {
+                cbUseCategories.Checked = false;;
+                cbUseRegulons.Checked = true;
+                Properties.Settings.Default.useCat = false;
+
+            }
+
             cbUsePValues.Checked = Properties.Settings.Default.use_pvalues;
             cbUseFoldChanges.Checked = !Properties.Settings.Default.use_pvalues;
 
@@ -435,7 +444,7 @@ namespace GINtool
 
             cbOrderFC.Enabled = enable;
             cbUseCategories.Enabled = enable && gCatOutput;
-            cbUseRegulons.Enabled = enable;
+            cbUseRegulons.Enabled = enable && gCatOutput;
 
             cbOperon.Enabled = enable && gOperonOutput;
 
@@ -1762,7 +1771,8 @@ namespace GINtool
         {
             SysData.DataTable lTable = new SysData.DataTable();
 
-            
+            // SysData.DataTable _fc_BSU = ReformatResults(gOutput); Use this as a replacement in future releases
+
             SysData.DataColumn col = new SysData.DataColumn("BSU", Type.GetType("System.String"));
             lTable.Columns.Add(col);
 
@@ -1803,7 +1813,7 @@ namespace GINtool
                 // continue depending on value of lowest fc definition
                 bool accept = Properties.Settings.Default.use_pvalues ? lLst[r].PVALUE < Properties.Settings.Default.pvalue_cutoff : Math.Abs(lLst[r].FC) > lowVal;
 
-                if (accept)
+                if (true)
                 {
                     SysData.DataRow lRow = lTable.Rows.Add();
                     lRow["FC"] = lLst[r].FC;
@@ -2451,9 +2461,9 @@ namespace GINtool
                     //}
                     //if ((gOutput != null && gSummary != null && dlg.GetSelection().Count() > 0) ) //&& gNeedsUpdate.Check(UPDATE_FLAGS.PRegulon))
                     //{ 
-                        if (Properties.Settings.Default.regPlot)
+                        if (Properties.Settings.Default.regPlot && gList!=null)
                         {
-                            RankingPlot(gOutput, gSummary, dlg.GetSelection(),tableOutput:dlg.selectTableOutput(),splitNP:dlg.GetSplitOption()); // wordt optie in category plot hierboven
+                            RankingPlot(gOutput, gSummary, gList, dlg.GetSelection(),tableOutput:dlg.selectTableOutput(),splitNP:dlg.GetSplitOption()); // wordt optie in category plot hierboven
                             //private void CreateRegulonPlotDataSheet(List<element_fc> theElements)
 
                             // data for now.. to be changed in plot
@@ -2705,8 +2715,8 @@ namespace GINtool
              }
 
             element_Fcs.All = _All;
-            element_Fcs.Pos = _Pos;
-            element_Fcs.Neg = _Neg;
+            element_Fcs.Activated = _Pos;
+            element_Fcs.Repressed = _Neg;
 
 
             if (Properties.Settings.Default.useSort)
@@ -2756,9 +2766,9 @@ namespace GINtool
             element_fc element_Fcs = new element_fc();
             
             List<summaryInfo> _All = new List<summaryInfo>();
-            List<summaryInfo> _Pos = new List<summaryInfo>();
-            List<summaryInfo> _Neg = new List<summaryInfo>();
-            List<summaryInfo> _Com = new List<summaryInfo>();
+            List<summaryInfo> _Act = new List<summaryInfo>();
+            List<summaryInfo> _Rep = new List<summaryInfo>();
+            //List<summaryInfo> _Com = new List<summaryInfo>();
 
             foreach (cat_elements el in cat_Elements)
             {                
@@ -2770,27 +2780,28 @@ namespace GINtool
                 // find genes for the regulon/category
 
                 summaryInfo __All = new summaryInfo();
-                summaryInfo __Pos = new summaryInfo();
-                summaryInfo __Neg = new summaryInfo();
+                summaryInfo __Act = new summaryInfo();
+                summaryInfo __Rep = new summaryInfo();
                 //summaryInfo __Com = new summaryInfo();
 
                 __All.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
-                __Pos.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
-                __Neg.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+                __Act.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+                __Rep.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
 
+                //total
+                List<double> _fcsT = new List<double>();
+                List<string> _genesT = new List<string>();
+                List<double> _pvaluesT = new List<double>();
 
+                //activatedd
                 List<double> _fcsA = new List<double>();
                 List<string> _genesA = new List<string>();
                 List<double> _pvaluesA = new List<double>();
 
-
-                List<double> _fcsP = new List<double>();
-                List<string> _genesP = new List<string>();
-                List<double> _pvaluesP = new List<double>();
-
-                List<double> _fcsN = new List<double>();
-                List<string> _genesN = new List<string>();
-                List<double> _pvaluesN = new List<double>();
+                // repressed
+                List<double> _fcsR = new List<double>();
+                List<string> _genesR = new List<string>();
+                List<double> _pvaluesR = new List<double>();
 
 
                 if (_dataTable.Rows.Count > 0)
@@ -2798,45 +2809,53 @@ namespace GINtool
 
                     //__Com.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
 
-
+                    // int mainDir = _dataTable.Rows.Count - Int32.Parse(_dataTable.Compute("COUNT(FC)","FC<0").ToString());
 
                     for (int i = 0; i < _dataTable.Rows.Count; i++)
                     {
-
                         double fc = (double)_dataTable.Rows[i]["FC"];
-
-                        _genesA.Add(_dataTable.Rows[i]["Gene"].ToString());
-                        _fcsA.Add(fc);
-                        _pvaluesA.Add(double.Parse(_dataTable.Rows[i]["Pvalue"].ToString()));
-
-                        if (fc >= 0)
-                        {
-                            _genesP.Add(_dataTable.Rows[i]["Gene"].ToString());
-                            _fcsP.Add(fc);
-                            _pvaluesP.Add(double.Parse(_dataTable.Rows[i]["Pvalue"].ToString()));
-                        }
-                        else if (fc < 0)
-                        {
-                            _genesN.Add(_dataTable.Rows[i]["Gene"].ToString());
-                            _fcsN.Add(fc);
-                            _pvaluesN.Add(double.Parse(_dataTable.Rows[i]["Pvalue"].ToString()));
-                        }
+                        string _geneName = _dataTable.Rows[i]["Gene"].ToString();
+                        _genesT.Add(_geneName);
+                        _fcsT.Add(fc);
+                        _pvaluesT.Add(double.Parse(_dataTable.Rows[i]["Pvalue"].ToString()));
                     }
+
+                   
+                    DataRow[] _inhibited = _dataTable.Select("(FC<0 AND DIR>0) OR (FC>0 AND DIR<0) ");                    
+                    for (int i = 0; i < _inhibited.Length; i++)
+                    {
+                        double fc = (double)_inhibited[i]["FC"];
+                        string _geneName = _inhibited[i]["Gene"].ToString();
+                        _genesR.Add(_geneName);
+                        _fcsR.Add(fc);
+                        _pvaluesR.Add(double.Parse(_inhibited[i]["Pvalue"].ToString()));
+                    }
+
+
+                    DataRow[] _activated = _dataTable.Select("(FC>0 AND DIR>0) OR (FC<0 AND DIR<0) ");
+                    for (int i = 0; i < _activated.Length; i++)
+                    {
+                        double fc = (double)_activated[i]["FC"];
+                        string _geneName = _activated[i]["Gene"].ToString();
+                        _genesA.Add(_geneName);
+                        _fcsA.Add(fc);
+                        _pvaluesA.Add(double.Parse(_activated[i]["Pvalue"].ToString()));
+                    }
+
                 }
 
 
+                __Act.fc_average = _fcsA.Count>0?_fcsA.AbsAverage() : Double.NaN;                    
+                __Rep.fc_average = _fcsR.Count>0?-_fcsR.AbsAverage() : Double.NaN;
+                __All.fc_average = _fcsT.Count>0?_fcsT.Average() : Double.NaN;
 
-                __Pos.fc_average = _fcsP.Count>0?_fcsP.Average() : Double.NaN;                    
-                __Neg.fc_average = _fcsN.Count>0?_fcsN.Average() : Double.NaN;
-                __All.fc_average = _fcsA.Count>0?_fcsA.Average() : Double.NaN;
+                __Act.fc_values = _fcsA.Count > 0 ? _fcsA.ToArray() : new double[0];// { 0 };
+                __Rep.fc_values = _fcsR.Count > 0 ? _fcsR.ToArray() : new double[0];// { 0 };
+                __All.fc_values = _fcsT.Count > 0 ? _fcsT.ToArray() : new double[0];// { 0 };
 
-                __Pos.fc_values = _fcsP.Count > 0 ? _fcsP.ToArray() : new double[0];// { 0 };
-                __Neg.fc_values = _fcsN.Count > 0 ? _fcsN.ToArray() : new double[0];// { 0 };
-                __All.fc_values = _fcsA.Count > 0 ? _fcsA.ToArray() : new double[0];// { 0 };
-
-                __Pos.fc_mad = _fcsP.Count > 0 ? _fcsP.mad() : Double.NaN;
-                __Neg.fc_mad = _fcsN.Count > 0 ? _fcsN.mad() : Double.NaN;
-                __All.fc_mad = _fcsA.Count > 0 ? _fcsA.mad() : Double.NaN;
+                __Act.fc_mad = _fcsA.Count > 0 ? _fcsA.AbsMad() : Double.NaN;
+                __Rep.fc_mad = _fcsR.Count > 0 ? _fcsR.AbsMad() : Double.NaN;
+                __All.fc_mad = _fcsT.Count > 0 ? _fcsT.mad() : Double.NaN;
 
                 #region toberemoved
 
@@ -2849,31 +2868,31 @@ namespace GINtool
 
                 #endregion
 
-                __Pos.genes = _genesP.Count > 0 ? _genesP.ToArray() : new string[0]; // { "" };
-                __Neg.genes = _genesN.Count > 0 ? _genesN.ToArray() : new string[0];// { "" };
-                __All.genes = _genesA.Count > 0 ? _genesA.ToArray() : new string[0];// { "" };
+                __Act.genes = _genesA.Count > 0 ? _genesA.ToArray() : new string[0]; // { "" };
+                __Rep.genes = _genesR.Count > 0 ? _genesR.ToArray() : new string[0];// { "" };
+                __All.genes = _genesT.Count > 0 ? _genesT.ToArray() : new string[0];// { "" };
 
 
-                __Pos.p_values = _pvaluesP.Count > 0 ? _pvaluesP.ToArray() : new double[0];// { };
-                __Neg.p_values = _pvaluesN.Count > 0 ? _pvaluesN.ToArray() : new double[0];// { };
-                __All.p_values = _pvaluesA.Count > 0 ? _pvaluesA.ToArray() : new double[0];// { };
+                __Act.p_values = _pvaluesA.Count > 0 ? _pvaluesA.ToArray() : new double[0];// { };
+                __Rep.p_values = _pvaluesR.Count > 0 ? _pvaluesR.ToArray() : new double[0];// { };
+                __All.p_values = _pvaluesT.Count > 0 ? _pvaluesT.ToArray() : new double[0];// { };
 
-                __Pos.p_average = _pvaluesP.Count>0 ? _pvaluesP.paverage() : Double.NaN;
-                __Neg.p_average = _pvaluesN.Count>0 ? _pvaluesN.paverage() : Double.NaN;
-                __All.p_average = _pvaluesA.Count>0 ? _pvaluesA.paverage() : Double.NaN;
+                __Act.p_average = _pvaluesA.Count>0 ? _pvaluesA.paverage() : Double.NaN;
+                __Rep.p_average = _pvaluesR.Count>0 ? _pvaluesR.paverage() : Double.NaN;
+                __All.p_average = _pvaluesT.Count>0 ? _pvaluesT.paverage() : Double.NaN;
 
-                __Pos.p_mad = _pvaluesP.Count>0?_pvaluesP.mad() : Double.NaN;
-                __Neg.p_mad = _pvaluesN.Count>0?_pvaluesN.mad() : Double.NaN;
-                __All.p_mad = _pvaluesA.Count>0?_pvaluesA.mad() : Double.NaN;
+                __Act.p_mad = _pvaluesA.Count>0?_pvaluesA.mad() : Double.NaN;
+                __Rep.p_mad = _pvaluesR.Count>0?_pvaluesR.mad() : Double.NaN;
+                __All.p_mad = _pvaluesT.Count>0?_pvaluesT.mad() : Double.NaN;
 
                 _All.Add(__All);
-                _Pos.Add(__Pos);
-                _Neg.Add(__Neg);
+                _Act.Add(__Act);
+                _Rep.Add(__Rep);
 
 
                 element_Fcs.All = _All;
-                element_Fcs.Pos = _Pos;
-                element_Fcs.Neg = _Neg;
+                element_Fcs.Activated = _Act;
+                element_Fcs.Repressed = _Rep;
                  
             }
 
@@ -3126,7 +3145,7 @@ namespace GINtool
                 catPlotData = CatElements2ElementsFC(dataView, cat_Elements, topTenFC, topTenP);                
             }
             else
-                catPlotData = Regulons2ElementsFC(dataView, cat_Elements, topTenFC, topTenP);
+                catPlotData = Regulons2ElementsFC(dataView, cat_Elements,topTenFC:topTenFC, topTenP:topTenP); // need to alter caller
            
 
             
@@ -3226,7 +3245,7 @@ namespace GINtool
         //}
 
 
-        private void RankingPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements, bool tableOutput=false, bool splitNP=false)
+        private void RankingPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<BsuRegulons> aLst, List<cat_elements> cat_Elements, bool tableOutput=false, bool splitNP=false)
         {
             //gApplication.EnableEvents = false;
             //gApplication.DisplayAlerts = false;
@@ -3258,17 +3277,20 @@ namespace GINtool
                 catPlotData = Regulons2ElementsFC(dataView, cat_Elements,splitNP:splitNP);
 
             //CreateExtendedRegulonCategoryDataSheet(catPlotData);
-            (List<element_rank> plotData,List<summaryInfo> _all, List<summaryInfo> _pos, List < summaryInfo > _neg, List <summaryInfo> _com) = CreateRankingPlotData(catPlotData);
+            (List<element_rank> plotData,List<summaryInfo> _all, List<summaryInfo> _pos, List < summaryInfo > _neg) = CreateRankingPlotData(catPlotData);
 
 
             int chartNr = Properties.Settings.Default.useCat ? nextWorksheet("CatRankPlot_") : nextWorksheet("RegRankPlot_");
             string chartName = (Properties.Settings.Default.useCat ? "CatRankPlot_" : "RegRankPlot_") + chartNr.ToString();
-                        
+            string chartNameBest = chartName.Replace("Plot_", "PlotBest_");
 
             //if (tableOutput)
-            Excel.Worksheet lRankingSheet = CreateRankingDataSheet(catPlotData, _all,_pos,_neg,_com);
+            (Excel.Worksheet lRankingSheet, List<summaryInfo> _best) = CreateRankingDataSheet(catPlotData, _all,_pos,_neg);
 
-            PlotRoutines.CreateRankingPlot(lRankingSheet, plotData, chartName);
+            PlotRoutines.CreateRankingPlot2(plotData, chartName);
+            List<element_rank> _bestRankData = BubblePlotData(_best);
+            PlotRoutines.CreateRankingPlot2( _bestRankData, chartNameBest, bestPlot:true);
+
 
             this.RibbonUI.ActivateTab("TabGINtool");
 
@@ -3310,9 +3332,10 @@ namespace GINtool
 
         private List<summaryInfo> SortedElements(List<summaryInfo> alist, SORTMODE mode = SORTMODE.FC, bool descending = true)
         {
-            List<summaryInfo> _work = new List<summaryInfo>(alist.Where(x => x.fc_values.Length > 0));
-            List<summaryInfo> _skip = new List<summaryInfo>(alist.Where(x => x.fc_values.Length == 0));
-            
+            //List<summaryInfo> _work = new List<summaryInfo>(alist.Where(x => x.fc_values.Length > 0));
+            List<summaryInfo> _work = new List<summaryInfo>(alist);
+            //List<summaryInfo> _skip = new List<summaryInfo>(alist.Where(x => x.fc_values.Length == 0));
+
 
             if (mode == SORTMODE.CATNAME)
             {
@@ -3321,7 +3344,7 @@ namespace GINtool
                 List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
 
                 alist = sortedElements.Select(x => _work[x.Value]).ToList();
-                alist.AddRange(_skip);
+                //alist.AddRange(_skip);
 
                 return alist;
             }
@@ -3345,19 +3368,18 @@ namespace GINtool
                 List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
 
                 alist = sortedElements.Select(x => _work[x.Value]).ToList();
-                alist.AddRange(_skip);
+                
+                //alist.AddRange(_skip);
 
                 return alist;
             }
         }
 
-        private (List<element_rank>, List<summaryInfo> , List<summaryInfo>, List<summaryInfo>, List<summaryInfo>) CreateRankingPlotData(element_fc theElements)
-        {
 
-            //List<element_fc> toRemove = new List<element_fc>();
-            //DataTable lTable = ElementsToTable(theElements);
+        private List<element_rank> BubblePlotData(List<summaryInfo> info)
+        {
             List<element_rank> element_Ranks = new List<element_rank>();
-            
+
             // MAD values
             List<double> e1_m = new List<double>(), e2_m = new List<double>(), e3_m = new List<double>(), e4_m = new List<double>(), e5_m = new List<double>();
             // FC values
@@ -3367,16 +3389,16 @@ namespace GINtool
             // CATEGORY/REGULON NAMES
             List<string> e1_s = new List<string>(), e2_s = new List<string>(), e3_s = new List<string>(), e4_s = new List<string>(), e5_s = new List<string>();
 
-            
 
-            foreach (summaryInfo sInfo in theElements.All)
+
+            foreach (summaryInfo sInfo in info)
             {
                 List<double> _workfc = null;
                 List<double> _workm = null;
                 List<int> _workn = null;
                 List<string> _works = null;
 
-                if (sInfo.p_average <0.06125 && sInfo.genes[0]!="" )
+                if (sInfo.p_average < 0.06125 && sInfo.genes[0] != "")
                 {
                     _workfc = e1_fc;
                     _workm = e1_m;
@@ -3424,7 +3446,8 @@ namespace GINtool
                     _workm.Add(sInfo.fc_mad);
                     _workn.Add(sInfo.p_values != null ? sInfo.p_values.Length : 0);
                     _works.Add(StripText(sInfo.catName));
-                }              
+                }
+                                
             }
 
 
@@ -3435,7 +3458,7 @@ namespace GINtool
             e1.mad_fc = e1_m.ToArray();
             e1.nr_genes = e1_n.ToArray();
             e1.genes = e1_s.ToArray();
-            
+
             e2.catName = "0.0625>=p<0.125";
             e2.average_fc = e2_fc.ToArray();
             e2.mad_fc = e2_m.ToArray();
@@ -3467,11 +3490,22 @@ namespace GINtool
             element_Ranks.Add(e5);
 
 
-            List<summaryInfo> all_elements = SortedElements(theElements.All,mode:SORTMODE.P,descending:false);
-            List<summaryInfo> pos_elements = SortedElements(theElements.Pos);
-            List<summaryInfo> neg_elements = SortedElements(theElements.Neg,descending:false);
+            return element_Ranks;
+        }
 
-            return (element_Ranks, all_elements, pos_elements,neg_elements,null);
+        private (List<element_rank>, List<summaryInfo> , List<summaryInfo>, List<summaryInfo>) CreateRankingPlotData(element_fc theElements)
+        {
+
+            
+            //List<summaryInfo> all_elements = SortedElements(theElements.All,mode:SORTMODE.P,descending:false);
+            //List<summaryInfo> pos_elements = SortedElements(theElements.Activated);
+            //List<summaryInfo> neg_elements = SortedElements(theElements.Repressed,descending:false);
+            
+            List<summaryInfo> all_elements = SortedElements(theElements.All,mode:SORTMODE.CATNAME,descending:false);
+            List<summaryInfo> pos_elements = SortedElements(theElements.Activated, mode: SORTMODE.CATNAME, descending: false);
+            List<summaryInfo> neg_elements = SortedElements(theElements.Repressed, mode: SORTMODE.CATNAME, descending: false);
+
+            return (BubblePlotData(theElements.All), all_elements, pos_elements,neg_elements);
 
 
         }
@@ -3513,48 +3547,32 @@ namespace GINtool
 
       
 
-        private DataTable UDElementsToTable(element_fc element_info)
+        private (DataTable, List<summaryInfo>) BestElementScore(element_fc element_info)
         {
 
+            // get best results..
+
             List<summaryInfo> _tmp = SortedElements(element_info.All, mode: SORTMODE.CATNAME,descending:false);
+            List<summaryInfo> _output = new List<summaryInfo>();
 
             SysData.DataTable lTable = new SysData.DataTable("Elements");
 
             SysData.DataColumn regColumn = new SysData.DataColumn("Name", Type.GetType("System.String"));
-            SysData.DataColumn cntColumnA = new SysData.DataColumn("CountT", Type.GetType("System.Int16"));            
-            
-            SysData.DataColumn statColumn1 = new SysData.DataColumn("Mode1", Type.GetType("System.String"));
-            SysData.DataColumn cntColumn1 = new SysData.DataColumn("Count1", Type.GetType("System.Int16"));
-            SysData.DataColumn percColumn1 = new SysData.DataColumn("Perc1", Type.GetType("System.Double"));
-            SysData.DataColumn avgFCColumn1 = new SysData.DataColumn("AverageFC1", Type.GetType("System.Double"));
-            SysData.DataColumn madFCColumn1 = new SysData.DataColumn("MadFC1", Type.GetType("System.Double"));
-            SysData.DataColumn avgPColumn1 = new SysData.DataColumn("AverageP1", Type.GetType("System.Double"));
-
-
-            SysData.DataColumn statColumn2 = new SysData.DataColumn("Mode2", Type.GetType("System.String"));
-            SysData.DataColumn cntColumn2 = new SysData.DataColumn("Count2", Type.GetType("System.Int16"));
-            SysData.DataColumn percColumn2 = new SysData.DataColumn("Perc2", Type.GetType("System.Double"));
-            SysData.DataColumn avgFCColumn2 = new SysData.DataColumn("AverageFC2", Type.GetType("System.Double"));
-            SysData.DataColumn madFCColumn2 = new SysData.DataColumn("MadFC2", Type.GetType("System.Double"));
-            SysData.DataColumn avgPColumn2 = new SysData.DataColumn("AverageP2", Type.GetType("System.Double"));
+            SysData.DataColumn statColumn1 = new SysData.DataColumn("Mode", Type.GetType("System.String"));
+            SysData.DataColumn cntColumnA = new SysData.DataColumn("Count", Type.GetType("System.Int16"));
+            SysData.DataColumn percColumnA = new SysData.DataColumn("Percentage", Type.GetType("System.Int16"));
+            SysData.DataColumn avgFCColumn1 = new SysData.DataColumn("AverageABSFC", Type.GetType("System.Double"));
+            SysData.DataColumn madFCColumn1 = new SysData.DataColumn("MadABSFC", Type.GetType("System.Double"));
+            SysData.DataColumn avgPColumn1 = new SysData.DataColumn("AverageP", Type.GetType("System.Double"));            
 
 
             lTable.Columns.Add(regColumn);
-            lTable.Columns.Add(cntColumnA);
-
             lTable.Columns.Add(statColumn1);
-            lTable.Columns.Add(cntColumn1);
-            lTable.Columns.Add(percColumn1);
+            lTable.Columns.Add(cntColumnA);
+            lTable.Columns.Add(percColumnA);
             lTable.Columns.Add(avgFCColumn1);
             lTable.Columns.Add(madFCColumn1);
             lTable.Columns.Add(avgPColumn1);
-
-            lTable.Columns.Add(statColumn2);
-            lTable.Columns.Add(cntColumn2);
-            lTable.Columns.Add(percColumn2);
-            lTable.Columns.Add(avgFCColumn2);
-            lTable.Columns.Add(madFCColumn2);
-            lTable.Columns.Add(avgPColumn2);
 
 
             for (int i=0;i<_tmp.Count;i++)
@@ -3563,13 +3581,12 @@ namespace GINtool
                 SysData.DataRow lRow = lTable.Rows.Add();
                 string catName = _tmp[i].catName;
                 int totnrgenes = _tmp[i].genes.Length;
-                summaryInfo _pos = element_info.Pos.GetCatValues(catName);
-                summaryInfo _neg = element_info.Neg.GetCatValues(catName);
+                summaryInfo _pos = element_info.Activated.GetCatValues(catName);
+                summaryInfo _neg = element_info.Repressed.GetCatValues(catName);
                 summaryInfo _si1 = _pos;
                 summaryInfo _si2 = _neg;
                 
                 lRow["Name"] = StripText(catName);
-                lRow["CountT"] = totnrgenes;
                 
                 if(_pos.genes.Length < _neg.genes.Length)
                 {
@@ -3579,8 +3596,7 @@ namespace GINtool
                     
                 }
 
-                int n1 = _si1.genes.Length;
-                //int n2 = _si2.genes[0] == "" ? 0 : _si2.genes.Length;
+                int n1 = _si1.genes.Length;                
                 int n2 = _si2.genes.Length;
 
                 if(n1==n2) // check for highest FC
@@ -3588,42 +3604,40 @@ namespace GINtool
                     if(Math.Abs(_si2.fc_average) > Math.Abs(_si1.fc_average))
                     {
                         _si1 = _neg;
-                        _si2 = _pos;
                         swapped = !swapped;
                     }
                 }
+                _output.Add(_si1);
 
-                lRow["Mode1"] = swapped ? "repressed" : "activated";
-                lRow["Count1"] = _si1.genes.Length;
-                lRow["Perc1"] = totnrgenes == 0 ? 0:Math.Round(((double)n1 / (double)totnrgenes) * 100, 0);
+                lRow["Mode"] = swapped ? "repressed" : "activated";
+                lRow["Count"] = _si1.genes.Length;
+                if (totnrgenes > 0)
+                    lRow["Percentage"] = Math.Round((double)_si1.genes.Length / (double)totnrgenes * 100);
+                
                 if (n1 > 0)
                 {
-                    lRow["AverageFC1"] = _si1.fc_average;
-                    lRow["MadFC1"] = _si1.fc_mad;
-                    lRow["AverageP1"] = _si1.p_average;
+                    lRow["AverageABSFC"] = _si1.fc_average;
+                    lRow["MadABSFC"] = _si1.fc_mad;
+                    lRow["AverageP"] = _si1.p_average;
                 }
-
-                lRow["Mode2"] = swapped ? "activated" : "repressed";
-                lRow["Count2"] = _si2.genes.Length;
-                lRow["Perc2"] = totnrgenes==0?0:Math.Round(((double)n2 / (double)totnrgenes) * 100, 0);
-                if (n2 > 0)
-                {
-                    lRow["AverageFC2"] = _si2.fc_average;
-                    lRow["MadFC2"] = _si2.fc_mad;
-                    lRow["AverageP2"] = _si2.p_average;
-                }
+               
             }
-            
-            return lTable;
+
+            DataView _dv = lTable.DefaultView;
+            _dv.Sort = "Name asc";
+
+            return (_dv.ToTable(), _output);
         }
 
 
-        private DataTable ElementsToTable(List<summaryInfo> elements)
+        private DataTable ElementsToTable(List<summaryInfo> elements, bool dirMode = false)
         {
 
             SysData.DataTable lTable = new SysData.DataTable("Elements");
             
             SysData.DataColumn regColumn = new SysData.DataColumn("Name", Type.GetType("System.String"));
+            SysData.DataColumn dirColumn = new SysData.DataColumn("Direction", Type.GetType("System.String"));
+
             SysData.DataColumn cntColumn = new SysData.DataColumn("Count", Type.GetType("System.Int16"));
             SysData.DataColumn avgColumn = new SysData.DataColumn("Average", Type.GetType("System.Double"));
             SysData.DataColumn madColumn = new SysData.DataColumn("Mad", Type.GetType("System.Double"));
@@ -3635,6 +3649,8 @@ namespace GINtool
 
 
             lTable.Columns.Add(regColumn);
+            if(dirMode)
+                lTable.Columns.Add(dirColumn);
             lTable.Columns.Add(cntColumn);
             lTable.Columns.Add(avgColumn);
             lTable.Columns.Add(madColumn);
@@ -3655,6 +3671,10 @@ namespace GINtool
                 {
 
                     lRow["Name"] = newname; // name.Substring(0, names[0].Length);
+                    if(dirMode)
+                    {
+                        lRow["Direction"] = elements[r].fc_average > 0 ? "activation" : "repression";
+                    }
                     lRow["Count"] = elements[r].p_values == null ? 0 : elements[r].p_values.Count();
                     if (!(elements[r].fc_average is Double.NaN))
                         lRow["Average"] = elements[r].fc_average;
@@ -3697,7 +3717,7 @@ namespace GINtool
 
         }
 
-        private Excel.Worksheet CreateRankingDataSheet(element_fc theElements, List<summaryInfo> all, List<summaryInfo> posSort, List<summaryInfo> negSort, List<summaryInfo> comSort) 
+        private (Excel.Worksheet,List<summaryInfo>) CreateRankingDataSheet(element_fc theElements, List<summaryInfo> all, List<summaryInfo> posSort, List<summaryInfo> negSort) 
         {
             string catRegLabel = Properties.Settings.Default.useCat ? "CatRankTab_" : "RegRankTab_";
             Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
@@ -3706,6 +3726,12 @@ namespace GINtool
             DataTable lTable = ElementsToTable(all);
 
             string catRegHeader = Properties.Settings.Default.useCat ? "Category" : "Regulon";
+            string firstBlockHeader = Properties.Settings.Default.useCat ? "PLOT DATA" : "Without regulatory directionality";
+            string secondBlockHeader = Properties.Settings.Default.useCat ? "POSITIVE FC" : "When regulator is activated";
+            string thirdBlockHeader = Properties.Settings.Default.useCat ? "NEGATIVE FC" : "When regulator is repressed";
+            string fourthBlockHeader = Properties.Settings.Default.useCat ? "COMBINED RESULTS" : "Best score";
+            string FCheader = Properties.Settings.Default.useCat ? "Average FC" : "Average ABS(FC)";
+            string MADheader = Properties.Settings.Default.useCat ? "MAD FC" : "MAD ABS(FC)";
 
             int hdrRow = 2;
 
@@ -3714,7 +3740,7 @@ namespace GINtool
             Excel.Range bottom = lNewSheet.Cells[1, 5];
             Excel.Range rall = (Excel.Range)lNewSheet.get_Range(top, bottom);
             rall.Merge();
-            rall.Value = "PLOT DATA";
+            rall.Value = firstBlockHeader;
             rall.HorizontalAlignment = Microsoft.Office.Interop.Excel.Constants.xlCenter;
 
             lNewSheet.Cells[hdrRow, 1] = catRegHeader;
@@ -3745,16 +3771,16 @@ namespace GINtool
             bottom = lNewSheet.Cells[1, 11];
             rall = (Excel.Range)lNewSheet.get_Range(top, bottom);
             rall.Merge();
-            rall.Value = "POSITIVE FC";
+            rall.Value = secondBlockHeader;
             rall.HorizontalAlignment = Microsoft.Office.Interop.Excel.Constants.xlCenter;
 
             lTable = ElementsToTable(posSort);
 
             lNewSheet.Cells[hdrRow, 7] = catRegHeader;
-            lNewSheet.Cells[hdrRow, 8] = "Nr Genes Positive";
-            lNewSheet.Cells[hdrRow, 9] = "Average FC Positive";
-            lNewSheet.Cells[hdrRow, 10] = "MAD FC Positive";            
-            lNewSheet.Cells[hdrRow, 11] = "Average P Positive";            
+            lNewSheet.Cells[hdrRow, 8] = "Nr Genes";
+            lNewSheet.Cells[hdrRow, 9] = FCheader;
+            lNewSheet.Cells[hdrRow, 10] = MADheader;            
+            lNewSheet.Cells[hdrRow, 11] = "Average P";            
 
             // Sort the data with ascending p-values
             lView = lTable.DefaultView;
@@ -3777,14 +3803,14 @@ namespace GINtool
             bottom = lNewSheet.Cells[1, 17];
             rall = (Excel.Range)lNewSheet.get_Range(top, bottom);
             rall.Merge();
-            rall.Value = "NEGATIVE FC";
+            rall.Value = thirdBlockHeader;
             rall.HorizontalAlignment = Microsoft.Office.Interop.Excel.Constants.xlCenter;
 
             lNewSheet.Cells[hdrRow, 13] = catRegHeader;
-            lNewSheet.Cells[hdrRow, 14] = "Nr Genes Negative";
-            lNewSheet.Cells[hdrRow, 15] = "Average FC Negative";
-            lNewSheet.Cells[hdrRow, 16] = "MAD FC Negative";
-            lNewSheet.Cells[hdrRow, 17] = "Average P Negative";
+            lNewSheet.Cells[hdrRow, 14] = "Nr Genes";
+            lNewSheet.Cells[hdrRow, 15] = FCheader;
+            lNewSheet.Cells[hdrRow, 16] = MADheader;
+            lNewSheet.Cells[hdrRow, 17] = "Average P";
 
             // Sort the data with ascending p-values
             lView = lTable.DefaultView;
@@ -3802,46 +3828,37 @@ namespace GINtool
 
 
             top = lNewSheet.Cells[1, 19];
-            bottom = lNewSheet.Cells[1, 32];
+            bottom = lNewSheet.Cells[1, 25];
             rall = (Excel.Range)lNewSheet.get_Range(top, bottom);
             rall.Merge();
-            rall.Value = "COMBINED RESULTS";
+            rall.Value = fourthBlockHeader;
 
             rall.HorizontalAlignment = Microsoft.Office.Interop.Excel.Constants.xlCenter;
-            lNewSheet.Cells[hdrRow, 19] = catRegHeader;
-            lNewSheet.Cells[hdrRow, 20] = "Total nr genes";
-            lNewSheet.Cells[hdrRow, 21] = "Status";
-            lNewSheet.Cells[hdrRow, 22] = "Nr of genes";
-            lNewSheet.Cells[hdrRow, 23] = "%";
-            lNewSheet.Cells[hdrRow, 24] = "Average FC";
-            lNewSheet.Cells[hdrRow, 25] = "MAD FC";
-            lNewSheet.Cells[hdrRow, 26] = "Average P";
-            lNewSheet.Cells[hdrRow, 27] = "Status";
-            lNewSheet.Cells[hdrRow, 28] = "Nr of genes";
-            lNewSheet.Cells[hdrRow, 29] = "%";
-            lNewSheet.Cells[hdrRow, 30] = "Average FC";
-            lNewSheet.Cells[hdrRow, 31] = "MAD FC";
-            lNewSheet.Cells[hdrRow, 32] = "Average P";
+            lNewSheet.Cells[hdrRow, 19] = catRegHeader;            
+            lNewSheet.Cells[hdrRow, 20] = "directon";
+            lNewSheet.Cells[hdrRow, 21] = "Nr of genes";
+            lNewSheet.Cells[hdrRow, 22] = "Percentage";
+            lNewSheet.Cells[hdrRow, 23] = "Average ABS(FC)";
+            lNewSheet.Cells[hdrRow, 24] = "MAD ABS(FC)";
+            lNewSheet.Cells[hdrRow, 25] = "Average P";
 
+            List<summaryInfo> _best = null;
+            (lTable, _best) = BestElementScore(theElements);
 
-            lTable = UDElementsToTable(theElements);
+            //_best = SortedElements(_best, mode: SORTMODE.P, descending: false);
+            //lTable = ElementsToTable(_best,dirMode:true);
             
-
-
             FastDtToExcel(lTable, lNewSheet, hdrRow + 1, 19, lTable.Rows.Count + hdrRow, lTable.Columns.Count + 18);
 
             top = lNewSheet.Cells[1, 19];
-            bottom = lNewSheet.Cells[lTable.Rows.Count + hdrRow, 32];
+            bottom = lNewSheet.Cells[lTable.Rows.Count + hdrRow, 25];
             rall = (Excel.Range)lNewSheet.get_Range(top, bottom);
             rall.Interior.ThemeColor = Excel.XlThemeColor.xlThemeColorAccent1;
             rall.Interior.TintAndShade = 0.8;
             rall.Interior.PatternTintAndShade = 0;
 
 
-
-
-
-            return lNewSheet;
+            return (lNewSheet, _best);
 
         }
 
@@ -4298,7 +4315,8 @@ namespace GINtool
             cbUseCategories.Enabled = false;           
             Properties.Settings.Default.useCat = false;
             cbUseRegulons.Checked = true;
-
+            cbUseRegulons.Enabled = false;
+            
             Properties.Settings.Default.categoryFile= "";            
             btnCatFile.Label = "No file selected";
 

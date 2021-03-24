@@ -668,7 +668,7 @@ namespace GINtool
 
     public struct summaryInfo
     {
-        public string catName;
+        public string catName;      //catName contains regulon or category title
         public double[] p_values;
         public double[] fc_values;
         public double p_average;
@@ -682,8 +682,8 @@ namespace GINtool
     {
         //public string catName;
 
-        public List<summaryInfo> All, Pos, Neg, Com;
-                
+        public List<summaryInfo> All, Activated, Repressed; // Com;
+                        
         //public double[] fcP;
         //public double[] fcN;
         //public double[] fcT;

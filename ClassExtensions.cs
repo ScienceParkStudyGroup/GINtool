@@ -145,6 +145,21 @@ namespace GINtool
 
         }
 
+        public static double AbsMad(this List<double> list)
+        {
+            if (list.Count == 1)
+                return 0;
+
+            list = list.Select(x => Math.Abs(x)).ToList();
+            double median = list.median();
+            List<double> md = new List<double>(list.Count);
+            for (int i = 0; i < list.Count; i++)
+                md.Add(Math.Abs(list[i] - median));
+
+            return md.median();
+
+        }
+
         public static bool Any(this byte en)
         {
             return ((byte)GinRibbon.UPDATE_FLAGS.NONE | en) != (byte)GinRibbon.UPDATE_FLAGS.NONE;
@@ -191,6 +206,43 @@ namespace GINtool
             return new cat_elements();
         }
         
+        public static int FindAssocForRegulon(this BsuRegulons bsu, string regulon)
+        {
+            int _pos = bsu.REGULONS.IndexOf(regulon);
+            if(bsu.UP.Contains(_pos))
+            {
+                return _pos;
+            }
+            if(bsu.DOWN.Contains(_pos))
+            {
+                return -_pos;
+            }
+            return 0;
+        }
+        
+        public static BsuRegulons GetByGeneName(this List<BsuRegulons> lst, string geneName)
+        {
+            if (lst != null && lst.Count > 0)
+            {
+                IEnumerable<BsuRegulons> output = lst.Where(x => x.GENE == geneName);
+                if (output.Count() > 0)
+                {
+                    return output.First();
+                }
+            }
+
+            return new BsuRegulons();
+        }
+        
+        public static double AbsAverage(this List<double> lst)
+        {
+            if(lst.Count>0)
+            {
+                return lst.Select(x => Math.Abs(x)).ToArray().Average();
+            }
+            return Double.NaN;
+        }
+
 
 #if CLICK_CHART
         public static string getPoint(this chart_info chart, int serie, int point)

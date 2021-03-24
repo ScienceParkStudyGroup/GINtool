@@ -4,6 +4,9 @@ namespace GINtool
 {
     internal class BsuRegulons
     {
+
+        // a gene can be regulated by more then 1 regulon..furthermore different regulons can influence the gene differently (i.e. up and down regulation)
+
         public const double NO_FC = -12345.6;
         public const double NO_PVALUE = -654321.1;
         public double PVALUE = NO_PVALUE;
@@ -33,6 +36,15 @@ namespace GINtool
         public BsuRegulons(string aBSU)
         {
             BSU = aBSU;
+            REGULONS = new List<string>();
+            FC = NO_FC;
+            PVALUE = NO_PVALUE;
+            GENE = "";
+        }
+
+        public BsuRegulons()
+        {
+            BSU = "";
             REGULONS = new List<string>();
             FC = NO_FC;
             PVALUE = NO_PVALUE;
