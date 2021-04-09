@@ -986,7 +986,7 @@ namespace GINtool
             bottom = lNewSheet.Cells[1, 25];
             all = (Excel.Range)lNewSheet.get_Range(top, bottom);
             all.Merge();
-            all.Value = "Logical direction";
+            all.Value = "Probability regulation direction";
             all.HorizontalAlignment = Microsoft.Office.Interop.Excel.Constants.xlCenter;
 
             lNewSheet.Cells[2, col++] = "Regulon";
@@ -1018,20 +1018,12 @@ namespace GINtool
             lNewSheet.Cells[2, col++] = string.Format("DOWN <=-{0} & >=-{1}", Properties.Settings.Default.fcHIGH, Properties.Settings.Default.fcMID);
             lNewSheet.Cells[2, col++] = string.Format("DOWN <-{0}", Properties.Settings.Default.fcHIGH);
             
-            lNewSheet.Cells[2, col++] = "% down regulated";
-            lNewSheet.Cells[2, col++] = "% up regulated";
-
-            lNewSheet.Cells[2, col++] = "repression mode";
-            lNewSheet.Cells[2, col++] = "activated mode";
+            lNewSheet.Cells[2, col++] = "if repression";            
+            lNewSheet.Cells[2, col++] = "proof";
+            lNewSheet.Cells[2, col++] = "if activation";
+            lNewSheet.Cells[2, col++] = "proof";
             
-
-            // copy the data to the sheet, don't show the numbers up and down columns
-            //List<string> colNames = new List<string>();
-            //foreach( DataColumn _col in theTable.Columns) { colNames.Add(_col.ColumnName); }
-            //colNames.Remove("nr_Up");
-            //colNames.Remove("nr_Down");
-
-            //FastDtToExcel(theTable.DefaultView.ToTable(false, colNames.ToArray()), lNewSheet, 3, 1, theTable.Rows.Count + 2, theTable.Columns.Count);
+            
             FastDtToExcel(theTable, lNewSheet, 3, 1, theTable.Rows.Count + 2, theTable.Columns.Count);
 
             // color the blocks of cells... not by direction but just to separate up from down regulated            
@@ -1048,21 +1040,16 @@ namespace GINtool
             // set number formats for the different types of cells
 
             top = lNewSheet.Cells[3, 13];
-            bottom = lNewSheet.Cells[2 + theTable.Rows.Count, 23];
+            bottom = lNewSheet.Cells[2 + theTable.Rows.Count, 22];
             all = (Excel.Range)lNewSheet.get_Range(top, bottom);
             all.NumberFormat = "###%";
 
 
-            //top = lNewSheet.Cells[3, 23];
-            //bottom = lNewSheet.Cells[2 + theTable.Rows.Count, 23];
-            //all = (Excel.Range)lNewSheet.get_Range(top, bottom);
-            //all.NumberFormat = "###%";
-
-            //top = lNewSheet.Cells[3, 25];
-            //bottom = lNewSheet.Cells[2 + theTable.Rows.Count, 25];
-            //all = (Excel.Range)lNewSheet.get_Range(top, bottom);
-            //all.NumberFormat = "###%";
-
+            top = lNewSheet.Cells[3, 24];
+            bottom = lNewSheet.Cells[2 + theTable.Rows.Count, 24];
+            all = (Excel.Range)lNewSheet.get_Range(top, bottom);
+            all.NumberFormat = "###%";
+            
 
             // fit the width of the columns
             top = lNewSheet.Cells[1, 1];
@@ -1708,25 +1695,23 @@ namespace GINtool
                     lTable.Columns.Add(col);
                 }
 
-                //col = new SysData.DataColumn("nr_Down", Type.GetType("System.Int16"));
-                //lTable.Columns.Add(col);
+                // if repression
 
                 col = new SysData.DataColumn("perc_DOWN", Type.GetType("System.Double"));
                 lTable.Columns.Add(col);
 
 
-                col = new SysData.DataColumn("perc_UP", Type.GetType("System.Double"));
-                lTable.Columns.Add(col);
-
-                //col = new SysData.DataColumn("nr_Up", Type.GetType("System.Int16"));
-                //lTable.Columns.Add(col);
-
                 col = new SysData.DataColumn("repressed", Type.GetType("System.String"));
                 lTable.Columns.Add(col);
 
-                col = new SysData.DataColumn("activated", Type.GetType("System.String"));
+
+                // if activation
+                col = new SysData.DataColumn("perc_UP", Type.GetType("System.Double"));
                 lTable.Columns.Add(col);
 
+                
+                col = new SysData.DataColumn("activated", Type.GetType("System.String"));
+                lTable.Columns.Add(col);
 
                 
                 /* define the combined table */
@@ -1809,7 +1794,6 @@ namespace GINtool
                     int _lcount = Int16.Parse(_tmp2[0]["Count"].ToString());
 
                     lNewRow["Count"] = _lcount;
-
                     
 
                     lNewRow["Regulon"] = reg;
@@ -1834,10 +1818,7 @@ namespace GINtool
                     // skip up1 and down1 .. they do not fall in the relevant class
                     lNewRow["totrel"] = up2 + up3 + up4 + down2 + down3 + down4; // nrTOT;
                     lNewRow["percrel"] =(double)( up2 + up3 + up4 + down2 + down3 + down4)/ (double)_lcount; // nrTOT;
-                    
-                    //lNewRow["nr_Up"] = up2 + up3 + up4;
-                    //lNewRow["nr_Down"] = down2 + down3 + down4;
-
+                                        
                     // nrUP and nrDOWN contain the counts of those genes that were defined as up or down regulated that had a 'significant' fc.
                     // this was, false positive can be identified
                     if (nrTOT > 0)
@@ -1846,8 +1827,8 @@ namespace GINtool
                         lNewRow["perc_UP"] = (double)(repressedUP+activatedUP) / (double)(nrTOT);
                     }
 
-                    lNewRow["activated"] = activatedDOWN.ToString() + _down + activatedUP.ToString() + _up;
-                    lNewRow["repressed"] = repressedDOWN.ToString() + _down + repressedUP.ToString() + _up;
+                    lNewRow["activated"] = repressedUP.ToString() + _down + activatedUP.ToString() + _up;
+                    lNewRow["repressed"] = activatedDOWN.ToString() + _down + repressedDOWN.ToString() + _up;
 
                     // add a new row to the combined table
 
