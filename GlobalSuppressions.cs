@@ -5,4 +5,4 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GINtool.GinRibbon.validateTextBoxData(Microsoft.Office.Tools.Ribbon.RibbonEditBox)")]
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GINtool.GinRibbon.ValidateTextBoxData(Microsoft.Office.Tools.Ribbon.RibbonEditBox)")]
