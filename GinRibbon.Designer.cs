@@ -76,9 +76,9 @@
             this.separator1 = this.Factory.CreateRibbonSeparator();
             this.btnCatFile = this.Factory.CreateRibbonButton();
             this.grpMap = this.Factory.CreateRibbonGroup();
+            this.ddGene = this.Factory.CreateRibbonDropDown();
             this.ddBSU = this.Factory.CreateRibbonDropDown();
             this.ddRegulon = this.Factory.CreateRibbonDropDown();
-            this.ddGene = this.Factory.CreateRibbonDropDown();
             this.grpUpDown = this.Factory.CreateRibbonGroup();
             this.ddDir = this.Factory.CreateRibbonDropDown();
             this.btRegDirMap = this.Factory.CreateRibbonButton();
@@ -423,20 +423,29 @@
             // 
             // grpMap
             // 
+            this.grpMap.Items.Add(this.ddGene);
             this.grpMap.Items.Add(this.ddBSU);
             this.grpMap.Items.Add(this.ddRegulon);
-            this.grpMap.Items.Add(this.ddGene);
             this.grpMap.Label = "column mappings";
             this.grpMap.Name = "grpMap";
             this.grpMap.Visible = false;
+            // 
+            // ddGene
+            // 
+            this.ddGene.Image = global::GINtool.Properties.Resources.dna;
+            this.ddGene.Label = "gene name";
+            this.ddGene.Name = "ddGene";
+            this.ddGene.ScreenTip = "specify the column that contains the gene names";
+            this.ddGene.ShowImage = true;
+            this.ddGene.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.DropDown_Gene_SelectionChanged);
             // 
             // ddBSU
             // 
             this.ddBSU.Enabled = false;
             this.ddBSU.Image = global::GINtool.Properties.Resources.target;
-            this.ddBSU.Label = "bsu";
+            this.ddBSU.Label = "gene ID";
             this.ddBSU.Name = "ddBSU";
-            this.ddBSU.ScreenTip = "specify the column that contains the bsu code";
+            this.ddBSU.ScreenTip = "specify the column that contains the gene identifier (BSU) code";
             this.ddBSU.ShowImage = true;
             this.ddBSU.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.DropDown_BSU_SelectionChanged);
             // 
@@ -444,20 +453,11 @@
             // 
             this.ddRegulon.Enabled = false;
             this.ddRegulon.Image = global::GINtool.Properties.Resources.crossroads;
-            this.ddRegulon.Label = "regulon";
+            this.ddRegulon.Label = "regulon name";
             this.ddRegulon.Name = "ddRegulon";
-            this.ddRegulon.ScreenTip = "specify the column that contains the regulator names";
+            this.ddRegulon.ScreenTip = "specify the column that contains the regulon names";
             this.ddRegulon.ShowImage = true;
             this.ddRegulon.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.DropDown_Regulon_SelectionChanged);
-            // 
-            // ddGene
-            // 
-            this.ddGene.Image = global::GINtool.Properties.Resources.dna;
-            this.ddGene.Label = "gene";
-            this.ddGene.Name = "ddGene";
-            this.ddGene.ScreenTip = "specify the column that contains the gene names";
-            this.ddGene.ShowImage = true;
-            this.ddGene.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.DropDown_Gene_SelectionChanged);
             // 
             // grpUpDown
             // 
@@ -531,7 +531,6 @@
             this.editMinPval.Label = "p-value";
             this.editMinPval.Name = "editMinPval";
             this.editMinPval.ScreenTip = "Define the p-value cut-off value to include in the comined report";
-            this.editMinPval.ShowImage = true;
             this.editMinPval.Text = null;
             this.editMinPval.TextChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.EditMinPval_TextChanged);
             // 
@@ -547,12 +546,14 @@
             // 
             this.cbAscending.Label = "ascending";
             this.cbAscending.Name = "cbAscending";
+            this.cbAscending.ScreenTip = "Set the sort direction for outputting tables and figures";
             this.cbAscending.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CheckBox_Ascending_Click);
             // 
             // cbDescending
             // 
             this.cbDescending.Label = "descending";
             this.cbDescending.Name = "cbDescending";
+            this.cbDescending.ScreenTip = "Set the sort direction for outputting tables and figures";
             this.cbDescending.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CheckBox_Descending_Click);
             // 
             // GinRibbon

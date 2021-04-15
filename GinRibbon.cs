@@ -1018,12 +1018,12 @@ namespace GINtool
             lNewSheet.Cells[2, col++] = string.Format("DOWN <=-{0} & >=-{1}", Properties.Settings.Default.fcHIGH, Properties.Settings.Default.fcMID);
             lNewSheet.Cells[2, col++] = string.Format("DOWN <-{0}", Properties.Settings.Default.fcHIGH);
             
-            lNewSheet.Cells[2, col++] = "if repression";            
-            lNewSheet.Cells[2, col++] = "proof";
-            lNewSheet.Cells[2, col++] = "if activation";
-            lNewSheet.Cells[2, col++] = "proof";
-            
-            
+            lNewSheet.Cells[2, col++] = "If activation";
+            lNewSheet.Cells[2, col++] = "Support";
+            lNewSheet.Cells[2, col++] = "If repression";
+            lNewSheet.Cells[2, col++] = "Support";
+
+
             FastDtToExcel(theTable, lNewSheet, 3, 1, theTable.Rows.Count + 2, theTable.Columns.Count);
 
             // color the blocks of cells... not by direction but just to separate up from down regulated            
@@ -1695,6 +1695,15 @@ namespace GINtool
                     lTable.Columns.Add(col);
                 }
 
+
+                // if activation
+                col = new SysData.DataColumn("perc_UP", Type.GetType("System.Double"));
+                lTable.Columns.Add(col);
+
+
+                col = new SysData.DataColumn("activated", Type.GetType("System.String"));
+                lTable.Columns.Add(col);
+
                 // if repression
 
                 col = new SysData.DataColumn("perc_DOWN", Type.GetType("System.Double"));
@@ -1703,16 +1712,7 @@ namespace GINtool
 
                 col = new SysData.DataColumn("repressed", Type.GetType("System.String"));
                 lTable.Columns.Add(col);
-
-
-                // if activation
-                col = new SysData.DataColumn("perc_UP", Type.GetType("System.Double"));
-                lTable.Columns.Add(col);
-
                 
-                col = new SysData.DataColumn("activated", Type.GetType("System.String"));
-                lTable.Columns.Add(col);
-
                 
                 /* define the combined table */
 
@@ -2553,11 +2553,15 @@ namespace GINtool
             }
             else if (topTenFC > 0) // if top FC is selected only select the top X values using absolute FC values. The default order is descending
             {
-                double[] __values = element_Fcs.All.Select(x => x.fc_average).ToArray();                
-                var sortedElements = __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => Math.Abs(x.Key)).ToList();
-                List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
-                element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).Where(x => x.fc_values.Length > 0).ToList();
-                element_Fcs.All = element_Fcs.All.GetRange(0, topTenFC);
+                // only useful if top N selected is smaller then total number of items
+                if (topTenFC < element_Fcs.All.Count)
+                {
+                    double[] __values = element_Fcs.All.Select(x => x.fc_average).ToArray();
+                    var sortedElements = __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => Math.Abs(x.Key)).ToList();
+                    List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
+                    element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).Where(x => x.fc_values.Length > 0).ToList();
+                    element_Fcs.All = element_Fcs.All.GetRange(0, topTenFC);
+                }
 
                 // if selected, reverse the order
                 if (!Properties.Settings.Default.sortAscending)
@@ -2565,13 +2569,16 @@ namespace GINtool
             }
             else if (topTenP > 0) // do the same if top X p-value is selected. Because we are using -log(p) value the default order is descending
             {
-                // assertion... it's -10 log(p) -> so the higher, the better
-                double[] __values = element_Fcs.All.Select(x => -Math.Log(x.p_average)).ToArray();
-                var sortedElements = __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
-                List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
-                element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).Where(x => x.fc_values.Length > 0).ToList();
-                element_Fcs.All = element_Fcs.All.GetRange(0, topTenP);
-
+                // only useful if top N selected is smaller then total number of items
+                if (topTenP < element_Fcs.All.Count) 
+                {
+                    // assertion... it's -10 log(p) -> so the higher, the better
+                    double[] __values = element_Fcs.All.Select(x => -Math.Log(x.p_average)).ToArray();
+                    var sortedElements = __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
+                    List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
+                    element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).Where(x => x.fc_values.Length > 0).ToList();
+                    element_Fcs.All = element_Fcs.All.GetRange(0, topTenP);
+                }
                 // if selected, reverse the order
                 if (!Properties.Settings.Default.sortAscending)
                     element_Fcs.All.Reverse();
@@ -2722,26 +2729,33 @@ namespace GINtool
             }
             else if (topTenFC > 0 ) // top X FC is based on abs average FC.
             {
-                double[] __values = element_Fcs.All.Select(x => x.fc_average).ToArray();                
-                var sortedElements = __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => Math.Abs(x.Key)).ToList();
-                List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();                
-                // remove elements with no genes associated
-                element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList().Where(x=> x.fc_values.Length > 0).ToList();
-                element_Fcs.All = element_Fcs.All.GetRange(0, topTenFC);
-                
+                // only useful if top N selected is smaller then total number of items
+                if (topTenFC < element_Fcs.All.Count)
+                {
+                    double[] __values = element_Fcs.All.Select(x => x.fc_average).ToArray();
+                    var sortedElements = __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => Math.Abs(x.Key)).ToList();
+                    List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
+                    // remove elements with no genes associated
+                    element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList().Where(x => x.fc_values.Length > 0).ToList();
+                    element_Fcs.All = element_Fcs.All.GetRange(0, topTenFC);
+                }
                 // reverse if selected
                 if (!Properties.Settings.Default.sortAscending)
                     element_Fcs.All.Reverse();
             }
             else if(topTenP>0 ) // top X p-value is based on descending, because of -log10(p) transformation
             {
-                // assertion... it's -10 log(p) -> so the higher, the better
-                double[] __values = element_Fcs.All.Select(x =>-Math.Log(x.p_average)).ToArray();                
-                var sortedElements = __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
-                List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();                
-                // remove elements with no genes associated
-                element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList().Where(x => x.fc_values.Length > 0).ToList();
-                element_Fcs.All = element_Fcs.All.GetRange(0, topTenP);
+                // only useful if top N selected is smaller then total number of items
+                if (topTenP < element_Fcs.All.Count)
+                {
+                    // assertion... it's -10 log(p) -> so the higher, the better
+                    double[] __values = element_Fcs.All.Select(x => -Math.Log(x.p_average)).ToArray();
+                    var sortedElements = __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
+                    List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
+                    // remove elements with no genes associated
+                    element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList().Where(x => x.fc_values.Length > 0).ToList();
+                    element_Fcs.All = element_Fcs.All.GetRange(0, topTenP);
+                }
 
                 // reverse if selected
                 if (!Properties.Settings.Default.sortAscending)

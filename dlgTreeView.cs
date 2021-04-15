@@ -610,16 +610,25 @@ namespace GINtool
             tableOutput = cbTableOutput.Checked;
         }
 
+
+        private void EnableSingleSelectionButtons(bool enable)
+        {
+            button1.Enabled = enable;
+            button2.Enabled = enable;
+        }
+
         private void cbCat_CheckedChanged(object sender, EventArgs e)
         {
             udCat.Enabled = cbCat.Checked;
+            EnableSingleSelectionButtons(!cbCat.Checked);
         }
 
         private void cbTopFC_CheckedChanged(object sender, EventArgs e)
         {
             udTopFC.Enabled = cbTopFC.Checked;
+            EnableSingleSelectionButtons(!cbTopFC.Checked);
             if (cbTopFC.Checked)
-            {
+            {                
                 udTOPP.Enabled = false;
                 cbTopP.Checked = false;
             }
@@ -628,8 +637,9 @@ namespace GINtool
         private void cbTopP_CheckedChanged(object sender, EventArgs e)
         {
             udTOPP.Enabled = cbTopP.Checked;
+            EnableSingleSelectionButtons(!cbTopP.Checked);
             if (cbTopP.Checked)
-            {
+            {                
                 udTopFC.Enabled = false;
                 cbTopFC.Checked = false;
             }
