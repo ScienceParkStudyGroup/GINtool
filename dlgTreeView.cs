@@ -37,7 +37,7 @@ namespace GINtool
         public dlgTreeView(bool categoryView = false, bool spreadingOptions = true, bool rankingOptions=true)
         {
             InitializeComponent();
-            udCat.SelectedItem = udCat.Items[0];
+            udCat.SelectedItem = udCat.Items[3];            
             cbTopFC.Checked = false;
             cbTopP.Checked = false;
             udTopFC.Enabled = false;
@@ -46,8 +46,8 @@ namespace GINtool
             cbCat.Enabled = categoryView;
             udCat.Enabled = false;
             cbTableOutput.Enabled = spreadingOptions;
-            cbTopFC.Enabled = spreadingOptions;
-            cbTopP.Enabled = spreadingOptions;
+            cbTopFC.Enabled = spreadingOptions & !categoryView;
+            cbTopP.Enabled = spreadingOptions & !categoryView;
             cbSplit.Checked = false;
             cbSplit.Enabled = rankingOptions;
         }
@@ -427,8 +427,13 @@ namespace GINtool
                     //do something else
                 }
             }
-            else
+            else if (gSelection.Count()==0)
             {
+                MessageBox.Show("You have not selected any item. No plot can be generated. Please update your selection or press cancel to return.", "Warning");
+            }
+            else // generate plot
+            {
+                
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
@@ -686,7 +691,9 @@ namespace GINtool
         public double p_mad;
         public double fc_mad;
         public string[] genes;
+        public double best_gene_percentage;
     }
+    
 
     public struct element_fc
     {
@@ -741,7 +748,8 @@ namespace GINtool
         //public double[] average_p;
         public int[] nr_genes;
         public string[] genes;
-
+        // only used in case of best results 
+        public double[] best_genes_percentage;
         //public double[] averagen_fc;
         //public double[] madn_fc;
         //public int[] nrn_genes;

@@ -288,14 +288,14 @@ namespace GINtool
             // 
             // udCat
             // 
-            this.udCat.Items.Add("I");
-            this.udCat.Items.Add("II");
-            this.udCat.Items.Add("III");
             this.udCat.Items.Add("IV");
+            this.udCat.Items.Add("III");
+            this.udCat.Items.Add("II");
+            this.udCat.Items.Add("I");
             this.udCat.Location = new System.Drawing.Point(272, 316);
             this.udCat.Name = "udCat";
             this.udCat.Size = new System.Drawing.Size(132, 20);
-            this.udCat.TabIndex = 1;
+            this.udCat.TabIndex = 4;
             // 
             // cbCat
             // 

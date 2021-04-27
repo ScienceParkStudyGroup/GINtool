@@ -207,8 +207,16 @@ namespace GINtool
                 int nrGenes = eRank.nr_genes.Length;
                 if (eRank.mad_fc != null && nrGenes > 0)
                 {
-                    xy1.XValues = eRank.average_fc;
-                    xy1.Values = eRank.mad_fc;
+                    if (bestPlot)
+                    {
+                        xy1.XValues = eRank.best_genes_percentage;
+                        xy1.Values = eRank.average_fc;
+                    }
+                    else
+                    {
+                        xy1.XValues = eRank.average_fc;
+                        xy1.Values = eRank.mad_fc;
+                    }
                     xy1.BubbleSizes = eRank.nr_genes;
                         
                     xy1.HasDataLabels = true;
@@ -227,6 +235,16 @@ namespace GINtool
                 }
             }
 
+            chartPage.Axes(Excel.XlAxisType.xlValue).HasTitle = true;
+            chartPage.Axes(Excel.XlAxisType.xlCategory).HasTitle = true;
+
+            string xLabel = bestPlot ? "% logical regulation" : "average FC";
+            string yLabel = bestPlot ? "average FC" : "mad FC";
+
+
+            chartPage.Axes(Excel.XlAxisType.xlCategory).AxisTitle.Text = xLabel;
+            chartPage.Axes(Excel.XlAxisType.xlValue).AxisTitle.Text = yLabel;
+            
 
             chartPage.Axes(Excel.XlAxisType.xlValue).TickLabelPosition = Excel.XlTickLabelPosition.xlTickLabelPositionNone;
             chartPage.Axes(Excel.XlAxisType.xlValue).MajorGridLines.Delete();
