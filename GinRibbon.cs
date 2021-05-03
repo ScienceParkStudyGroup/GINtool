@@ -2875,7 +2875,7 @@ namespace GINtool
         /// <param name="splitNP"></param>
         private void RankingPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements)
         {
-
+            ddd
             AddTask(TASKS.REGULON_CHART);
 
             SysData.DataTable _fc_BSU = ReformatResults(aOutput);

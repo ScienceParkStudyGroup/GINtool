@@ -36,7 +36,7 @@
     <PublishUrl>publish\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.56</ApplicationVersion>
+    <ApplicationVersion>1.0.0.57</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -127,6 +127,9 @@
   -->
   <ItemGroup>
     <Reference Include="Accessibility" />
+    <Reference Include="HtmlAgilityPack, Version=1.11.33.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
+      <HintPath>packages\HtmlAgilityPack.1.11.33\lib\Net45\HtmlAgilityPack.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Design" />
@@ -247,7 +250,9 @@
     </EmbeddedResource>
     <None Include="app.config" />
     <None Include="GINtool_3_TemporaryKey.pfx" />
+    <None Include="GINtool_4_TemporaryKey.pfx" />
     <None Include="GINtool_TemporaryKey.pfx" />
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -320,11 +325,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="HtmlAgilityPack">
-      <Version>1.11.24</Version>
-    </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\tools.png" />
     <None Include="Resources\takeoff.png" />
     <None Include="Resources\swatches.png" />
@@ -349,10 +349,10 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>GINtool_3_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>GINtool_4_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>17441A4C837BB7D64DECF753FA5D25A814CE9BB6</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>7F070EF6AC36DFDDD9AFF2A3D715745CF0111340</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>
