@@ -164,7 +164,7 @@ namespace GINtool
 
 
 
-        public static Excel.Chart CreateRankingPlot2(List<element_rank> element_Ranks, string chartName, bool bestPlot=false)
+        public static Excel.Chart CreateRankingPlot2(List<element_rank> element_Ranks, string chartName, bool bestPlot=false, bool bestNew=false)
         {
             if (theApp == null)
                 return null;
@@ -207,11 +207,11 @@ namespace GINtool
                 int nrGenes = eRank.nr_genes.Length;
                 if (eRank.mad_fc != null && nrGenes > 0)
                 {
-                    if (bestPlot)
+                    if (bestPlot & bestNew)
                     {
                         xy1.XValues = eRank.best_genes_percentage;
                         xy1.Values = eRank.average_fc;
-                    }
+                    }                    
                     else
                     {
                         xy1.XValues = eRank.average_fc;
@@ -238,8 +238,8 @@ namespace GINtool
             chartPage.Axes(Excel.XlAxisType.xlValue).HasTitle = true;
             chartPage.Axes(Excel.XlAxisType.xlCategory).HasTitle = true;
 
-            string xLabel = bestPlot ? "% logical regulation" : "average FC";
-            string yLabel = bestPlot ? "average FC" : "mad FC";
+            string xLabel = (bestPlot & bestNew) ? "% logical regulation" :  (bestPlot ? "average ABS(FC)" : "average FC");
+            string yLabel = (bestPlot & bestNew) ? "average FC" : (bestPlot? "mad ABS(FC)": "mad FC");
 
 
             chartPage.Axes(Excel.XlAxisType.xlCategory).AxisTitle.Text = xLabel;
@@ -253,7 +253,7 @@ namespace GINtool
             chartPage.Axes(Excel.XlAxisType.xlValue).Format.Line.DashStyle = Excel.XlLineStyle.xlDashDot;
             chartPage.Legend.Delete();
 
-            chartPage.ChartColor = bestPlot ? 21 : 22;
+            chartPage.ChartColor = (bestPlot | bestNew) ? 21 : 22;
             chartPage.Location(Excel.XlChartLocation.xlLocationAsNewSheet, chartName);
 
             aSheet.Delete();

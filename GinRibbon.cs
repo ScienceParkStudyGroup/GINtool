@@ -2874,8 +2874,7 @@ namespace GINtool
         /// <param name="cat_Elements"></param>        
         /// <param name="splitNP"></param>
         private void RankingPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements)
-        {
-            ddd
+        {            
             AddTask(TASKS.REGULON_CHART);
 
             SysData.DataTable _fc_BSU = ReformatResults(aOutput);
@@ -2910,7 +2909,8 @@ namespace GINtool
             if (!(_best is null))
             {                
                 List<element_rank> _bestRankData = BubblePlotData(_best);
-                PlotRoutines.CreateRankingPlot2(_bestRankData, chartNameBest, bestPlot: true);
+                PlotRoutines.CreateRankingPlot2(_bestRankData, chartNameBest+"_1", bestPlot: true);
+                PlotRoutines.CreateRankingPlot2(_bestRankData, chartNameBest+"_2", bestPlot: true, bestNew:true);
             }
 
 

@@ -46,8 +46,8 @@ namespace GINtool
             cbCat.Enabled = categoryView;
             udCat.Enabled = false;
             cbTableOutput.Enabled = spreadingOptions;
-            cbTopFC.Enabled = spreadingOptions & !categoryView;
-            cbTopP.Enabled = spreadingOptions & !categoryView;
+            cbTopFC.Enabled = spreadingOptions;//& !categoryView;
+            cbTopP.Enabled = spreadingOptions; //& !categoryView;
             cbSplit.Checked = false;
             cbSplit.Enabled = rankingOptions;
         }
@@ -551,6 +551,8 @@ namespace GINtool
         {
             List<TreeNode> selection = new List<TreeNode>();
 
+            int maxCategories = udCat.Items.Count-1;
+
             if (!cbCat.Checked)
 
             {
@@ -559,7 +561,8 @@ namespace GINtool
             }
             else
             {
-                selection = SelectCategoryLevel(udCat.SelectedIndex);
+                // coding level is reverse of order
+                selection = SelectCategoryLevel(maxCategories - udCat.SelectedIndex);
             }            
 
             foreach (TreeNode node in selection)
