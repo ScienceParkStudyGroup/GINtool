@@ -63,6 +63,7 @@
             this.grpReference = this.Factory.CreateRibbonGroup();
             this.splitButton1 = this.Factory.CreateRibbonSplitButton();
             this.btnSelectRegulonFile = this.Factory.CreateRibbonButton();
+            this.btnResetRegulonFile = this.Factory.CreateRibbonButton();
             this.separator3 = this.Factory.CreateRibbonSeparator();
             this.btnRegulonFileName = this.Factory.CreateRibbonButton();
             this.splitButton2 = this.Factory.CreateRibbonSplitButton();
@@ -318,6 +319,7 @@
             this.splitButton1.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
             this.splitButton1.Image = global::GINtool.Properties.Resources.stack1;
             this.splitButton1.Items.Add(this.btnSelectRegulonFile);
+            this.splitButton1.Items.Add(this.btnResetRegulonFile);
             this.splitButton1.Items.Add(this.separator3);
             this.splitButton1.Items.Add(this.btnRegulonFileName);
             this.splitButton1.Label = "regulon file";
@@ -332,6 +334,14 @@
             this.btnSelectRegulonFile.ScreenTip = "select the file";
             this.btnSelectRegulonFile.ShowImage = true;
             this.btnSelectRegulonFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button1_Click);
+            // 
+            // btnResetRegulonFile
+            // 
+            this.btnResetRegulonFile.Image = global::GINtool.Properties.Resources.denied;
+            this.btnResetRegulonFile.Label = "reset";
+            this.btnResetRegulonFile.Name = "btnResetRegulonFile";
+            this.btnResetRegulonFile.ShowImage = true;
+            this.btnResetRegulonFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnResetRegulonFile_Click);
             // 
             // separator3
             // 
@@ -647,6 +657,7 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbAscending;
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbDescending;
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbUseRegulons;
+        internal Microsoft.Office.Tools.Ribbon.RibbonButton btnResetRegulonFile;
     }
 
     partial class ThisRibbonCollection

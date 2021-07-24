@@ -3999,6 +3999,22 @@ namespace GINtool
             Properties.Settings.Default.useCat = !cbUseRegulons.Checked;
             cbUseCategories.Checked = !cbUseRegulons.Checked;
         }
+
+        private void btnResetRegulonFile_Click(object sender, RibbonControlEventArgs e)
+        {
+
+            //Properties.Settings.Default.referenceFile = "";
+            //btnRegulonFileName.Label = "No file selected";
+            ////Properties.Settings.Default.operonSheet = "";
+            ////btnOperonFile.Label = "No file selected";
+
+            //gOperonOutput = false;
+            //cbOperon.Checked = false;
+            //cbOperon.Enabled = false;
+            //Properties.Settings.Default.tblOperon = false;
+
+            //Properties.Settings.Default.referenceRegulon
+        }
     }
 
     /// <summary>
