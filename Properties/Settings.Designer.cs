@@ -12,7 +12,7 @@ namespace GINtool.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.8.1.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.10.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -61,7 +61,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("regulon")]
+        [global::System.Configuration.DefaultSettingValueAttribute("regulator")]
         public string referenceRegulon {
             get {
                 return ((string)(this["referenceRegulon"]));
@@ -353,6 +353,102 @@ namespace GINtool.Properties {
             }
             set {
                 this["useSort"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool genesMappingVisible {
+            get {
+                return ((bool)(this["genesMappingVisible"]));
+            }
+            set {
+                this["genesMappingVisible"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool operonMappingVisible {
+            get {
+                return ((bool)(this["operonMappingVisible"]));
+            }
+            set {
+                this["operonMappingVisible"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string genesFileName {
+            get {
+                return ((string)(this["genesFileName"]));
+            }
+            set {
+                this["genesFileName"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Sheet1")]
+        public string genesSheetName {
+            get {
+                return ((string)(this["genesSheetName"]));
+            }
+            set {
+                this["genesSheetName"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("locus_tag")]
+        public string genesBSUColumn {
+            get {
+                return ((string)(this["genesBSUColumn"]));
+            }
+            set {
+                this["genesBSUColumn"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("gene")]
+        public string genesNameColumn {
+            get {
+                return ((string)(this["genesNameColumn"]));
+            }
+            set {
+                this["genesNameColumn"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("function")]
+        public string genesFunctionColumn {
+            get {
+                return ((string)(this["genesFunctionColumn"]));
+            }
+            set {
+                this["genesFunctionColumn"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("description")]
+        public string genesDescriptionColumn {
+            get {
+                return ((string)(this["genesDescriptionColumn"]));
+            }
+            set {
+                this["genesDescriptionColumn"] = value;
             }
         }
     }

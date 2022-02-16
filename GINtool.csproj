@@ -339,6 +339,8 @@
     <None Include="Resources\clipboard.png" />
     <None Include="Resources\crop.png" />
     <None Include="Resources\keyboard.png" />
+    <None Include="Resources\gene-editing-icon-128_128.png" />
+    <None Include="Resources\gene-editing-icon-64x64.png" />
     <Content Include="Resources\Resources.txt" />
   </ItemGroup>
   <PropertyGroup>

@@ -88,21 +88,24 @@ namespace GINtool
 
 
         bool Checkoutput()
-        {            
-            
-            if(rangeBSU.Rows.Count!=rangeFC.Rows.Count || rangeBSU.Rows.Count != rangeP.Rows.Count || rangeFC.Rows.Count != rangeP.Rows.Count)
+        {       
+            if (!(rangeBSU is null))
             {
-                MessageBox.Show("The input sizes of the selected columns is not the same. Please adjust!");
-                return false;
-            }
-                
-            if(rangeBSU.Address.ToString() == rangeFC.Address.ToString() || rangeBSU.Address.ToString() == rangeP.Address.ToString() || rangeFC.Address.ToString() == rangeP.Address.ToString())
-            {
-                MessageBox.Show("Some of the inputs are pointing to the same data. Please adjust!");
-                return false;
-            }
+                if (rangeBSU.Rows.Count != rangeFC.Rows.Count || rangeBSU.Rows.Count != rangeP.Rows.Count || rangeFC.Rows.Count != rangeP.Rows.Count)
+                {
+                    MessageBox.Show("The input sizes of the selected columns is not the same. Please adjust!");
+                    return false;
+                }
 
-            return true;
+                if (rangeBSU.Address.ToString() == rangeFC.Address.ToString() || rangeBSU.Address.ToString() == rangeP.Address.ToString() || rangeFC.Address.ToString() == rangeP.Address.ToString())
+                {
+                    MessageBox.Show("Some of the inputs are pointing to the same data. Please adjust!");
+                    return false;
+                }
+
+                return true;
+            }
+            return false;
 
         }
 

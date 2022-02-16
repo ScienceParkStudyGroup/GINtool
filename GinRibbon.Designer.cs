@@ -36,11 +36,7 @@
         {
             this.TabGINtool = this.Factory.CreateRibbonTab();
             this.group1 = this.Factory.CreateRibbonGroup();
-            this.btLoad = this.Factory.CreateRibbonButton();
-            this.toggleButton1 = this.Factory.CreateRibbonToggleButton();
-            this.tglTaskPane = this.Factory.CreateRibbonToggleButton();
             this.grpDta = this.Factory.CreateRibbonGroup();
-            this.btnSelect = this.Factory.CreateRibbonButton();
             this.grpTable = this.Factory.CreateRibbonGroup();
             this.cbUsePValues = this.Factory.CreateRibbonCheckBox();
             this.cbUseFoldChanges = this.Factory.CreateRibbonCheckBox();
@@ -50,7 +46,6 @@
             this.separator5 = this.Factory.CreateRibbonSeparator();
             this.cbCombined = this.Factory.CreateRibbonCheckBox();
             this.cbOperon = this.Factory.CreateRibbonCheckBox();
-            this.btApply = this.Factory.CreateRibbonButton();
             this.grpPlot = this.Factory.CreateRibbonGroup();
             this.cbOrderFC = this.Factory.CreateRibbonCheckBox();
             this.cbUseCategories = this.Factory.CreateRibbonCheckBox();
@@ -59,10 +54,40 @@
             this.cbDistribution = this.Factory.CreateRibbonCheckBox();
             this.cbClustered = this.Factory.CreateRibbonCheckBox();
             this.chkRegulon = this.Factory.CreateRibbonCheckBox();
-            this.btPlot = this.Factory.CreateRibbonButton();
             this.grpReference = this.Factory.CreateRibbonGroup();
+            this.grpGenesMapping = this.Factory.CreateRibbonGroup();
+            this.ddGnsName = this.Factory.CreateRibbonDropDown();
+            this.ddGenesBSU = this.Factory.CreateRibbonDropDown();
+            this.ddGenesFunction = this.Factory.CreateRibbonDropDown();
+            this.grpMap = this.Factory.CreateRibbonGroup();
+            this.ddGene = this.Factory.CreateRibbonDropDown();
+            this.ddBSU = this.Factory.CreateRibbonDropDown();
+            this.ddRegulon = this.Factory.CreateRibbonDropDown();
+            this.grpUpDown = this.Factory.CreateRibbonGroup();
+            this.ddDir = this.Factory.CreateRibbonDropDown();
+            this.grpFC = this.Factory.CreateRibbonGroup();
+            this.ebLow = this.Factory.CreateRibbonEditBox();
+            this.ebMid = this.Factory.CreateRibbonEditBox();
+            this.ebHigh = this.Factory.CreateRibbonEditBox();
+            this.grpCutOff = this.Factory.CreateRibbonGroup();
+            this.editMinPval = this.Factory.CreateRibbonEditBox();
+            this.grpDirection = this.Factory.CreateRibbonGroup();
+            this.cbAscending = this.Factory.CreateRibbonCheckBox();
+            this.cbDescending = this.Factory.CreateRibbonCheckBox();
+            this.btLoad = this.Factory.CreateRibbonButton();
+            this.toggleButton1 = this.Factory.CreateRibbonToggleButton();
+            this.tglTaskPane = this.Factory.CreateRibbonToggleButton();
+            this.btnSelect = this.Factory.CreateRibbonButton();
+            this.btApply = this.Factory.CreateRibbonButton();
+            this.btPlot = this.Factory.CreateRibbonButton();
+            this.splitBtnGenesFile = this.Factory.CreateRibbonSplitButton();
+            this.btnSelectGenesFile = this.Factory.CreateRibbonButton();
+            this.btnGenesFileMapping = this.Factory.CreateRibbonCheckBox();
+            this.separator7 = this.Factory.CreateRibbonSeparator();
+            this.btnGenesFileSelected = this.Factory.CreateRibbonButton();
             this.splitButton1 = this.Factory.CreateRibbonSplitButton();
             this.btnSelectRegulonFile = this.Factory.CreateRibbonButton();
+            this.cbOperonMapping = this.Factory.CreateRibbonCheckBox();
             this.btnResetRegulonFile = this.Factory.CreateRibbonButton();
             this.separator3 = this.Factory.CreateRibbonSeparator();
             this.btnRegulonFileName = this.Factory.CreateRibbonButton();
@@ -76,28 +101,16 @@
             this.btnClearCatFile = this.Factory.CreateRibbonButton();
             this.separator1 = this.Factory.CreateRibbonSeparator();
             this.btnCatFile = this.Factory.CreateRibbonButton();
-            this.grpMap = this.Factory.CreateRibbonGroup();
-            this.ddGene = this.Factory.CreateRibbonDropDown();
-            this.ddBSU = this.Factory.CreateRibbonDropDown();
-            this.ddRegulon = this.Factory.CreateRibbonDropDown();
-            this.grpUpDown = this.Factory.CreateRibbonGroup();
-            this.ddDir = this.Factory.CreateRibbonDropDown();
             this.btRegDirMap = this.Factory.CreateRibbonButton();
-            this.grpFC = this.Factory.CreateRibbonGroup();
-            this.ebLow = this.Factory.CreateRibbonEditBox();
-            this.ebMid = this.Factory.CreateRibbonEditBox();
-            this.ebHigh = this.Factory.CreateRibbonEditBox();
-            this.grpCutOff = this.Factory.CreateRibbonGroup();
-            this.editMinPval = this.Factory.CreateRibbonEditBox();
-            this.grpDirection = this.Factory.CreateRibbonGroup();
-            this.cbAscending = this.Factory.CreateRibbonCheckBox();
-            this.cbDescending = this.Factory.CreateRibbonCheckBox();
+            this.ddGenesDescription = this.Factory.CreateRibbonDropDown();
+            this.separator8 = this.Factory.CreateRibbonSeparator();
             this.TabGINtool.SuspendLayout();
             this.group1.SuspendLayout();
             this.grpDta.SuspendLayout();
             this.grpTable.SuspendLayout();
             this.grpPlot.SuspendLayout();
             this.grpReference.SuspendLayout();
+            this.grpGenesMapping.SuspendLayout();
             this.grpMap.SuspendLayout();
             this.grpUpDown.SuspendLayout();
             this.grpFC.SuspendLayout();
@@ -112,6 +125,7 @@
             this.TabGINtool.Groups.Add(this.grpTable);
             this.TabGINtool.Groups.Add(this.grpPlot);
             this.TabGINtool.Groups.Add(this.grpReference);
+            this.TabGINtool.Groups.Add(this.grpGenesMapping);
             this.TabGINtool.Groups.Add(this.grpMap);
             this.TabGINtool.Groups.Add(this.grpUpDown);
             this.TabGINtool.Groups.Add(this.grpFC);
@@ -128,49 +142,11 @@
             this.group1.Label = "main";
             this.group1.Name = "group1";
             // 
-            // btLoad
-            // 
-            this.btLoad.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-            this.btLoad.Enabled = false;
-            this.btLoad.Image = global::GINtool.Properties.Resources.stack;
-            this.btLoad.Label = "load reference data";
-            this.btLoad.Name = "btLoad";
-            this.btLoad.ScreenTip = "load reference data into memory";
-            this.btLoad.ShowImage = true;
-            this.btLoad.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_Load_Click);
-            // 
-            // toggleButton1
-            // 
-            this.toggleButton1.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-            this.toggleButton1.Image = global::GINtool.Properties.Resources.tools;
-            this.toggleButton1.Label = "show/hide settings";
-            this.toggleButton1.Name = "toggleButton1";
-            this.toggleButton1.ShowImage = true;
-            this.toggleButton1.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Toggle_Settings_Click);
-            // 
-            // tglTaskPane
-            // 
-            this.tglTaskPane.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-            this.tglTaskPane.Image = global::GINtool.Properties.Resources.clipboard;
-            this.tglTaskPane.Label = "show/hide manual";
-            this.tglTaskPane.Name = "tglTaskPane";
-            this.tglTaskPane.ShowImage = true;
-            this.tglTaskPane.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ToggleTaskPane_Click);
-            // 
             // grpDta
             // 
             this.grpDta.Items.Add(this.btnSelect);
             this.grpDta.Label = "data";
             this.grpDta.Name = "grpDta";
-            // 
-            // btnSelect
-            // 
-            this.btnSelect.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-            this.btnSelect.Image = global::GINtool.Properties.Resources.crop;
-            this.btnSelect.Label = "select";
-            this.btnSelect.Name = "btnSelect";
-            this.btnSelect.ShowImage = true;
-            this.btnSelect.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_Select_Click);
             // 
             // grpTable
             // 
@@ -190,12 +166,14 @@
             // 
             this.cbUsePValues.Label = "p-values";
             this.cbUsePValues.Name = "cbUsePValues";
+            this.cbUsePValues.ScreenTip = "select items to include based on p-value cutoff settings";
             this.cbUsePValues.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CheckBox_UsePValues_Click);
             // 
             // cbUseFoldChanges
             // 
             this.cbUseFoldChanges.Label = "fold-changes";
             this.cbUseFoldChanges.Name = "cbUseFoldChanges";
+            this.cbUseFoldChanges.ScreenTip = "select items to include based on fold-changes settings";
             this.cbUseFoldChanges.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CheckBox_UseFoldChanges_Click);
             // 
             // separator6
@@ -232,16 +210,6 @@
             this.cbOperon.Label = "operon";
             this.cbOperon.Name = "cbOperon";
             this.cbOperon.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CheckBox_Operon_Click);
-            // 
-            // btApply
-            // 
-            this.btApply.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-            this.btApply.Image = global::GINtool.Properties.Resources.check1;
-            this.btApply.Label = "make tables";
-            this.btApply.Name = "btApply";
-            this.btApply.ScreenTip = "Start the analysis (PVALUE,FC,BSU)";
-            this.btApply.ShowImage = true;
-            this.btApply.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_Apply_Click);
             // 
             // grpPlot
             // 
@@ -296,17 +264,9 @@
             this.chkRegulon.Name = "chkRegulon";
             this.chkRegulon.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CheckBox_Regulon_Click);
             // 
-            // btPlot
-            // 
-            this.btPlot.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-            this.btPlot.Image = global::GINtool.Properties.Resources.barchart;
-            this.btPlot.Label = "make plots";
-            this.btPlot.Name = "btPlot";
-            this.btPlot.ShowImage = true;
-            this.btPlot.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_Plot_Click);
-            // 
             // grpReference
             // 
+            this.grpReference.Items.Add(this.splitBtnGenesFile);
             this.grpReference.Items.Add(this.splitButton1);
             this.grpReference.Items.Add(this.splitButton2);
             this.grpReference.Items.Add(this.splitButton4);
@@ -314,129 +274,44 @@
             this.grpReference.Name = "grpReference";
             this.grpReference.Visible = false;
             // 
-            // splitButton1
+            // grpGenesMapping
             // 
-            this.splitButton1.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-            this.splitButton1.Image = global::GINtool.Properties.Resources.stack1;
-            this.splitButton1.Items.Add(this.btnSelectRegulonFile);
-            this.splitButton1.Items.Add(this.btnResetRegulonFile);
-            this.splitButton1.Items.Add(this.separator3);
-            this.splitButton1.Items.Add(this.btnRegulonFileName);
-            this.splitButton1.Label = "regulon file";
-            this.splitButton1.Name = "splitButton1";
-            this.splitButton1.ScreenTip = "select the reference file that contains the mapping tables";
+            this.grpGenesMapping.Items.Add(this.ddGnsName);
+            this.grpGenesMapping.Items.Add(this.ddGenesBSU);
+            this.grpGenesMapping.Items.Add(this.ddGenesFunction);
+            this.grpGenesMapping.Items.Add(this.separator8);
+            this.grpGenesMapping.Items.Add(this.ddGenesDescription);
+            this.grpGenesMapping.Label = "genes column mapping";
+            this.grpGenesMapping.Name = "grpGenesMapping";
+            this.grpGenesMapping.Visible = false;
             // 
-            // btnSelectRegulonFile
+            // ddGnsName
             // 
-            this.btnSelectRegulonFile.Image = global::GINtool.Properties.Resources.cursor;
-            this.btnSelectRegulonFile.Label = "select";
-            this.btnSelectRegulonFile.Name = "btnSelectRegulonFile";
-            this.btnSelectRegulonFile.ScreenTip = "select the file";
-            this.btnSelectRegulonFile.ShowImage = true;
-            this.btnSelectRegulonFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button1_Click);
+            this.ddGnsName.Label = "gene name";
+            this.ddGnsName.Name = "ddGnsName";
+            this.ddGnsName.ScreenTip = "map the column that contains the genes\' common name";
+            this.ddGnsName.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ddGnsName_SelectionChanged);
             // 
-            // btnResetRegulonFile
+            // ddGenesBSU
             // 
-            this.btnResetRegulonFile.Image = global::GINtool.Properties.Resources.denied;
-            this.btnResetRegulonFile.Label = "reset";
-            this.btnResetRegulonFile.Name = "btnResetRegulonFile";
-            this.btnResetRegulonFile.ShowImage = true;
-            this.btnResetRegulonFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnResetRegulonFile_Click);
+            this.ddGenesBSU.Label = "bsu";
+            this.ddGenesBSU.Name = "ddGenesBSU";
+            this.ddGenesBSU.ScreenTip = "map the column that defines the genes\' bsu code";
+            this.ddGenesBSU.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ddGenesBSU_SelectionChanged);
             // 
-            // separator3
+            // ddGenesFunction
             // 
-            this.separator3.Name = "separator3";
-            // 
-            // btnRegulonFileName
-            // 
-            this.btnRegulonFileName.Enabled = false;
-            this.btnRegulonFileName.Label = "no file selected";
-            this.btnRegulonFileName.Name = "btnRegulonFileName";
-            this.btnRegulonFileName.ShowImage = true;
-            // 
-            // splitButton2
-            // 
-            this.splitButton2.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-            this.splitButton2.Image = global::GINtool.Properties.Resources.stack2;
-            this.splitButton2.Items.Add(this.btnSelectOperonFile);
-            this.splitButton2.Items.Add(this.btnResetOperonFile);
-            this.splitButton2.Items.Add(this.separator4);
-            this.splitButton2.Items.Add(this.btnOperonFile);
-            this.splitButton2.Label = "operon file";
-            this.splitButton2.Name = "splitButton2";
-            this.splitButton2.ScreenTip = "select the reference file that contains the operon-gene mapping";
-            // 
-            // btnSelectOperonFile
-            // 
-            this.btnSelectOperonFile.Image = global::GINtool.Properties.Resources.cursor;
-            this.btnSelectOperonFile.Label = "select";
-            this.btnSelectOperonFile.Name = "btnSelectOperonFile";
-            this.btnSelectOperonFile.ScreenTip = "select the file";
-            this.btnSelectOperonFile.ShowImage = true;
-            this.btnSelectOperonFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_SelectOperonFile_Click);
-            // 
-            // btnResetOperonFile
-            // 
-            this.btnResetOperonFile.Image = global::GINtool.Properties.Resources.denied;
-            this.btnResetOperonFile.Label = "clear";
-            this.btnResetOperonFile.Name = "btnResetOperonFile";
-            this.btnResetOperonFile.ShowImage = true;
-            this.btnResetOperonFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_ResetOperonFile_Click);
-            // 
-            // separator4
-            // 
-            this.separator4.Name = "separator4";
-            // 
-            // btnOperonFile
-            // 
-            this.btnOperonFile.Enabled = false;
-            this.btnOperonFile.Label = "no file selected";
-            this.btnOperonFile.Name = "btnOperonFile";
-            this.btnOperonFile.ShowImage = true;
-            // 
-            // splitButton4
-            // 
-            this.splitButton4.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-            this.splitButton4.Image = global::GINtool.Properties.Resources.swatches;
-            this.splitButton4.Items.Add(this.btnSelectCatFile);
-            this.splitButton4.Items.Add(this.btnClearCatFile);
-            this.splitButton4.Items.Add(this.separator1);
-            this.splitButton4.Items.Add(this.btnCatFile);
-            this.splitButton4.Label = "category file";
-            this.splitButton4.Name = "splitButton4";
-            // 
-            // btnSelectCatFile
-            // 
-            this.btnSelectCatFile.Image = global::GINtool.Properties.Resources.cursor;
-            this.btnSelectCatFile.Label = "select";
-            this.btnSelectCatFile.Name = "btnSelectCatFile";
-            this.btnSelectCatFile.ShowImage = true;
-            this.btnSelectCatFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_SelectCatFile_Click);
-            // 
-            // btnClearCatFile
-            // 
-            this.btnClearCatFile.Image = global::GINtool.Properties.Resources.denied;
-            this.btnClearCatFile.Label = "clear";
-            this.btnClearCatFile.Name = "btnClearCatFile";
-            this.btnClearCatFile.ShowImage = true;
-            this.btnClearCatFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_ClearCatFile_Click);
-            // 
-            // separator1
-            // 
-            this.separator1.Name = "separator1";
-            // 
-            // btnCatFile
-            // 
-            this.btnCatFile.Label = "no file selected";
-            this.btnCatFile.Name = "btnCatFile";
-            this.btnCatFile.ShowImage = true;
+            this.ddGenesFunction.Label = "function";
+            this.ddGenesFunction.Name = "ddGenesFunction";
+            this.ddGenesFunction.ScreenTip = "map the column that describes the genes\' function";
+            this.ddGenesFunction.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ddGenesFunction_SelectionChanged);
             // 
             // grpMap
             // 
             this.grpMap.Items.Add(this.ddGene);
             this.grpMap.Items.Add(this.ddBSU);
             this.grpMap.Items.Add(this.ddRegulon);
-            this.grpMap.Label = "column mappings";
+            this.grpMap.Label = "operon column mappings";
             this.grpMap.Name = "grpMap";
             this.grpMap.Visible = false;
             // 
@@ -473,7 +348,7 @@
             // 
             this.grpUpDown.Items.Add(this.ddDir);
             this.grpUpDown.Items.Add(this.btRegDirMap);
-            this.grpUpDown.Label = "up/down definition";
+            this.grpUpDown.Label = "operon up/down definition";
             this.grpUpDown.Name = "grpUpDown";
             this.grpUpDown.Visible = false;
             // 
@@ -485,16 +360,6 @@
             this.ddDir.ScreenTip = "specify the column that contains the direction definitions";
             this.ddDir.ShowImage = true;
             this.ddDir.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.DropDown_RegulonDirection_SelectionChanged);
-            // 
-            // btRegDirMap
-            // 
-            this.btRegDirMap.Enabled = false;
-            this.btRegDirMap.Image = global::GINtool.Properties.Resources.settings;
-            this.btRegDirMap.Label = "regulon direction mapping";
-            this.btRegDirMap.Name = "btRegDirMap";
-            this.btRegDirMap.ScreenTip = "define the text mappings for the direction of the regulons";
-            this.btRegDirMap.ShowImage = true;
-            this.btRegDirMap.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_RegulonDirectionMap_Click);
             // 
             // grpFC
             // 
@@ -566,6 +431,250 @@
             this.cbDescending.ScreenTip = "Set the sort direction for outputting tables and figures";
             this.cbDescending.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CheckBox_Descending_Click);
             // 
+            // btLoad
+            // 
+            this.btLoad.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.btLoad.Enabled = false;
+            this.btLoad.Image = global::GINtool.Properties.Resources.stack;
+            this.btLoad.Label = "load reference data";
+            this.btLoad.Name = "btLoad";
+            this.btLoad.ScreenTip = "load reference data into memory";
+            this.btLoad.ShowImage = true;
+            this.btLoad.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_Load_Click);
+            // 
+            // toggleButton1
+            // 
+            this.toggleButton1.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.toggleButton1.Image = global::GINtool.Properties.Resources.tools;
+            this.toggleButton1.Label = "show/hide settings";
+            this.toggleButton1.Name = "toggleButton1";
+            this.toggleButton1.ShowImage = true;
+            this.toggleButton1.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Toggle_Settings_Click);
+            // 
+            // tglTaskPane
+            // 
+            this.tglTaskPane.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.tglTaskPane.Image = global::GINtool.Properties.Resources.clipboard;
+            this.tglTaskPane.Label = "show/hide manual";
+            this.tglTaskPane.Name = "tglTaskPane";
+            this.tglTaskPane.ShowImage = true;
+            this.tglTaskPane.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ToggleTaskPane_Click);
+            // 
+            // btnSelect
+            // 
+            this.btnSelect.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.btnSelect.Image = global::GINtool.Properties.Resources.crop;
+            this.btnSelect.Label = "select";
+            this.btnSelect.Name = "btnSelect";
+            this.btnSelect.ShowImage = true;
+            this.btnSelect.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_Select_Click);
+            // 
+            // btApply
+            // 
+            this.btApply.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.btApply.Image = global::GINtool.Properties.Resources.check1;
+            this.btApply.Label = "make tables";
+            this.btApply.Name = "btApply";
+            this.btApply.ScreenTip = "Start the analysis (PVALUE,FC,BSU)";
+            this.btApply.ShowImage = true;
+            this.btApply.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_Apply_Click);
+            // 
+            // btPlot
+            // 
+            this.btPlot.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.btPlot.Image = global::GINtool.Properties.Resources.barchart;
+            this.btPlot.Label = "make plots";
+            this.btPlot.Name = "btPlot";
+            this.btPlot.ShowImage = true;
+            this.btPlot.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_Plot_Click);
+            // 
+            // splitBtnGenesFile
+            // 
+            this.splitBtnGenesFile.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.splitBtnGenesFile.Image = global::GINtool.Properties.Resources.gene_editing_icon_64x64;
+            this.splitBtnGenesFile.Items.Add(this.btnSelectGenesFile);
+            this.splitBtnGenesFile.Items.Add(this.btnGenesFileMapping);
+            this.splitBtnGenesFile.Items.Add(this.separator7);
+            this.splitBtnGenesFile.Items.Add(this.btnGenesFileSelected);
+            this.splitBtnGenesFile.Label = "genes file";
+            this.splitBtnGenesFile.Name = "splitBtnGenesFile";
+            this.splitBtnGenesFile.ScreenTip = "select the csv file that contains the gene description, names and bsu codes";
+            // 
+            // btnSelectGenesFile
+            // 
+            this.btnSelectGenesFile.Image = global::GINtool.Properties.Resources.cursor;
+            this.btnSelectGenesFile.Label = "select";
+            this.btnSelectGenesFile.Name = "btnSelectGenesFile";
+            this.btnSelectGenesFile.ShowImage = true;
+            this.btnSelectGenesFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnSelectGenesFile_Click);
+            // 
+            // btnGenesFileMapping
+            // 
+            this.btnGenesFileMapping.Label = "show/hide column mapping";
+            this.btnGenesFileMapping.Name = "btnGenesFileMapping";
+            this.btnGenesFileMapping.ScreenTip = "show/hide column mapping for this file";
+            this.btnGenesFileMapping.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnGenesFileMapping_Click);
+            // 
+            // separator7
+            // 
+            this.separator7.Name = "separator7";
+            // 
+            // btnGenesFileSelected
+            // 
+            this.btnGenesFileSelected.Enabled = false;
+            this.btnGenesFileSelected.Label = "no file selected";
+            this.btnGenesFileSelected.Name = "btnGenesFileSelected";
+            this.btnGenesFileSelected.ShowImage = true;
+            // 
+            // splitButton1
+            // 
+            this.splitButton1.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.splitButton1.Image = global::GINtool.Properties.Resources.stack1;
+            this.splitButton1.Items.Add(this.btnSelectRegulonFile);
+            this.splitButton1.Items.Add(this.cbOperonMapping);
+            this.splitButton1.Items.Add(this.btnResetRegulonFile);
+            this.splitButton1.Items.Add(this.separator3);
+            this.splitButton1.Items.Add(this.btnRegulonFileName);
+            this.splitButton1.Label = "regulon file";
+            this.splitButton1.Name = "splitButton1";
+            this.splitButton1.ScreenTip = "select the csv file that contains the regulon mapping info (subtwiki)";
+            // 
+            // btnSelectRegulonFile
+            // 
+            this.btnSelectRegulonFile.Image = global::GINtool.Properties.Resources.cursor;
+            this.btnSelectRegulonFile.Label = "select";
+            this.btnSelectRegulonFile.Name = "btnSelectRegulonFile";
+            this.btnSelectRegulonFile.ScreenTip = "select the file";
+            this.btnSelectRegulonFile.ShowImage = true;
+            this.btnSelectRegulonFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button1_Click);
+            // 
+            // cbOperonMapping
+            // 
+            this.cbOperonMapping.Label = "show/hide column mapping";
+            this.cbOperonMapping.Name = "cbOperonMapping";
+            this.cbOperonMapping.ScreenTip = "show/hide column mappings for this file";
+            this.cbOperonMapping.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.checkBox1_Click);
+            // 
+            // btnResetRegulonFile
+            // 
+            this.btnResetRegulonFile.Image = global::GINtool.Properties.Resources.denied;
+            this.btnResetRegulonFile.Label = "reset";
+            this.btnResetRegulonFile.Name = "btnResetRegulonFile";
+            this.btnResetRegulonFile.ShowImage = true;
+            this.btnResetRegulonFile.Visible = false;
+            this.btnResetRegulonFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnResetRegulonFile_Click);
+            // 
+            // separator3
+            // 
+            this.separator3.Name = "separator3";
+            // 
+            // btnRegulonFileName
+            // 
+            this.btnRegulonFileName.Enabled = false;
+            this.btnRegulonFileName.Label = "no file selected";
+            this.btnRegulonFileName.Name = "btnRegulonFileName";
+            this.btnRegulonFileName.ShowImage = true;
+            // 
+            // splitButton2
+            // 
+            this.splitButton2.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.splitButton2.Image = global::GINtool.Properties.Resources.stack2;
+            this.splitButton2.Items.Add(this.btnSelectOperonFile);
+            this.splitButton2.Items.Add(this.btnResetOperonFile);
+            this.splitButton2.Items.Add(this.separator4);
+            this.splitButton2.Items.Add(this.btnOperonFile);
+            this.splitButton2.Label = "operon file";
+            this.splitButton2.Name = "splitButton2";
+            this.splitButton2.ScreenTip = "select the reference file that contains the operon-gene mapping";
+            // 
+            // btnSelectOperonFile
+            // 
+            this.btnSelectOperonFile.Image = global::GINtool.Properties.Resources.cursor;
+            this.btnSelectOperonFile.Label = "select";
+            this.btnSelectOperonFile.Name = "btnSelectOperonFile";
+            this.btnSelectOperonFile.ScreenTip = "select the file";
+            this.btnSelectOperonFile.ShowImage = true;
+            this.btnSelectOperonFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_SelectOperonFile_Click);
+            // 
+            // btnResetOperonFile
+            // 
+            this.btnResetOperonFile.Image = global::GINtool.Properties.Resources.denied;
+            this.btnResetOperonFile.Label = "clear";
+            this.btnResetOperonFile.Name = "btnResetOperonFile";
+            this.btnResetOperonFile.ShowImage = true;
+            this.btnResetOperonFile.Visible = false;
+            this.btnResetOperonFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_ResetOperonFile_Click);
+            // 
+            // separator4
+            // 
+            this.separator4.Name = "separator4";
+            // 
+            // btnOperonFile
+            // 
+            this.btnOperonFile.Enabled = false;
+            this.btnOperonFile.Label = "no file selected";
+            this.btnOperonFile.Name = "btnOperonFile";
+            this.btnOperonFile.ShowImage = true;
+            // 
+            // splitButton4
+            // 
+            this.splitButton4.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.splitButton4.Image = global::GINtool.Properties.Resources.swatches;
+            this.splitButton4.Items.Add(this.btnSelectCatFile);
+            this.splitButton4.Items.Add(this.btnClearCatFile);
+            this.splitButton4.Items.Add(this.separator1);
+            this.splitButton4.Items.Add(this.btnCatFile);
+            this.splitButton4.Label = "category file";
+            this.splitButton4.Name = "splitButton4";
+            // 
+            // btnSelectCatFile
+            // 
+            this.btnSelectCatFile.Image = global::GINtool.Properties.Resources.cursor;
+            this.btnSelectCatFile.Label = "select";
+            this.btnSelectCatFile.Name = "btnSelectCatFile";
+            this.btnSelectCatFile.ShowImage = true;
+            this.btnSelectCatFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_SelectCatFile_Click);
+            // 
+            // btnClearCatFile
+            // 
+            this.btnClearCatFile.Image = global::GINtool.Properties.Resources.denied;
+            this.btnClearCatFile.Label = "clear";
+            this.btnClearCatFile.Name = "btnClearCatFile";
+            this.btnClearCatFile.ShowImage = true;
+            this.btnClearCatFile.Visible = false;
+            this.btnClearCatFile.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_ClearCatFile_Click);
+            // 
+            // separator1
+            // 
+            this.separator1.Name = "separator1";
+            // 
+            // btnCatFile
+            // 
+            this.btnCatFile.Enabled = false;
+            this.btnCatFile.Label = "no file selected";
+            this.btnCatFile.Name = "btnCatFile";
+            this.btnCatFile.ShowImage = true;
+            // 
+            // btRegDirMap
+            // 
+            this.btRegDirMap.Enabled = false;
+            this.btRegDirMap.Image = global::GINtool.Properties.Resources.settings;
+            this.btRegDirMap.Label = "regulon direction mapping";
+            this.btRegDirMap.Name = "btRegDirMap";
+            this.btRegDirMap.ScreenTip = "define the text mappings for the direction of the regulons";
+            this.btRegDirMap.ShowImage = true;
+            this.btRegDirMap.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_RegulonDirectionMap_Click);
+            // 
+            // ddGenesDescription
+            // 
+            this.ddGenesDescription.Label = "description";
+            this.ddGenesDescription.Name = "ddGenesDescription";
+            this.ddGenesDescription.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ddGenesDescription_SelectionChanged);
+            // 
+            // separator8
+            // 
+            this.separator8.Name = "separator8";
+            // 
             // GinRibbon
             // 
             this.Name = "GinRibbon";
@@ -584,6 +693,8 @@
             this.grpPlot.PerformLayout();
             this.grpReference.ResumeLayout(false);
             this.grpReference.PerformLayout();
+            this.grpGenesMapping.ResumeLayout(false);
+            this.grpGenesMapping.PerformLayout();
             this.grpMap.ResumeLayout(false);
             this.grpMap.PerformLayout();
             this.grpUpDown.ResumeLayout(false);
@@ -658,6 +769,18 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbDescending;
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbUseRegulons;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btnResetRegulonFile;
+        internal Microsoft.Office.Tools.Ribbon.RibbonSplitButton splitBtnGenesFile;
+        internal Microsoft.Office.Tools.Ribbon.RibbonButton btnSelectGenesFile;
+        internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator7;
+        internal Microsoft.Office.Tools.Ribbon.RibbonButton btnGenesFileSelected;
+        internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox btnGenesFileMapping;
+        internal Microsoft.Office.Tools.Ribbon.RibbonGroup grpGenesMapping;
+        internal Microsoft.Office.Tools.Ribbon.RibbonDropDown ddGnsName;
+        internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbOperonMapping;
+        internal Microsoft.Office.Tools.Ribbon.RibbonDropDown ddGenesBSU;
+        internal Microsoft.Office.Tools.Ribbon.RibbonDropDown ddGenesFunction;
+        internal Microsoft.Office.Tools.Ribbon.RibbonDropDown ddGenesDescription;
+        internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator8;
     }
 
     partial class ThisRibbonCollection

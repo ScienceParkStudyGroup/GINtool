@@ -33,16 +33,20 @@ namespace GINtool
         readonly List<TASKS> gTasks = new List<TASKS>();
 
         int maxGenesPerOperon = 1;
-
+        /// <value>The main table that contains all gene info</value>
+        SysData.DataTable gGenesWB = null;
         /// <value>The main table containing the regulon data.</value>
-        SysData.DataTable gRefWB = null; // RegulonData .. rename later
+        SysData.DataTable gRegulonWB = null; // RegulonData .. rename later
         /// <value>The main table containing simple statistics per gene</value>
         SysData.DataTable gRefStats = null;
         /// <value>The main table containing the operon data</value>
         SysData.DataTable gRefOperons = null;
         /// <value>The main table containing the category data</value>
         SysData.DataTable gCategories = null;
-        string[] gColNames = null;
+        /// <value>gGeneColNames contains the column names of the genes information file</value>
+        string[] gGenesColNames = null;
+        /// <value>gRegulonColNames contains the column names of the regulon file</value>
+        string[] gRegulonColNames = null; 
         readonly string gCategoryGeneColumn = "locus_tag"; // the fixed column name that refers to the genes inthe category csv file
         Excel.Application gApplication = null;
 
@@ -73,6 +77,9 @@ namespace GINtool
         List<BsuRegulons> gList = null;
         SysData.DataTable gCombineInfo = null;
 
+
+        bool gRegulonDataLoaded = false;
+        bool gGenesDataLoaded = false;
 
 
         /// <summary>
@@ -122,14 +129,14 @@ namespace GINtool
         /// <returns></returns>
         private SysData.DataRow[] Lookup(string value)
         {
-            SysData.DataRow[] filteredRows = gRefWB.Select(string.Format("[{0}] LIKE '%{1}%'", Properties.Settings.Default.referenceBSU, value));
+            SysData.DataRow[] filteredRows = gRegulonWB.Select(string.Format("[{0}] LIKE '%{1}%'", Properties.Settings.Default.referenceBSU, value));
 
             // copy data to temporary table
-            SysData.DataTable dt = gRefWB.Clone();
+            SysData.DataTable dt = gRegulonWB.Clone();
             foreach (SysData.DataRow dr in filteredRows)
                 dt.ImportRow(dr);
             // return only unique values
-            SysData.DataTable dt_unique = GetDistinctRecords(dt, gColNames);
+            SysData.DataTable dt_unique = GetDistinctRecords(dt, gRegulonColNames);
             return dt_unique.Select();
         }
 
@@ -141,7 +148,10 @@ namespace GINtool
         private bool LoadCategoryData()
         {
             if (Properties.Settings.Default.categoryFile.Length == 0 || Properties.Settings.Default.catSheet.Length == 0)
+            {
+                btnCatFile.Label = "No file selected";
                 return false;
+            }
 
             AddTask(TASKS.LOAD_CATEGORY_DATA);
 
@@ -218,6 +228,101 @@ namespace GINtool
             return gCategories.Rows.Count > 0;
         }
 
+
+        /// <summary>
+        /// Import the category data from the csv file downloaded from http://subtiwiki.uni-goettingen.de/. 
+        /// This routine is specifically made for that specific data format. d.d. 14/2/2022
+        /// </summary>
+        /// <returns></returns>
+        private bool LoadCategoryDataNewFormat()
+        {
+            if (Properties.Settings.Default.categoryFile.Length == 0 || Properties.Settings.Default.catSheet.Length == 0)
+            {
+                btnCatFile.Label = "No file selected";
+                return false;
+            }
+
+            AddTask(TASKS.LOAD_CATEGORY_DATA);
+
+            SysData.DataTable _tmp = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.catSheet, Properties.Settings.Default.categoryFile, 1, 1);
+            DataView __tmp = _tmp.DefaultView;
+            __tmp.Sort = "[category id] asc";
+            _tmp = __tmp.ToTable();
+
+            gCategories = new SysData.DataTable("Categories")
+            {
+                CaseSensitive = false
+            };
+
+            // long list of columns... make cleaner later..
+
+            gCategories.Columns.Add("catid", Type.GetType("System.String"));
+            gCategories.Columns.Add("category", Type.GetType("System.String"));
+            gCategories.Columns.Add("gene", Type.GetType("System.String"));
+            gCategories.Columns.Add("locus_tag", Type.GetType("System.String"));
+            gCategories.Columns.Add("cat1", Type.GetType("System.String"));
+            gCategories.Columns.Add("cat2", Type.GetType("System.String"));
+            gCategories.Columns.Add("cat3", Type.GetType("System.String"));
+            gCategories.Columns.Add("cat4", Type.GetType("System.String"));
+            gCategories.Columns.Add("cat5", Type.GetType("System.String"));
+            gCategories.Columns.Add("cat1_int", Type.GetType("System.Int32"));
+            gCategories.Columns.Add("cat2_int", Type.GetType("System.Int32"));
+            gCategories.Columns.Add("cat3_int", Type.GetType("System.Int32"));
+            gCategories.Columns.Add("cat4_int", Type.GetType("System.Int32"));
+            gCategories.Columns.Add("cat5_int", Type.GetType("System.Int32"));
+            gCategories.Columns.Add("ucat1_int", Type.GetType("System.Int32"));
+            gCategories.Columns.Add("ucat2_int", Type.GetType("System.Int32"));
+            gCategories.Columns.Add("ucat3_int", Type.GetType("System.Int32"));
+            gCategories.Columns.Add("ucat4_int", Type.GetType("System.Int32"));
+            gCategories.Columns.Add("ucat5_int", Type.GetType("System.Int32"));
+
+
+            string[] lcols = new string[] { "cat1_int", "cat2_int", "cat3_int", "cat4_int", "cat5_int" };
+            string[] ulcols = new string[] { "ucat1_int", "ucat2_int", "ucat3_int", "ucat4_int", "ucat5_int" };
+
+            foreach (SysData.DataRow lRow in _tmp.Rows)
+            {
+                object[] lItems = lRow.ItemArray;
+                SysData.DataRow lNewRow = gCategories.Rows.Add();
+                for (int i = 0; i < lItems.Length; i++)
+                {
+                    lNewRow["catid"] = lItems[0];
+                    string[] splits = lItems[0].ToString().Split(' ');
+                    //lNewRow["catid_short"] = splits[splits.Count() - 1];
+                    lNewRow["category"] = lItems[1];
+                    lNewRow["locus_tag"] = lItems[2];
+                    //lNewRow["cat1"] = lItems[3];
+                    //lNewRow["cat2"] = lItems[4];
+                    //lNewRow["cat3"] = lItems[5];
+                    //lNewRow["cat4"] = lItems[6];
+                    //lNewRow["cat5"] = lItems[7];
+
+                    string[] llItems = lItems[0].ToString().Split('.').Skip(1).ToArray();
+                    
+
+                    // start at 1.. that contains SW
+                    for (int j = 0; j < llItems.Length; j++)
+                    {
+                        lNewRow[lcols[j]] = Int32.Parse(llItems[j]);
+                    }
+
+                    lNewRow[String.Format("cat{0}", llItems.Length)] = lItems[1];
+
+                    int offset = 0;
+                    for (int j = 0; j < llItems.Length; j++)
+                    {
+                        lNewRow[ulcols[j]] = offset + ((Int32)lNewRow[lcols[j]]) * Math.Pow(10, 5 - j);
+                        offset = (Int32)lNewRow[ulcols[j]];
+                    }
+
+                }
+            }
+
+            RemoveTask(TASKS.LOAD_CATEGORY_DATA);
+
+            return gCategories.Rows.Count > 0;
+        }
+
         /// <summary>
         /// Load the operon data from the specified csv file as downloaded from http://subtiwiki.uni-goettingen.de/.        
         /// </summary>
@@ -227,7 +332,10 @@ namespace GINtool
         {
 
             if (Properties.Settings.Default.operonFile.Length == 0 || Properties.Settings.Default.operonSheet.Length == 0)
+            {
+                btnOperonFile.Label = "No file selected";
                 return false;
+            }
 
             AddTask(TASKS.LOAD_OPERON_DATA);
 
@@ -265,46 +373,81 @@ namespace GINtool
             return gRefOperons.Rows.Count > 0;
         }
 
+
+        /// <summary>
+        /// Load the main genes information data from a csv file
+        /// </summary>
+        /// <returns></returns>
+        private bool LoadGenesData()
+        {
+
+            if (Properties.Settings.Default.genesFileName.Length == 0 || Properties.Settings.Default.genesSheetName.Length == 0)
+            {
+                btnGenesFileSelected.Label = "No file selected";
+                return false;
+            }
+
+            AddTask(TASKS.LOAD_GENES_DATA);
+            gGenesWB = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.genesSheetName, Properties.Settings.Default.genesFileName, 1, 1);
+
+
+            if (gGenesWB != null)
+            {
+                gGenesColNames = new string[gGenesWB.Columns.Count];
+                int i = 0;
+                foreach (SysData.DataColumn col in gGenesWB.Columns)
+                {
+                    gGenesColNames[i++] = col.ColumnName;
+                }                
+            }
+
+            RemoveTask(TASKS.LOAD_GENES_DATA);
+            return gGenesWB != null;
+
+        }
+
+
         /// <summary>
         /// Load the main Regulon data as downloaded from http://subtiwiki.uni-goettingen.de/. 
         /// The whole add-in is written for data in that specific format!
         /// </summary>
         /// <returns></returns>
-        private bool LoadData()
+        private bool LoadRegulonData()
         {
 
             AddTask(TASKS.LOAD_REGULON_DATA);
 
-            gRefWB = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.referenceSheetName, Properties.Settings.Default.referenceFile, 1, 1);
-            if (gRefWB != null)
+            gRegulonWB = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.referenceSheetName, Properties.Settings.Default.referenceFile, 1, 1);
+            if (gRegulonWB != null)
             {
-                gColNames = new string[gRefWB.Columns.Count];
+                gRegulonColNames = new string[gRegulonWB.Columns.Count];
                 int i = 0;
-                foreach (SysData.DataColumn col in gRefWB.Columns)
+                foreach (SysData.DataColumn col in gRegulonWB.Columns)
                 {
-                    gColNames[i++] = col.ColumnName;
+                    gRegulonColNames[i++] = col.ColumnName;
                 }
                 // generate database frequency table
                 CreateTableStatistics();
             }
 
             RemoveTask(TASKS.LOAD_REGULON_DATA);
-            return gRefWB != null;
+            return gRegulonWB != null;
         }
 
         /// <summary>
-        /// Create a basic count / average usage table per regulon
+        /// Create a basic count / average usage table per regulon based on the regulon data from subtwiki
+        /// Because regulator_BSU is not known for all regulators whe use the regulator name
         /// </summary>
         private void CreateTableStatistics()
         {
             List<string> lString = new List<string> { Properties.Settings.Default.referenceRegulon };
-            SysData.DataTable lUnique = GetDistinctRecords(gRefWB, lString.ToArray());
+            SysData.DataTable lUnique = GetDistinctRecords(gRegulonWB, lString.ToArray());
 
             // initialize the global datatable
 
             gRefStats = new SysData.DataTable("tblstat");
 
-            int totNrRows = gRefWB.Rows.Count;
+            int totNrRows = gRegulonWB.Rows.Count;
 
             SysData.DataColumn regColumn = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
             SysData.DataColumn countColumn = new SysData.DataColumn("Count", Type.GetType("System.Int16"));
@@ -316,7 +459,7 @@ namespace GINtool
             foreach (SysData.DataRow lRow in lUnique.Rows)
             {
                 string lVal = lRow[Properties.Settings.Default.referenceRegulon].ToString();
-                int cnt = gRefWB.Select(string.Format("{0}='{1}'", Properties.Settings.Default.referenceRegulon, lVal)).Length;
+                int cnt = gRegulonWB.Select(string.Format("{0}='{1}'", Properties.Settings.Default.referenceRegulon, lVal)).Length;
                 SysData.DataRow nRow = gRefStats.Rows.Add();
                 nRow["Regulon"] = lVal;
                 nRow["Count"] = cnt;
@@ -334,6 +477,12 @@ namespace GINtool
         {
             btnSelect.Enabled = enable;
             btApply.Enabled = enable;
+
+            ddGenesBSU.Enabled = enable;
+            ddGenesDescription.Enabled = enable;
+            ddGenesFunction.Enabled = enable;
+            ddGnsName.Enabled = enable;
+
             ddBSU.Enabled = enable;
             ddGene.Enabled = enable;
             ddRegulon.Enabled = enable;
@@ -369,11 +518,23 @@ namespace GINtool
 
             }
 
+            btnGenesFileSelected.Label = Properties.Settings.Default.genesFileName;
+            if (btnGenesFileSelected.Label.Length > 0)
+            {
+                System.IO.FileInfo fInfo = new System.IO.FileInfo(btnGenesFileSelected.Label);
+                gLastFolder = fInfo.DirectoryName;
+            }
+
             btnOperonFile.Label = Properties.Settings.Default.operonFile;
             btnCatFile.Label = Properties.Settings.Default.categoryFile;
             cbOrderFC.Checked = Properties.Settings.Default.useSort;
             cbDescending.Checked = !Properties.Settings.Default.sortAscending;
             cbAscending.Checked = Properties.Settings.Default.sortAscending;
+
+            btnGenesFileMapping.Checked = Properties.Settings.Default.genesMappingVisible;
+            cbOperonMapping.Checked = Properties.Settings.Default.operonMappingVisible;
+
+            //operonMappingVisible
 
             chkRegulon.Checked = Properties.Settings.Default.regPlot;
             cbMapping.Checked = Properties.Settings.Default.tblMap;
@@ -413,6 +574,12 @@ namespace GINtool
             if (Properties.Settings.Default.operonFile.Length == 0)
                 btnOperonFile.Label = "No file selected";
 
+
+            if (Properties.Settings.Default.categoryFile.Length == 0 || Properties.Settings.Default.catSheet.Length == 0)
+            {
+                btnCatFile.Label = "No file selected";                
+            }
+
             gAvailItems = PropertyItems("directionMapUnassigned");
             gUpItems = PropertyItems("directionMapUp");
             gDownItems = PropertyItems("directionMapDown");
@@ -425,7 +592,7 @@ namespace GINtool
 
             gExcelErrorValues = ((int[])Enum.GetValues(typeof(ExcelUtils.CVErrEnum))).ToList();
 
-            btLoad.Enabled = System.IO.File.Exists(Properties.Settings.Default.referenceFile);
+            btLoad.Enabled = System.IO.File.Exists(Properties.Settings.Default.referenceFile) & System.IO.File.Exists(Properties.Settings.Default.genesFileName);
 
         }
 
@@ -1319,7 +1486,7 @@ namespace GINtool
                 // continue depending on value of lowest fc definition
                 bool accept = Properties.Settings.Default.use_pvalues ? lLst[r].PVALUE < Properties.Settings.Default.pvalue_cutoff : Math.Abs(lLst[r].FC) > lowVal;
 
-                if (true)
+                if (accept)
                 {
                     SysData.DataRow lColorRow = lColorTable.Rows.Add();
 
@@ -1625,6 +1792,14 @@ namespace GINtool
         }
 
 
+        private SysData.DataTable AugmentTableWithGeneInfo(SysData.DataTable table, string geneBSUcolumn)
+        {
+            
+            
+            
+            return null;
+        }
+
 
         /// <summary>
         /// Create the tables for the summary and combined info sheets
@@ -1889,7 +2064,7 @@ namespace GINtool
         /// </summary>
         private void LoadDirectionOptions()
         {
-            SysData.DataView view = new SysData.DataView(gRefWB);
+            SysData.DataView view = new SysData.DataView(gRegulonWB);
             SysData.DataTable distinctValues = view.ToTable(true, Properties.Settings.Default.referenceDIR);
 
             foreach (SysData.DataRow row in distinctValues.Rows)
@@ -1902,7 +2077,7 @@ namespace GINtool
         /// Load the regulon data  
         /// </summary>
 
-        private void LoadWorksheets()
+        private void LoadRegulonWorksheets()
         {
             Microsoft.Office.Interop.Excel.Application excel = (Microsoft.Office.Interop.Excel.Application)Globals.ThisAddIn.Application;
             excel.DisplayAlerts = false;
@@ -1915,7 +2090,30 @@ namespace GINtool
 
 
             excelworkBook.Close();
+            gRegulonDataLoaded = true;
+            excel.EnableEvents = true;
+            excel.DisplayAlerts = true;
+        }
 
+
+        /// <summary>
+        /// Load the regulon data  
+        /// </summary>
+
+        private void LoadGenesWorksheets()
+        {
+            Microsoft.Office.Interop.Excel.Application excel = (Microsoft.Office.Interop.Excel.Application)Globals.ThisAddIn.Application;
+            excel.DisplayAlerts = false;
+            excel.EnableEvents = false;
+
+            Excel.Workbook excelworkBook = excel.Workbooks.Open(Properties.Settings.Default.genesFileName);
+            // Set workbook to first worksheet
+            Excel.Worksheet ws = (Excel.Worksheet)excelworkBook.Sheets[1];
+            Properties.Settings.Default.genesSheetName = ws.Name;
+
+
+            excelworkBook.Close();
+            gGenesDataLoaded = true;
             excel.EnableEvents = true;
             excel.DisplayAlerts = true;
         }
@@ -1966,7 +2164,7 @@ namespace GINtool
         /// <summary>
         /// Fill the dropdown boxes and select the last known (stored) selected value
         /// </summary>
-        private void Fill_DropDownBoxes()
+        private void Fill_OperonDropDownBoxes()
         {
             gApplication.EnableEvents = false;
 
@@ -1975,7 +2173,7 @@ namespace GINtool
             ddGene.Items.Clear();
             ddDir.Items.Clear();
 
-            foreach (string s in gColNames)
+            foreach (string s in gRegulonColNames)
             {
                 RibbonDropDownItem ddItem1 = Factory.CreateRibbonDropDownItem();
                 ddItem1.Label = s;
@@ -2022,6 +2220,62 @@ namespace GINtool
 
         }
 
+        private void Fill_GenesDropDownBoxes()
+        {
+            gApplication.EnableEvents = false;
+
+            ddGnsName.Items.Clear();
+            ddGenesBSU.Items.Clear();
+            ddGenesFunction.Items.Clear();
+            ddGenesDescription.Items.Clear();
+
+            foreach (string s in gGenesColNames)
+            {
+                RibbonDropDownItem ddItem1 = Factory.CreateRibbonDropDownItem();
+                ddItem1.Label = s;
+                ddGnsName.Items.Add(ddItem1);
+
+                ddItem1 = Factory.CreateRibbonDropDownItem();
+                ddItem1.Label = s;
+                ddGenesBSU.Items.Add(ddItem1);
+
+                ddItem1 = Factory.CreateRibbonDropDownItem();
+                ddItem1.Label = s;
+                ddGenesFunction.Items.Add(ddItem1);
+
+                ddItem1 = Factory.CreateRibbonDropDownItem();
+                ddItem1.Label = s;
+                ddGenesDescription.Items.Add(ddItem1);
+
+            }
+
+            RibbonDropDownItem ddItem = GetItemByValue(ddGenesBSU, Properties.Settings.Default.genesBSUColumn);
+            if (ddItem != null)
+                ddGenesBSU.SelectedItem = ddItem;
+
+            ddItem = GetItemByValue(ddGnsName, Properties.Settings.Default.genesNameColumn);
+            if (ddItem != null)
+                ddGnsName.SelectedItem = ddItem;
+
+            ddItem = GetItemByValue(ddGenesFunction, Properties.Settings.Default.genesFunctionColumn);
+            if (ddItem != null)
+                ddGenesFunction.SelectedItem = ddItem;
+
+            ddItem = GetItemByValue(ddGenesDescription, Properties.Settings.Default.genesDescriptionColumn);
+            if (ddItem != null)
+                ddGenesDescription.SelectedItem = ddItem;
+
+            ddGnsName.Enabled = true;
+            ddGenesBSU.Enabled = true;
+            ddGenesFunction.Enabled = true;
+            ddGenesDescription.Enabled = true;            
+
+            gApplication.EnableEvents = true;
+
+
+        }
+
+    
         /// <summary>
         /// Reset main variables to initial values
         /// </summary>
@@ -2207,12 +2461,14 @@ namespace GINtool
         private void Button_Load_Click(object sender, RibbonControlEventArgs e)
         {
             gApplication.EnableEvents = false;
-            if (LoadData())
+            if (LoadRegulonData() & LoadGenesData())
             {
                 gOperonOutput = LoadOperonData();
-                gCatOutput = LoadCategoryData();
+                gCatOutput = LoadCategoryDataNewFormat();
+                //gCatOutput = LoadCategoryData();
 
-                Fill_DropDownBoxes();
+                Fill_GenesDropDownBoxes();
+                Fill_OperonDropDownBoxes();
                 if (gDownItems.Count == 0 && gUpItems.Count == 0 && gAvailItems.Count == 0)
                     LoadDirectionOptions();
 
@@ -2249,9 +2505,9 @@ namespace GINtool
                 {
                     dlg.populateTree(gCategories);
                 }
-                if (gRefWB != null && !cbUseCategories.Checked)
+                if (gRegulonWB != null && !cbUseCategories.Checked)
                 {
-                    dlg.populateTree(gRefWB, cat: false);
+                    dlg.populateTree(gRegulonWB, cat: false);
                 }
 
                 if (dlg.ShowDialog() == DialogResult.OK)
@@ -3304,6 +3560,7 @@ namespace GINtool
             return (_dv.ToTable(), _output);
         }
 
+       
         /// <summary>
         /// Transform the ranking info to a summarized table 
         /// </summary>
@@ -3558,8 +3815,8 @@ namespace GINtool
                 {
                     Properties.Settings.Default.referenceFile = openFileDialog.FileName;
                     btnRegulonFileName.Label = Properties.Settings.Default.referenceFile;
-                    LoadWorksheets();
-                    btLoad.Enabled = true;
+                    LoadRegulonWorksheets();
+                    btLoad.Enabled = gRegulonDataLoaded & gGenesDataLoaded;
 
                     System.IO.FileInfo fInfo = new System.IO.FileInfo(Properties.Settings.Default.referenceFile);
                     gLastFolder = fInfo.DirectoryName;
@@ -3761,13 +4018,23 @@ namespace GINtool
         private void ShowSettingPannels(bool show)
         {
             grpReference.Visible = show;
-            grpMap.Visible = show;
-            grpUpDown.Visible = show;
+            grpGenesMapping.Visible = Properties.Settings.Default.genesMappingVisible & show;
+            grpMap.Visible = Properties.Settings.Default.operonMappingVisible & show;
+            grpUpDown.Visible = Properties.Settings.Default.operonMappingVisible & show;
             grpFC.Visible = show;
             grpCutOff.Visible = show;
             grpDirection.Visible = show;
         }
 
+        /// <summary>
+        /// Update the mapping panels based on selections by the user
+        /// </summary>
+        private void UpdateMappingPanels()
+        {
+            grpGenesMapping.Visible = Properties.Settings.Default.genesMappingVisible;
+            grpMap.Visible = Properties.Settings.Default.operonMappingVisible;
+            grpUpDown.Visible = Properties.Settings.Default.operonMappingVisible;
+        }
 
         /// <summary>
         /// enumeration of tasks that are defined
@@ -3776,6 +4043,8 @@ namespace GINtool
         {
             /// <value>Nothing to do</value>
             READY = 0,
+            /// <value>Genes data is being read from file</value>
+            LOAD_GENES_DATA,
             /// <value>Regulon data is being read from file</value>
             LOAD_REGULON_DATA,
             /// <value>Operon data is being read from file</value>
@@ -3804,7 +4073,7 @@ namespace GINtool
             REGULON_CHART
         };
 
-        public string[] taks_strings = new string[] { "Ready", "Load regulon data", "Load operon data", "Load category data", "Mapping genes to regulons", "Read sheet data", "Read sheet categorized data", "Update mapping table", "Update summary table", "Update combined table", "Update operon table", "Color cells", "Create category chart", "Create regulon chart" };
+        public string[] taks_strings = new string[] { "Ready", "Load genes data","Load regulon data", "Load operon data", "Load category data", "Mapping genes to regulons", "Read sheet data", "Read sheet categorized data", "Update mapping table", "Update summary table", "Update combined table", "Update operon table", "Color cells", "Create category chart", "Create regulon chart" };
 
         /// <summary>
         /// enumeration of binary flags that can be set/unset.
@@ -4005,7 +4274,7 @@ namespace GINtool
 
             //Properties.Settings.Default.referenceFile = "";
             //btnRegulonFileName.Label = "No file selected";
-            ////Properties.Settings.Default.operonSheet = "";
+            //Properties.Settings.Default.operonSheet = "";
             ////btnOperonFile.Label = "No file selected";
 
             //gOperonOutput = false;
@@ -4014,6 +4283,77 @@ namespace GINtool
             //Properties.Settings.Default.tblOperon = false;
 
             //Properties.Settings.Default.referenceRegulon
+        }
+
+        private void btnGenesFileMapping_Click(object sender, RibbonControlEventArgs e)
+        {
+            if (btnGenesFileMapping.Checked & Properties.Settings.Default.operonMappingVisible)
+            {
+                Properties.Settings.Default.operonMappingVisible = false;
+                cbOperonMapping.Checked = false;
+            }
+            Properties.Settings.Default.genesMappingVisible = btnGenesFileMapping.Checked;
+            UpdateMappingPanels();
+
+        }
+
+        private void checkBox1_Click(object sender, RibbonControlEventArgs e)
+        {
+            if(Properties.Settings.Default.genesMappingVisible & cbOperonMapping.Checked)
+            {
+                Properties.Settings.Default.genesMappingVisible = false;
+                btnGenesFileMapping.Checked = false;
+
+            }
+            Properties.Settings.Default.operonMappingVisible = cbOperonMapping.Checked;
+
+            UpdateMappingPanels();
+        }
+
+        private void btnSelectGenesFile_Click(object sender, RibbonControlEventArgs e)
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.InitialDirectory = gLastFolder;
+                openFileDialog.Filter = "Excel files (*.xlsx)|*.xlsx|txt files (*.csv)|*.csv";
+                openFileDialog.FilterIndex = 2;
+                openFileDialog.RestoreDirectory = true;
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    Properties.Settings.Default.genesFileName = openFileDialog.FileName;
+                    btnGenesFileSelected.Label = Properties.Settings.Default.genesFileName;
+                    LoadGenesWorksheets();
+                    btLoad.Enabled = gGenesDataLoaded & gRegulonDataLoaded;
+
+                    System.IO.FileInfo fInfo = new System.IO.FileInfo(Properties.Settings.Default.genesFileName);
+                    gLastFolder = fInfo.DirectoryName;
+                }
+            }
+        }
+
+        private void ddGnsName_SelectionChanged(object sender, RibbonControlEventArgs e)
+        {
+            Properties.Settings.Default.genesNameColumn = ddGnsName.SelectedItem.Label;
+            SetFlags(UPDATE_FLAGS.ALL);
+        }
+
+        private void ddGenesBSU_SelectionChanged(object sender, RibbonControlEventArgs e)
+        {
+            Properties.Settings.Default.genesBSUColumn = ddGenesBSU.SelectedItem.Label;
+            SetFlags(UPDATE_FLAGS.ALL);
+        }
+
+        private void ddGenesFunction_SelectionChanged(object sender, RibbonControlEventArgs e)
+        {
+            Properties.Settings.Default.genesFunctionColumn = ddGenesFunction.SelectedItem.Label;
+            SetFlags(UPDATE_FLAGS.ALL);
+        }
+
+        private void ddGenesDescription_SelectionChanged(object sender, RibbonControlEventArgs e)
+        {
+            Properties.Settings.Default.genesDescriptionColumn = ddGenesDescription.SelectedItem.Label;
+            SetFlags(UPDATE_FLAGS.ALL);
         }
     }
 
