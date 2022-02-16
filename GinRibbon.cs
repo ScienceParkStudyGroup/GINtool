@@ -78,8 +78,9 @@ namespace GINtool
         SysData.DataTable gCombineInfo = null;
 
 
-        bool gRegulonDataLoaded = false;
-        bool gGenesDataLoaded = false;
+        bool gRegulonFileSelected = false;
+        bool gCategoryFileSelected = false;
+        bool gGenesFileSelected = false;
 
 
         /// <summary>
@@ -129,7 +130,8 @@ namespace GINtool
         /// <returns></returns>
         private SysData.DataRow[] Lookup(string value)
         {
-            SysData.DataRow[] filteredRows = gRegulonWB.Select(string.Format("[{0}] LIKE '%{1}%'", Properties.Settings.Default.referenceBSU, value));
+            // needs to be replaced by genes table entry
+            SysData.DataRow[] filteredRows = gRegulonWB.Select(string.Format("[{0}] LIKE '%{1}%'", Properties.Settings.Default.referenceBSU, value));            
 
             // copy data to temporary table
             SysData.DataTable dt = gRegulonWB.Clone();
@@ -414,7 +416,11 @@ namespace GINtool
         /// <returns></returns>
         private bool LoadRegulonData()
         {
-
+            if (Properties.Settings.Default.referenceFile.Length == 0 || Properties.Settings.Default.referenceSheetName.Length == 0)
+            {
+                btnRegulonFileName.Label = "No file selected";
+                return false;
+            }
             AddTask(TASKS.LOAD_REGULON_DATA);
 
             gRegulonWB = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.referenceSheetName, Properties.Settings.Default.referenceFile, 1, 1);
@@ -592,7 +598,13 @@ namespace GINtool
 
             gExcelErrorValues = ((int[])Enum.GetValues(typeof(ExcelUtils.CVErrEnum))).ToList();
 
-            btLoad.Enabled = System.IO.File.Exists(Properties.Settings.Default.referenceFile) & System.IO.File.Exists(Properties.Settings.Default.genesFileName);
+
+            gCategoryFileSelected = System.IO.File.Exists(Properties.Settings.Default.categoryFile);
+            gRegulonFileSelected = System.IO.File.Exists(Properties.Settings.Default.referenceFile);
+            gGenesFileSelected = System.IO.File.Exists(Properties.Settings.Default.genesFileName);
+
+            btLoad.Enabled = (System.IO.File.Exists(Properties.Settings.Default.referenceFile) | System.IO.File.Exists(Properties.Settings.Default.categoryFile)) & System.IO.File.Exists(Properties.Settings.Default.genesFileName);
+            
 
         }
 
@@ -724,7 +736,7 @@ namespace GINtool
                 BsuRegulons lMap = new BsuRegulons(lFC, lPvalue, lBSU);
 
                 //  double check if BSU has a value 
-                if (lMap.BSU.Length > 0)
+                if ((lMap.BSU.Length > 0) & !(gRegulonWB is null))
                 {
                     // find the entries that are linked by the same gene
                     SysData.DataRow[] results = Lookup(lMap.BSU);
@@ -2090,7 +2102,7 @@ namespace GINtool
 
 
             excelworkBook.Close();
-            gRegulonDataLoaded = true;
+            gRegulonFileSelected = true;
             excel.EnableEvents = true;
             excel.DisplayAlerts = true;
         }
@@ -2113,7 +2125,7 @@ namespace GINtool
 
 
             excelworkBook.Close();
-            gGenesDataLoaded = true;
+            gGenesFileSelected = true;
             excel.EnableEvents = true;
             excel.DisplayAlerts = true;
         }
@@ -2132,8 +2144,7 @@ namespace GINtool
             // Set workbook to first worksheet
             Excel.Worksheet ws = (Excel.Worksheet)excelworkBook.Sheets[1];
             Properties.Settings.Default.operonSheet = ws.Name;
-
-
+            
             excelworkBook.Close();
 
             excel.EnableEvents = true;
@@ -2156,15 +2167,15 @@ namespace GINtool
 
 
             excelworkBook.Close();
-
+            gCategoryFileSelected = true;
             excel.EnableEvents = true;
             excel.DisplayAlerts = true;
         }
 
         /// <summary>
-        /// Fill the dropdown boxes and select the last known (stored) selected value
+        /// Fill the regulon dropdown boxes and select the last known (stored) selected value
         /// </summary>
-        private void Fill_OperonDropDownBoxes()
+        private void Fill_RegulonDropDownBoxes()
         {
             gApplication.EnableEvents = false;
 
@@ -2461,22 +2472,33 @@ namespace GINtool
         private void Button_Load_Click(object sender, RibbonControlEventArgs e)
         {
             gApplication.EnableEvents = false;
-            if (LoadRegulonData() & LoadGenesData())
+            if (LoadGenesData() & (LoadRegulonData() | LoadCategoryData()))
             {
+                
                 gOperonOutput = LoadOperonData();
-                gCatOutput = LoadCategoryDataNewFormat();
+                //gCatOutput = LoadCategoryDataNewFormat();
                 //gCatOutput = LoadCategoryData();
 
                 Fill_GenesDropDownBoxes();
-                Fill_OperonDropDownBoxes();
-                if (gDownItems.Count == 0 && gUpItems.Count == 0 && gAvailItems.Count == 0)
-                    LoadDirectionOptions();
+
+                if (gRegulonFileSelected)
+                {
+                    Fill_RegulonDropDownBoxes();
+                    if (gDownItems.Count == 0 && gUpItems.Count == 0 && gAvailItems.Count == 0)
+                        LoadDirectionOptions();
+                }
+
+                if(gCategoryFileSelected)
+                {
+                    // load comboboxes for the category file (if necessary)
+                }
 
                 btnSelect.Enabled = true;
                 toggleButton1.Enabled = true;
                 LoadFCDefaults();
                 ResetTables();
 
+                btLoad.Enabled = false;
             }
             gApplication.EnableEvents = true;
         }
@@ -3816,7 +3838,9 @@ namespace GINtool
                     Properties.Settings.Default.referenceFile = openFileDialog.FileName;
                     btnRegulonFileName.Label = Properties.Settings.Default.referenceFile;
                     LoadRegulonWorksheets();
-                    btLoad.Enabled = gRegulonDataLoaded & gGenesDataLoaded;
+                    // enable load button if files are selected
+
+                    btLoad.Enabled = gGenesFileSelected & (gRegulonFileSelected | gCategoryFileSelected);
 
                     System.IO.FileInfo fInfo = new System.IO.FileInfo(Properties.Settings.Default.referenceFile);
                     gLastFolder = fInfo.DirectoryName;
@@ -3952,6 +3976,9 @@ namespace GINtool
 
                     System.IO.FileInfo fInfo = new System.IO.FileInfo(Properties.Settings.Default.categoryFile);
                     gLastFolder = fInfo.DirectoryName;
+                    
+                    btLoad.Enabled = gGenesFileSelected & (gRegulonFileSelected | gCategoryFileSelected);
+
 
                 }
             }
@@ -4272,8 +4299,8 @@ namespace GINtool
         private void btnResetRegulonFile_Click(object sender, RibbonControlEventArgs e)
         {
 
-            //Properties.Settings.Default.referenceFile = "";
-            //btnRegulonFileName.Label = "No file selected";
+            Properties.Settings.Default.referenceFile = "";
+            btnRegulonFileName.Label = "No file selected";
             //Properties.Settings.Default.operonSheet = "";
             ////btnOperonFile.Label = "No file selected";
 
@@ -4282,6 +4309,10 @@ namespace GINtool
             //cbOperon.Enabled = false;
             //Properties.Settings.Default.tblOperon = false;
 
+            gRegulonFileSelected = false;
+
+            cbUseRegulons.Checked = false;
+            cbUseRegulons.Enabled = false;
             //Properties.Settings.Default.referenceRegulon
         }
 
@@ -4324,7 +4355,8 @@ namespace GINtool
                     Properties.Settings.Default.genesFileName = openFileDialog.FileName;
                     btnGenesFileSelected.Label = Properties.Settings.Default.genesFileName;
                     LoadGenesWorksheets();
-                    btLoad.Enabled = gGenesDataLoaded & gRegulonDataLoaded;
+
+                    btLoad.Enabled = gGenesFileSelected & (gRegulonFileSelected | gCategoryFileSelected);
 
                     System.IO.FileInfo fInfo = new System.IO.FileInfo(Properties.Settings.Default.genesFileName);
                     gLastFolder = fInfo.DirectoryName;
@@ -4336,6 +4368,7 @@ namespace GINtool
         {
             Properties.Settings.Default.genesNameColumn = ddGnsName.SelectedItem.Label;
             SetFlags(UPDATE_FLAGS.ALL);
+           
         }
 
         private void ddGenesBSU_SelectionChanged(object sender, RibbonControlEventArgs e)
