@@ -206,32 +206,32 @@ namespace GINtool
             return new cat_elements();
         }
         
-        public static int FindAssocForRegulon(this BsuRegulons bsu, string regulon)
-        {
-            int _pos = bsu.REGULONS.IndexOf(regulon);
-            if(bsu.UP.Contains(_pos))
-            {
-                return _pos;
-            }
-            if(bsu.DOWN.Contains(_pos))
-            {
-                return -_pos;
-            }
-            return 0;
-        }
+        //public static int FindAssocForRegulon(this BsuLinkedItems bsu, string regulon)
+        //{
+        //    int _pos = bsu.Regulons.IndexOf(regulon);
+        //    if(bsu.REGULON_UP.Contains(_pos))
+        //    {
+        //        return _pos;
+        //    }
+        //    if(bsu.REGULON_DOWN.Contains(_pos))
+        //    {
+        //        return -_pos;
+        //    }
+        //    return 0;
+        //}
         
-        public static BsuRegulons GetByGeneName(this List<BsuRegulons> lst, string geneName)
+        public static BsuLinkedItems GetByGeneName(this List<BsuLinkedItems> lst, string geneName)
         {
             if (lst != null && lst.Count > 0)
             {
-                IEnumerable<BsuRegulons> output = lst.Where(x => x.GENE == geneName);
+                IEnumerable<BsuLinkedItems> output = lst.Where(x => x.GeneName == geneName);
                 if (output.Count() > 0)
                 {
                     return output.First();
                 }
             }
 
-            return new BsuRegulons();
+            return new BsuLinkedItems();
         }
         
         public static double AbsAverage(this List<double> lst)

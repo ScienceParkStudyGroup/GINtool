@@ -110,5 +110,17 @@
     <Setting Name="genesDescriptionColumn" Type="System.String" Scope="User">
       <Value Profile="(Default)">description</Value>
     </Setting>
+    <Setting Name="catBSUColum" Type="System.String" Scope="User">
+      <Value Profile="(Default)">locus tag</Value>
+    </Setting>
+    <Setting Name="catCatIDColumn" Type="System.String" Scope="User">
+      <Value Profile="(Default)">category id</Value>
+    </Setting>
+    <Setting Name="catCatDescriptionColumn" Type="System.String" Scope="User">
+      <Value Profile="(Default)">description</Value>
+    </Setting>
+    <Setting Name="categoryMappingsVisible" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

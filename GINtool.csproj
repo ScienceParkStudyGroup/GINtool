@@ -190,7 +190,7 @@
     can be found.
   -->
   <ItemGroup>
-    <Compile Include="BsuRegulons.cs" />
+    <Compile Include="BsuLinkedItems.cs" />
     <Compile Include="CalcTables.cs">
       <SubType>Component</SubType>
     </Compile>

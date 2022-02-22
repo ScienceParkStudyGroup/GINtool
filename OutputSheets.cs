@@ -18,17 +18,17 @@ namespace GINtool
       /// </summary>
       /// <param name="lResults"></param>
       /// <returns></returns>
-        (SysData.DataTable, SysData.DataTable) PrepareResultTable(List<BsuRegulons> lResults)
+        (SysData.DataTable, SysData.DataTable) PrepareResultTable(List<BsuLinkedItems> lResults)
         {
             SysData.DataTable myTable = new System.Data.DataTable("mytable");
             SysData.DataTable clrTable = new System.Data.DataTable("colortable");
 
-            int maxcol = lResults[0].REGULONS.Count;
+            int maxcol = lResults[0].Regulons.Count;
 
             // count max number of columns neccesary
             for (int r = 1; r < lResults.Count; r++)
-                if (maxcol < lResults[r].REGULONS.Count)
-                    maxcol = lResults[r].REGULONS.Count;
+                if (maxcol < lResults[r].Regulons.Count)
+                    maxcol = lResults[r].Regulons.Count;
 
             // add BSU/gene/p-value/fc columns
 
@@ -60,21 +60,21 @@ namespace GINtool
                 SysData.DataRow newRow = myTable.Rows.Add();
 
                 newRow["bsu"] = lResults[r].BSU;
-                newRow["gene"] = lResults[r].GENE;
+                newRow["gene"] = lResults[r].GeneName;
                 newRow["fc"] = lResults[r].FC;
                 newRow["pval"] = lResults[r].PVALUE;
 
-                newRow["count_col"] = lResults[r].TOT;
+                newRow["count_col"] = lResults[r].REGULON_TOT;
                 SysData.DataRow clrRow = clrTable.Rows.Add();
 
-                for (int c = 0; c < lResults[r].REGULONS.Count; c++)
-                    newRow[string.Format("col_{0}", c + 1)] = lResults[r].REGULONS[c];
+                for (int c = 0; c < lResults[r].Regulons.Count; c++)
+                    newRow[string.Format("col_{0}", c + 1)] = lResults[r].Regulons[c];
 
-                for (int c = 0; c < lResults[r].UP.Count; c++)
-                    clrRow[lResults[r].UP[c]] = 1;
+                for (int c = 0; c < lResults[r].REGULON_UP.Count; c++)
+                    clrRow[lResults[r].REGULON_UP[c]] = 1;
 
-                for (int c = 0; c < lResults[r].DOWN.Count; c++)
-                    clrRow[lResults[r].DOWN[c]] = -1;
+                for (int c = 0; c < lResults[r].REGULON_DOWN.Count; c++)
+                    clrRow[lResults[r].REGULON_DOWN[c]] = -1;
 
             }
 
@@ -408,7 +408,7 @@ namespace GINtool
         /// Create the worksheet that contains the basic mapping gene - regulon table
         /// </summary>
         /// <param name="bsuRegulons"></param>
-        private void CreateMappingSheet(List<BsuRegulons> bsuRegulons)
+        private void CreateMappingSheet(List<BsuLinkedItems> bsuRegulons)
         {
             (SysData.DataTable lTable, SysData.DataTable clrTbl) = PrepareResultTable(bsuRegulons);
 

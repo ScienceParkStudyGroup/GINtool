@@ -40,13 +40,17 @@ namespace GINtool
         /// <value>The main table containing simple statistics per gene</value>
         SysData.DataTable gRefStats = null;
         /// <value>The main table containing the operon data</value>
-        SysData.DataTable gRefOperons = null;
+        SysData.DataTable gRefOperonsWB = null;
         /// <value>The main table containing the category data</value>
-        SysData.DataTable gCategories = null;
+        SysData.DataTable gCategoriesWB = null;
         /// <value>gGeneColNames contains the column names of the genes information file</value>
         string[] gGenesColNames = null;
         /// <value>gRegulonColNames contains the column names of the regulon file</value>
-        string[] gRegulonColNames = null; 
+        string[] gRegulonColNames = null;
+        /// <value>gCategoryColNames contains the column names of the categories file</value>
+        string[] gCategoryColNames = null;
+
+
         readonly string gCategoryGeneColumn = "locus_tag"; // the fixed column name that refers to the genes inthe category csv file
         Excel.Application gApplication = null;
 
@@ -74,7 +78,7 @@ namespace GINtool
 
         List<FC_BSU> gOutput = null;
         SysData.DataTable gSummary = null;
-        List<BsuRegulons> gList = null;
+        List<BsuLinkedItems> gList = null;
         SysData.DataTable gCombineInfo = null;
         SysData.DataTable gBestTable = null;
 
@@ -83,6 +87,12 @@ namespace GINtool
         bool gCategoryFileSelected = false;
         bool gGenesFileSelected = false;
 
+
+
+        private bool UseCategoryData()
+        {
+            return Properties.Settings.Default.useCat;
+        }
 
         /// <summary>
         /// Obtain the value for the property from the default settings
@@ -129,7 +139,7 @@ namespace GINtool
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        private SysData.DataRow[] Lookup(string value)
+        private SysData.DataRow[] LookupRegulon(string value)
         {
             // needs to be replaced by genes table entry
             SysData.DataRow[] filteredRows = gRegulonWB.Select(string.Format("[{0}] LIKE '%{1}%'", Properties.Settings.Default.referenceBSU, value));            
@@ -140,6 +150,46 @@ namespace GINtool
                 dt.ImportRow(dr);
             // return only unique values
             SysData.DataTable dt_unique = GetDistinctRecords(dt, gRegulonColNames);
+            return dt_unique.Select();
+        }
+
+
+        /// <summary>
+        /// Find the records in the main Category table where the ID (=BSU column, locus tag) = value
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private SysData.DataRow[] LookupCategory(string value)
+        {
+            // needs to be replaced by genes table entry
+            SysData.DataRow[] filteredRows = gCategoriesWB.Select(string.Format("[{0}] LIKE '%{1}%'", Properties.Settings.Default.catBSUColum, value));
+
+            // copy data to temporary table
+            SysData.DataTable dt = gCategoriesWB.Clone();
+            foreach (SysData.DataRow dr in filteredRows)
+                dt.ImportRow(dr);
+            // return only unique values
+            SysData.DataTable dt_unique = GetDistinctRecords(dt, gCategoryColNames);
+            return dt_unique.Select();
+        }
+
+
+        /// <summary>
+        /// Find the records in the main Category table where the ID (=BSU column, locus tag) = value
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private SysData.DataRow[] LookupGeneInfo(string value)
+        {
+            // needs to be replaced by genes table entry
+            SysData.DataRow[] filteredRows = gGenesWB.Select(string.Format("[{0}] LIKE '%{1}%'", Properties.Settings.Default.genesBSUColumn, value));
+
+            // copy data to temporary table
+            SysData.DataTable dt = gGenesWB.Clone();
+            foreach (SysData.DataRow dr in filteredRows)
+                dt.ImportRow(dr);
+            // return only unique values
+            SysData.DataTable dt_unique = GetDistinctRecords(dt, gGenesColNames);
             return dt_unique.Select();
         }
 
@@ -182,7 +232,7 @@ namespace GINtool
         /// <summary>
         /// Load the last known settings stored in the persitent default.settings
         /// </summary>
-        private void LoadButtonStatus()
+        private void LoadPersistentSettings()
         {
             gApplication = Globals.ThisAddIn.GetExcelApplication();
             btnRegulonFileName.Label = Properties.Settings.Default.referenceFile;
@@ -219,18 +269,18 @@ namespace GINtool
             cbOperon.Checked = Properties.Settings.Default.tblOperon;
 
             cbClustered.Checked = Properties.Settings.Default.catPlot;
-            cbDistribution.Checked = Properties.Settings.Default.distPlot;
-
-            cbUseCategories.Checked = Properties.Settings.Default.useCat;
-            cbUseRegulons.Checked = !Properties.Settings.Default.useCat;
+            cbDistribution.Checked = Properties.Settings.Default.distPlot;            
 
             if (Properties.Settings.Default.categoryFile.Length == 0)
             {
-                cbUseCategories.Checked = false; ;
+                cbUseCategories.Checked = false; 
                 cbUseRegulons.Checked = true;
                 Properties.Settings.Default.useCat = false;
 
             }
+
+            cbUseCategories.Checked = Properties.Settings.Default.useCat;
+            cbUseRegulons.Checked = !Properties.Settings.Default.useCat;
 
             cbUsePValues.Checked = Properties.Settings.Default.use_pvalues;
             cbUseFoldChanges.Checked = !Properties.Settings.Default.use_pvalues;
@@ -245,7 +295,7 @@ namespace GINtool
         private void GinRibbon_Load(object sender, RibbonUIEventArgs e)
         {
 
-            LoadButtonStatus();
+            LoadPersistentSettings();
 
             if (Properties.Settings.Default.operonFile.Length == 0)
                 btnOperonFile.Label = "No file selected";
@@ -300,7 +350,7 @@ namespace GINtool
 
             cbOrderFC.Enabled = enable;
             cbUseCategories.Enabled = enable && gCatOutput;
-            cbUseRegulons.Enabled = enable && gCatOutput;
+            cbUseRegulons.Enabled = enable && !gCatOutput;
 
             cbOperon.Enabled = enable && gOperonOutput;
 
@@ -370,84 +420,88 @@ namespace GINtool
         /// </summary>
         /// <param name="theCells"></param>
         /// <returns>A list of data genes</returns>
-        private List<BsuRegulons> QueryResultTable(List<Excel.Range> theCells)
+        private List<BsuLinkedItems> AugmentWithRegulonData(List<BsuLinkedItems> theInputData)
         {
 
-            AddTask(TASKS.MAPPING_GENES_TO_REGULONS);
-
-            // Copy the data from the selected cells as determined in the dialog earlier.
-            object[,] rangeBSU = theCells[2].Value2;
-            object[,] rangeFC = theCells[1].Value2;
-            object[,] rangeP = theCells[0].Value2;
-
-
-            // Initialize the list
-            List<BsuRegulons> lList = new List<BsuRegulons>();
-
+            AddTask(TASKS.AUGMENTING_WITH_REGULON_DATA);
+       
             // loop of the number of rows in rangeBSU
 
-            for (int _r = 1; _r <= rangeBSU.Length; _r++)
+            foreach (BsuLinkedItems _it in theInputData)
             {
-                string lBSU;
-                double lFC = 0;
-                double lPvalue = 1;
 
-                lBSU = rangeBSU[_r, 1].ToString();
-
-                if (!IsErrorCell(rangeP[_r, 1]))
-                    if (!Double.TryParse(rangeP[_r, 1].ToString(), out lPvalue))
-                        lPvalue = 1;
-
-                if (!IsErrorCell(rangeFC[_r, 1]))
-                    if (!Double.TryParse(rangeFC[_r, 1].ToString(), out lFC))
-                        lFC = 0;
-
-                // create a mapping entry
-                BsuRegulons lMap = new BsuRegulons(lFC, lPvalue, lBSU);
-
-                //  double check if BSU has a value 
-                if ((lMap.BSU.Length > 0) & !(gRegulonWB is null))
+                if ((_it.BSU.Length > 0) & !(gRegulonWB is null))
                 {
                     // find the entries that are linked by the same gene
-                    SysData.DataRow[] results = Lookup(lMap.BSU);
+                    SysData.DataRow[] results = LookupRegulon(_it.BSU);
 
                     // loop over the entries (=regulons) found
-                    if (results.Length > 0)
+                    for (int r = 0; r < results.Length; r++)
                     {
-                        string gene = results[0][Properties.Settings.Default.referenceGene].ToString();
-                        lMap.GENE = gene;
 
-                        // store every regulon and it's association if found in the user defined up/down regulation list
+                        string item = results[r][Properties.Settings.Default.referenceRegulon].ToString();
+                        string direction = results[r][Properties.Settings.Default.referenceDIR].ToString();
 
-                        for (int r = 0; r < results.Length; r++)
+
+                        if (item.Length > 0)
                         {
-                            string item = results[r][Properties.Settings.Default.referenceRegulon].ToString();
-                            string direction = results[r][Properties.Settings.Default.referenceDIR].ToString();
+                            _it.Regulons.Add(new RegulonItem(item, direction));
 
+                            if (gUpItems.Contains(direction))
+                                _it.REGULON_UP.Add(r);
 
-                            if (item.Length > 0)
-                            {
-                                lMap.REGULONS.Add(item);
-
-                                if (gUpItems.Contains(direction))
-                                    lMap.UP.Add(r);
-
-                                if (gDownItems.Contains(direction))
-                                    lMap.DOWN.Add(r);
-                            }
+                            if (gDownItems.Contains(direction))
+                                _it.REGULON_DOWN.Add(r);
                         }
+
                     }
                 }
-
-                lList.Add(lMap);
             }
 
-            RemoveTask(TASKS.MAPPING_GENES_TO_REGULONS);
-            return lList;
+            RemoveTask(TASKS.AUGMENTING_WITH_REGULON_DATA);
+            return theInputData;
 
         }
 
-       
+        /// <summary>
+        /// The main routine to map the data to a list of genes with their associated FC, p-values etc.. and a possibly a list of categories.. 
+        /// </summary>
+        /// <param name="theCells"></param>
+        /// <returns>A list of data genes</returns>
+        private List<BsuLinkedItems> AugmentWithCategoryData(List<BsuLinkedItems> theInputData)
+        {
+
+            AddTask(TASKS.AUGMENTING_WITH_CATEGORY_DATA);
+                  
+            // loop of the number of rows in rangeBSU
+
+            foreach (BsuLinkedItems _it in theInputData)
+            {
+            
+                if ((_it.BSU.Length > 0) & !(gCategoriesWB is null))
+                {
+                    // find the entries that are linked by the same gene
+                    // SysData.DataRow[] results = LookupCategory(lMap.BSU);
+                    SysData.DataRow[] results = LookupCategory(_it.BSU);
+                    if (results.Length>0)
+                    {
+                        string catName = results[0][Properties.Settings.Default.catBSUColum].ToString();
+                        string catID = results[0][Properties.Settings.Default.catBSUColum].ToString();
+
+                        CategoryItem _lCat = new CategoryItem(catName, catID);
+                        _it.Categories.Add(_lCat);
+                        
+                    }
+
+                }                
+            }
+
+            RemoveTask(TASKS.AUGMENTING_WITH_CATEGORY_DATA);
+            return theInputData;
+
+        }
+
+
 
         /// <summary>
         /// Get the address in string format of a specified range
@@ -689,10 +743,10 @@ namespace GINtool
         /// <param name="opid"></param>
         /// <param name="lLst"></param>
         /// <returns></returns>
-        private (List<string>, List<double>) GetOperonGenesFC(/*string operon,*/ string opid, List<BsuRegulons> lLst)
+        private (List<string>, List<double>) GetOperonGenesFC(/*string operon,*/ string opid, List<BsuLinkedItems> lLst)
         {
 
-            SysData.DataRow[] lquery = gRefOperons.Select(string.Format("op_id = '{0}'", opid));
+            SysData.DataRow[] lquery = gRefOperonsWB.Select(string.Format("op_id = '{0}'", opid));
 
             List<string> _genes = new List<string>();
             List<double> _lfcs = new List<double>();
@@ -703,7 +757,7 @@ namespace GINtool
                 string lgene = row["gene"].ToString();
                 _genes.Add(lgene);
 
-                BsuRegulons result = lLst.Find(item => item.GENE == lgene);
+                BsuLinkedItems result = lLst.Find(item => item.GeneName == lgene);
                 if (result != null)
                     _lfcs.Add(result.FC);
                 else
@@ -714,10 +768,61 @@ namespace GINtool
         }
 
 
-        private SysData.DataTable AugmentTableWithGeneInfo(SysData.DataTable table, string geneBSUcolumn)
+        private List<BsuLinkedItems> AugmentWithGeneInfo(List<Excel.Range> theCells)
         {
+
+            AddTask(TASKS.AUGMENTING_WITH_REGULON_DATA);
+
+            // Copy the data from the selected cells as determined in the dialog earlier.
+            object[,] rangeBSU = theCells[2].Value2;
+            object[,] rangeFC = theCells[1].Value2;
+            object[,] rangeP = theCells[0].Value2;
+
+
+            // Initialize the list
+            List<BsuLinkedItems> lList = new List<BsuLinkedItems>();
+
+            // loop of the number of rows in rangeBSU
+
+            for (int _r = 1; _r <= rangeBSU.Length; _r++)
+            {
+                string lBSU;
+                double lFC = 0;
+                double lPvalue = 1;
+
+                lBSU = rangeBSU[_r, 1].ToString();
+
+                if (!IsErrorCell(rangeP[_r, 1]))
+                    if (!Double.TryParse(rangeP[_r, 1].ToString(), out lPvalue))
+                        lPvalue = 1;
+
+                if (!IsErrorCell(rangeFC[_r, 1]))
+                    if (!Double.TryParse(rangeFC[_r, 1].ToString(), out lFC))
+                        lFC = 0;
+
+                // create a mapping entry .. not annotated with category data (yet!)
+                BsuLinkedItems lMap = new BsuLinkedItems(lFC, lPvalue, lBSU);
+
+                //  double check if BSU has a value 
+                if ((lMap.BSU.Length > 0) & !(gGenesWB is null))
+                {
+                    // find the entries that are linked by the same gene
+                    // SysData.DataRow[] results = LookupCategory(lMap.BSU);
+                    SysData.DataRow[] results = LookupGeneInfo(lMap.BSU);
+                    if (results.Length > 0)
+                    {                        
+                        lMap.GeneName = results[0][Properties.Settings.Default.genesNameColumn].ToString();
+                        lMap.GeneDescription = results[0][Properties.Settings.Default.genesDescriptionColumn].ToString();
+                        lMap.GeneFunction = results[0][Properties.Settings.Default.genesFunctionColumn].ToString();
+                    }
+                 
+                }
+
+                lList.Add(lMap);
+            }
+
             // to be implemented (combine data with gene info table (i.e. function/description)                        
-            return null;
+            return lList;
         }
 
         /// <summary>
@@ -869,7 +974,51 @@ namespace GINtool
 
         }
 
-    
+
+        private void Fill_CategoryDropDownBoxes()
+        {
+            gApplication.EnableEvents = false;
+
+            ddCatID.Items.Clear();
+            ddCatName.Items.Clear();
+            ddCatBSU.Items.Clear();            
+
+            foreach (string s in gCategoryColNames)
+            {
+                RibbonDropDownItem ddItem1 = Factory.CreateRibbonDropDownItem();
+                ddItem1.Label = s;
+                ddCatID.Items.Add(ddItem1);
+
+                ddItem1 = Factory.CreateRibbonDropDownItem();
+                ddItem1.Label = s;
+                ddCatName.Items.Add(ddItem1);
+
+                ddItem1 = Factory.CreateRibbonDropDownItem();
+                ddItem1.Label = s;
+                ddCatBSU.Items.Add(ddItem1);
+            }
+
+            RibbonDropDownItem ddItem = GetItemByValue(ddCatID, Properties.Settings.Default.catCatIDColumn);
+            if (ddItem != null)
+                ddCatID.SelectedItem = ddItem;
+
+            ddItem = GetItemByValue(ddCatName, Properties.Settings.Default.catCatDescriptionColumn);
+            if (ddItem != null)
+                ddCatName.SelectedItem = ddItem;
+
+            ddItem = GetItemByValue(ddCatBSU, Properties.Settings.Default.catBSUColum);
+            if (ddItem != null)
+                ddCatBSU.SelectedItem = ddItem;
+
+            ddCatID.Enabled = true;
+            ddCatName.Enabled = true;
+            ddCatBSU.Enabled = true;            
+
+            gApplication.EnableEvents = true;
+
+
+        }
+
         /// <summary>
         /// Reset main variables to initial values
         /// </summary>
@@ -1073,6 +1222,7 @@ namespace GINtool
 
                 if(gCategoryFileSelected)
                 {
+                    Fill_CategoryDropDownBoxes();
                     // load comboboxes for the category file (if necessary)
                 }
 
@@ -1106,9 +1256,9 @@ namespace GINtool
             {
                 dlgTreeView dlg = new dlgTreeView(categoryView: cbUseCategories.Checked, spreadingOptions: Properties.Settings.Default.catPlot, rankingOptions: Properties.Settings.Default.regPlot);
 
-                if (gCategories != null && cbUseCategories.Checked)
+                if (gCategoriesWB != null && cbUseCategories.Checked)
                 {
-                    dlg.populateTree(gCategories);
+                    dlg.populateTree(gCategoriesWB);
                 }
                 if (gRegulonWB != null && !cbUseCategories.Checked)
                 {
@@ -1117,17 +1267,21 @@ namespace GINtool
 
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-
-                    if ((gOutput == null || gSummary == null) || gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
-                    {
-                        (gOutput, gList) = GenerateOutput();
-
-                        if (gOutput != null && gList != null)
+                    if (!UseCategoryData())
+                    { 
+                        //if ((gOutput == null || gSummary == null) || gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
+                        if ((gSummary == null) || gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
                         {
-                            UnSetFlags(UPDATE_FLAGS.TMapped);
-                            (gSummary, gCombineInfo) = CreateRegulonUsageTable(gOutput);
-                            UnSetFlags(UPDATE_FLAGS.TCombined);
-                        }
+                            //(gOutput, gList) = GenerateOutput();
+                            (gOutput, gList) = GenerateOutput();
+
+                            if (gOutput != null && gList != null)
+                            {
+                                UnSetFlags(UPDATE_FLAGS.TMapped);
+                                (gSummary, gCombineInfo) = CreateRegulonUsageTable(gOutput);
+                                UnSetFlags(UPDATE_FLAGS.TCombined);
+                            }
+                        } 
                     }
 
 
@@ -1291,7 +1445,7 @@ namespace GINtool
 
             //List<element_fc> element_Fcs = new List<element_fc>();
             element_fc element_Fcs = new element_fc();
-            SysData.DataView dataViewCat = gCategories.AsDataView();
+            SysData.DataView dataViewCat = gCategoriesWB.AsDataView();
 
 
             List<summaryInfo> _All = new List<summaryInfo>();
@@ -2054,7 +2208,7 @@ namespace GINtool
             ShowSettingPannels(toggleButton1.Checked);
             grpPlot.Visible = !toggleButton1.Checked;
             grpTable.Visible = !toggleButton1.Checked;
-            grpDta.Visible = !toggleButton1.Checked;
+            grpDta.Visible = !toggleButton1.Checked;            
         }
 
         /// <summary>
@@ -2067,6 +2221,7 @@ namespace GINtool
             grpGenesMapping.Visible = Properties.Settings.Default.genesMappingVisible & show;
             grpMap.Visible = Properties.Settings.Default.operonMappingVisible & show;
             grpUpDown.Visible = Properties.Settings.Default.operonMappingVisible & show;
+            grpColMapCategory.Visible = Properties.Settings.Default.categoryMappingsVisible & show;
             grpFC.Visible = show;
             grpCutOff.Visible = show;
             grpDirection.Visible = show;
@@ -2080,6 +2235,7 @@ namespace GINtool
             grpGenesMapping.Visible = Properties.Settings.Default.genesMappingVisible;
             grpMap.Visible = Properties.Settings.Default.operonMappingVisible;
             grpUpDown.Visible = Properties.Settings.Default.operonMappingVisible;
+            grpColMapCategory.Visible = Properties.Settings.Default.categoryMappingsVisible;
         }
 
         /// <summary>
@@ -2097,8 +2253,12 @@ namespace GINtool
             LOAD_OPERON_DATA,
             /// <value>Category is being read from file</value>
             LOAD_CATEGORY_DATA,
+            /// <value>Data is augmented with gene info</value>
+            AUGMENTING_WITH_GENES_INFO,
             /// <value>Genes are being mapped to regulons</value>
-            MAPPING_GENES_TO_REGULONS,
+            AUGMENTING_WITH_REGULON_DATA,
+            /// <value>Genes are being mapped to categories</value>
+            AUGMENTING_WITH_CATEGORY_DATA,
             /// <value>Read the selected data from the worksheet</value>
             READ_SHEET_DATA,
             /// <value>Import the the category data</value>
@@ -2119,7 +2279,10 @@ namespace GINtool
             REGULON_CHART
         };
 
-        public string[] taks_strings = new string[] { "Ready", "Load genes data","Load regulon data", "Load operon data", "Load category data", "Mapping genes to regulons", "Read sheet data", "Read sheet categorized data", "Update mapping table", "Update summary table", "Update combined table", "Update operon table", "Color cells", "Create category chart", "Create regulon chart" };
+        public string[] taks_strings = new string[] { "Ready", "Load genes data","Load regulon data", "Load operon data", "Load category data", 
+        "Augmenting with gene data", "Augmenting with with regulon data", "Augmenting with category data", "Read sheet data", "Read sheet categorized data", 
+            "Update mapping table", "Update summary table", "Update combined table", "Update operon table", "Color cells", "Create category chart", 
+            "Create regulon chart" };
 
         /// <summary>
         /// enumeration of binary flags that can be set/unset.
@@ -2269,8 +2432,11 @@ namespace GINtool
 
                 (gOutput, gList) = GenerateOutput();
 
-                if (gOutput is null || gList is null)
+                if (gList is null)
                     return;
+
+                //if (gOutput is null || gList is null)
+                //    return;
 
                 btApply.Enabled = true;
                 btPlot.Enabled = true;
@@ -2337,10 +2503,12 @@ namespace GINtool
 
         private void btnGenesFileMapping_Click(object sender, RibbonControlEventArgs e)
         {
-            if (btnGenesFileMapping.Checked & Properties.Settings.Default.operonMappingVisible)
+            if (btnGenesFileMapping.Checked)
             {
                 Properties.Settings.Default.operonMappingVisible = false;
                 cbOperonMapping.Checked = false;
+                Properties.Settings.Default.categoryMappingsVisible = false;
+                cbCategoryMapping.Checked = false;
             }
             Properties.Settings.Default.genesMappingVisible = btnGenesFileMapping.Checked;
             UpdateMappingPanels();
@@ -2349,14 +2517,29 @@ namespace GINtool
 
         private void checkBox1_Click(object sender, RibbonControlEventArgs e)
         {
-            if(Properties.Settings.Default.genesMappingVisible & cbOperonMapping.Checked)
-            {
+            if(cbOperonMapping.Checked)
+            {                
                 Properties.Settings.Default.genesMappingVisible = false;
+                Properties.Settings.Default.categoryMappingsVisible = false;
                 btnGenesFileMapping.Checked = false;
-
+                cbCategoryMapping.Checked = false;
             }
             Properties.Settings.Default.operonMappingVisible = cbOperonMapping.Checked;
 
+            UpdateMappingPanels();
+        }
+
+
+        private void cbCategoryMapping_Click(object sender, RibbonControlEventArgs e)
+        {
+            if (cbCategoryMapping.Checked)
+            {
+                Properties.Settings.Default.genesMappingVisible = false;
+                Properties.Settings.Default.operonMappingVisible = false;                
+                cbOperonMapping.Checked = false;
+                btnGenesFileMapping.Checked = false;
+            }
+            Properties.Settings.Default.categoryMappingsVisible = cbCategoryMapping.Checked;
             UpdateMappingPanels();
         }
 
@@ -2407,6 +2590,7 @@ namespace GINtool
             Properties.Settings.Default.genesDescriptionColumn = ddGenesDescription.SelectedItem.Label;
             SetFlags(UPDATE_FLAGS.ALL);
         }
+
     }
 
     /// <summary>

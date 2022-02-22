@@ -161,7 +161,7 @@ namespace GINtool
         /// </summary>
         /// <param name="suppressOutput"></param>
         /// <returns></returns>        
-        private (List<FC_BSU>, List<BsuRegulons>) GenerateOutput()
+        private (List<FC_BSU>, List<BsuLinkedItems>) GenerateOutput()
         {
 
             AddTask(TASKS.READ_SHEET_DATA);
@@ -174,7 +174,8 @@ namespace GINtool
             };
 
             // set flag is data has changed       
-            if (InputHasChanged() || gOutput == null || gList == null)
+            //if (InputHasChanged() || gOutput == null || gList == null)
+            if (InputHasChanged() || gList == null)
             {
                 gNeedsUpdate = (byte)UPDATE_FLAGS.ALL;
             }
@@ -187,45 +188,27 @@ namespace GINtool
             int nrRows = gRangeP.Rows.Count;
 
             // generate the results for outputting the data and summary
-            try
+            try            
             {
-                //if (Properties.Settings.Default.useCat)
-                //{
-                    
-                    
-                //    RemoveTask(TASKS.READ_SHEET_DATA);
-
-                //    return (null, null);
-                //}
-                //else
-                {
-                    List<BsuRegulons> lResults = QueryResultTable(theInputCells);
-                    // copy the input to a List of structures
-                    List<FC_BSU> lOutput = new List<FC_BSU>();
-
-                    // for all genes register the positive or negative regulon association or none if not defined
-                    for (int r = 0; r < nrRows; r++)
-                        for (int c = 0; c < lResults[r].REGULONS.Count; c++)
-                        {
-                            int val = 0;
-                            if (lResults[r].UP.Contains(c))
-                                val = 1;
-                            if (lResults[r].DOWN.Contains(c))
-                                val = -1;
-
-                            // augment data with regulon info
-                            lOutput.Add(new FC_BSU(lResults[r].FC, lResults[r].REGULONS[c], val, lResults[r].PVALUE, lResults[r].GENE));
-                        }
-                    
+                List<BsuLinkedItems> lResults = AugmentWithGeneInfo(theInputCells);
+                
+                if (Properties.Settings.Default.useCat)
+                {                    
+                    lResults = AugmentWithCategoryData(lResults);
                     RemoveTask(TASKS.READ_SHEET_DATA);
-
-                    return (lOutput, lResults);
+                    return (null, lResults);
                 }
-              
+                else
+                {
+                    // check the up-down data in the regulon table .. 
+                    lResults = AugmentWithRegulonData(lResults);                    
+                    RemoveTask(TASKS.READ_SHEET_DATA);
+                    return (null, lResults);
+                }              
             }
             catch
             {
-                MessageBox.Show("Are you sure the columns do not contain text?");
+                MessageBox.Show("Are you sure the columns are properly mapped?");
                 RemoveTask(TASKS.READ_SHEET_DATA);
 
                 return (null, null);
@@ -297,7 +280,7 @@ namespace GINtool
         /// <param name="aUsageTbl"></param>
         /// <param name="lLst"></param>
         /// <returns></returns>
-        private (SysData.DataTable, SysData.DataTable) CreateCombinedTable(SysData.DataTable aUsageTbl, List<BsuRegulons> lLst)
+        private (SysData.DataTable, SysData.DataTable) CreateCombinedTable(SysData.DataTable aUsageTbl, List<BsuLinkedItems> lLst)
         {
             SysData.DataTable lTable = new SysData.DataTable();
             SysData.DataTable lColorTable = new SysData.DataTable();
@@ -319,8 +302,8 @@ namespace GINtool
             int maxRegulons = 0;
             for (int i = 0; i < lLst.Count; i++)
             {
-                if (maxRegulons < lLst[i].REGULONS.Count)
-                    maxRegulons = lLst[i].REGULONS.Count;
+                if (maxRegulons < lLst[i].Regulons.Count)
+                    maxRegulons = lLst[i].Regulons.Count;
             }
 
             for (int i = 0; i < maxRegulons; i++)
@@ -347,23 +330,23 @@ namespace GINtool
                     SysData.DataRow lRow = lTable.Rows.Add();
                     lRow["FC"] = lLst[r].FC;
                     lRow["BSU"] = lLst[r].BSU;
-                    lRow["GENE"] = lLst[r].GENE;
+                    lRow["GENE"] = lLst[r].GeneName;
                     lRow["PVALUE"] = lLst[r].PVALUE;
 
 
                     double FC = lLst[r].FC;
 
-                    for (int i = 0; i < lLst[r].REGULONS.Count; i++)
+                    for (int i = 0; i < lLst[r].Regulons.Count; i++)
                     {
 
                         // check association direction 
-                        bool posAssoc = lLst[r].UP.Contains(i);
-                        bool negAssoc = lLst[r].DOWN.Contains(i);
+                        bool posAssoc = lLst[r].REGULON_UP.Contains(i);
+                        bool negAssoc = lLst[r].REGULON_DOWN.Contains(i);
                         // depending on the association in the table the cell color is red or green
 
                         int clrInt = posAssoc ? 1 : negAssoc ? -1 : 0;
 
-                        SysData.DataRow[] lHit = aUsageTbl.Select(string.Format("Regulon = '{0}'", lLst[r].REGULONS[i]));
+                        SysData.DataRow[] lHit = aUsageTbl.Select(string.Format("Regulon = '{0}'", lLst[r].Regulons[i]));
                         double nrUP = Double.Parse(lHit[0]["nr_UP"].ToString());
                         double nrDOWN = Double.Parse(lHit[0]["nr_DOWN"].ToString());
                         Double.TryParse(lHit[0]["perc_UP"].ToString(), out double percUP);
@@ -391,7 +374,7 @@ namespace GINtool
                             lVal = percDOWN.ToString("P0") + _down + percRel.ToString("P0") + "-tot";
                         }
 
-                        lRow[string.Format("Regulon_{0}", i + 1)] = lLst[r].REGULONS[i] + " " + lVal;
+                        lRow[string.Format("Regulon_{0}", i + 1)] = lLst[r].Regulons[i] + " " + lVal;
                         lColorRow[string.Format("Regulon_{0}", i + 1)] = clrInt;
                     }
                 }
@@ -419,7 +402,7 @@ namespace GINtool
         /// <param name="aUsageTbl"></param>
         /// <param name="lLst"></param>
         /// <returns></returns>
-        private SysData.DataTable CreateOperonTable(List<BsuRegulons> lLst)
+        private SysData.DataTable CreateOperonTable(List<BsuLinkedItems> lLst)
         {
 
             SysData.DataTable lTable = new SysData.DataTable();
@@ -461,7 +444,7 @@ namespace GINtool
             for (int r = 0; r < lLst.Count; r++)
             {
 
-                string geneName = lLst[r].GENE;
+                string geneName = lLst[r].GeneName;
                 //double lFC = lLst[r].FC;
                 //double lPval = lLst[r].PVALUE;
 
@@ -469,7 +452,7 @@ namespace GINtool
 
 
                 // possibly multiple operons for a single gene
-                SysData.DataRow[] lOperons = gRefOperons.Select(string.Format("gene='{0}'", geneName));
+                SysData.DataRow[] lOperons = gRefOperonsWB.Select(string.Format("gene='{0}'", geneName));
 
 
                 string operon = "";
@@ -966,7 +949,7 @@ namespace GINtool
             DataTable lView = null;
             if (Properties.Settings.Default.useCat)
             {                
-                lView = GetDistinctRecords(gCategories, catcols);
+                lView = GetDistinctRecords(gCategoriesWB, catcols);
                 //refColumn = catcols;
                 //BuildTree(dataTable, treeView1.Nodes.Add("Categories"), 1);
             }

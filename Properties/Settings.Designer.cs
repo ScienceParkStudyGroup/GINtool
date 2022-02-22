@@ -12,7 +12,7 @@ namespace GINtool.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.10.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.1.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -449,6 +449,54 @@ namespace GINtool.Properties {
             }
             set {
                 this["genesDescriptionColumn"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("locus tag")]
+        public string catBSUColum {
+            get {
+                return ((string)(this["catBSUColum"]));
+            }
+            set {
+                this["catBSUColum"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("category id")]
+        public string catCatIDColumn {
+            get {
+                return ((string)(this["catCatIDColumn"]));
+            }
+            set {
+                this["catCatIDColumn"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("description")]
+        public string catCatDescriptionColumn {
+            get {
+                return ((string)(this["catCatDescriptionColumn"]));
+            }
+            set {
+                this["catCatDescriptionColumn"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool categoryMappingsVisible {
+            get {
+                return ((bool)(this["categoryMappingsVisible"]));
+            }
+            set {
+                this["categoryMappingsVisible"] = value;
             }
         }
     }

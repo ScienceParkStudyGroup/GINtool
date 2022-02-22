@@ -32,32 +32,60 @@ namespace GINtool
             AddTask(TASKS.LOAD_CATEGORY_DATA);
 
             SysData.DataTable _tmp = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.catSheet, Properties.Settings.Default.categoryFile, 1, 1);
-            gCategories = new SysData.DataTable("Categories")
+            if (_tmp != null)
+            {
+                gCategoryColNames = new string[_tmp.Columns.Count];
+                int i = 0;
+                foreach (SysData.DataColumn col in _tmp.Columns)
+                {
+                    gCategoryColNames[i++] = col.ColumnName;
+                }
+            }
+
+
+
+            gCategoriesWB = new SysData.DataTable("Categories")
             {
                 CaseSensitive = false
             };
 
+
+
+            string IDcol = Properties.Settings.Default.catCatIDColumn;
+            string BSUcol = Properties.Settings.Default.catBSUColum;            
             // long list of columns... make cleaner later..
 
-            gCategories.Columns.Add("catid", Type.GetType("System.String"));
-            gCategories.Columns.Add("catid_short", Type.GetType("System.String"));
-            gCategories.Columns.Add("gene", Type.GetType("System.String"));
-            gCategories.Columns.Add("locus_tag", Type.GetType("System.String"));
-            gCategories.Columns.Add("cat1", Type.GetType("System.String"));
-            gCategories.Columns.Add("cat2", Type.GetType("System.String"));
-            gCategories.Columns.Add("cat3", Type.GetType("System.String"));
-            gCategories.Columns.Add("cat4", Type.GetType("System.String"));
-            gCategories.Columns.Add("cat5", Type.GetType("System.String"));
-            gCategories.Columns.Add("cat1_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("cat2_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("cat3_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("cat4_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("cat5_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("ucat1_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("ucat2_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("ucat3_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("ucat4_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("ucat5_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add(IDcol, Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("cat_short", Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add(BSUcol, Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("gene", Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("cat1", Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("cat2", Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("cat3", Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("cat4", Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("cat5", Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("cat1_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("cat2_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("cat3_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("cat4_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("cat5_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("ucat1_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("ucat2_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("ucat3_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("ucat4_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("ucat5_int", Type.GetType("System.Int32"));
+
+
+            gCategoryColNames = new string[gCategoriesWB.Columns.Count];
+            if (gCategoriesWB != null)
+            {
+                gCategoryColNames = new string[gCategoriesWB.Columns.Count];
+                int i = 0;
+                foreach (SysData.DataColumn col in gCategoriesWB.Columns)
+                {
+                    gCategoryColNames[i++] = col.ColumnName;
+                }
+            }            
 
 
             string[] lcols = new string[] { "cat1_int", "cat2_int", "cat3_int", "cat4_int", "cat5_int" };
@@ -66,14 +94,14 @@ namespace GINtool
             foreach (SysData.DataRow lRow in _tmp.Rows)
             {
                 object[] lItems = lRow.ItemArray;
-                SysData.DataRow lNewRow = gCategories.Rows.Add();
+                SysData.DataRow lNewRow = gCategoriesWB.Rows.Add();
                 for (int i = 0; i < lItems.Length; i++)
                 {
-                    lNewRow["catid"] = lItems[0];
+                    lNewRow[IDcol] = lItems[0];
                     string[] splits = lItems[0].ToString().Split(' ');
-                    lNewRow["catid_short"] = splits[splits.Count() - 1];
-                    lNewRow["Gene"] = lItems[1];
-                    lNewRow["locus_tag"] = lItems[2];
+                    lNewRow["cat_short"] = splits[splits.Count() - 1];
+                    lNewRow[BSUcol] = lItems[1];
+                    lNewRow["Gene"] = lItems[2];
                     lNewRow["cat1"] = lItems[3];
                     lNewRow["cat2"] = lItems[4];
                     lNewRow["cat3"] = lItems[5];
@@ -101,7 +129,7 @@ namespace GINtool
 
             RemoveTask(TASKS.LOAD_CATEGORY_DATA);
 
-            return gCategories.Rows.Count > 0;
+            return gCategoriesWB.Rows.Count > 0;
         }
 
 
@@ -121,36 +149,48 @@ namespace GINtool
             AddTask(TASKS.LOAD_CATEGORY_DATA);
 
             SysData.DataTable _tmp = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.catSheet, Properties.Settings.Default.categoryFile, 1, 1);
+
+
+            if (_tmp != null)
+            {
+                gCategoryColNames = new string[_tmp.Columns.Count];
+                int i = 0;
+                foreach (SysData.DataColumn col in _tmp.Columns)
+                {
+                    gCategoryColNames[i++] = col.ColumnName;
+                }
+            }
+
             DataView __tmp = _tmp.DefaultView;
             __tmp.Sort = "[category id] asc";
             _tmp = __tmp.ToTable();
 
-            gCategories = new SysData.DataTable("Categories")
+            gCategoriesWB = new SysData.DataTable("Categories")
             {
                 CaseSensitive = false
             };
 
             // long list of columns... make cleaner later..
 
-            gCategories.Columns.Add("catid", Type.GetType("System.String"));
-            gCategories.Columns.Add("category", Type.GetType("System.String"));
-            gCategories.Columns.Add("gene", Type.GetType("System.String"));
-            gCategories.Columns.Add("locus_tag", Type.GetType("System.String"));
-            gCategories.Columns.Add("cat1", Type.GetType("System.String"));
-            gCategories.Columns.Add("cat2", Type.GetType("System.String"));
-            gCategories.Columns.Add("cat3", Type.GetType("System.String"));
-            gCategories.Columns.Add("cat4", Type.GetType("System.String"));
-            gCategories.Columns.Add("cat5", Type.GetType("System.String"));
-            gCategories.Columns.Add("cat1_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("cat2_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("cat3_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("cat4_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("cat5_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("ucat1_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("ucat2_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("ucat3_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("ucat4_int", Type.GetType("System.Int32"));
-            gCategories.Columns.Add("ucat5_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("catid", Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("category", Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("gene", Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("locus_tag", Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("cat1", Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("cat2", Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("cat3", Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("cat4", Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("cat5", Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("cat1_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("cat2_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("cat3_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("cat4_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("cat5_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("ucat1_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("ucat2_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("ucat3_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("ucat4_int", Type.GetType("System.Int32"));
+            gCategoriesWB.Columns.Add("ucat5_int", Type.GetType("System.Int32"));
 
 
             string[] lcols = new string[] { "cat1_int", "cat2_int", "cat3_int", "cat4_int", "cat5_int" };
@@ -159,7 +199,7 @@ namespace GINtool
             foreach (SysData.DataRow lRow in _tmp.Rows)
             {
                 object[] lItems = lRow.ItemArray;
-                SysData.DataRow lNewRow = gCategories.Rows.Add();
+                SysData.DataRow lNewRow = gCategoriesWB.Rows.Add();
                 for (int i = 0; i < lItems.Length; i++)
                 {
                     lNewRow["catid"] = lItems[0];
@@ -196,7 +236,7 @@ namespace GINtool
 
             RemoveTask(TASKS.LOAD_CATEGORY_DATA);
 
-            return gCategories.Rows.Count > 0;
+            return gCategoriesWB.Rows.Count > 0;
         }
 
         /// <summary>
@@ -216,14 +256,14 @@ namespace GINtool
             AddTask(TASKS.LOAD_OPERON_DATA);
 
             SysData.DataTable _tmp = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.operonSheet, Properties.Settings.Default.operonFile, 1, 1);
-            gRefOperons = new SysData.DataTable("OPERONS")
+            gRefOperonsWB = new SysData.DataTable("OPERONS")
             {
                 CaseSensitive = false
             };
 
-            gRefOperons.Columns.Add("operon", Type.GetType("System.String"));
-            gRefOperons.Columns.Add("gene", Type.GetType("System.String"));
-            gRefOperons.Columns.Add("op_id", Type.GetType("System.Int32"));
+            gRefOperonsWB.Columns.Add("operon", Type.GetType("System.String"));
+            gRefOperonsWB.Columns.Add("gene", Type.GetType("System.String"));
+            gRefOperonsWB.Columns.Add("op_id", Type.GetType("System.Int32"));
 
             int _op_id = 0;
 
@@ -236,7 +276,7 @@ namespace GINtool
 
                 for (int i = 0; i < lItems.Length; i++)
                 {
-                    SysData.DataRow lNewRow = gRefOperons.Rows.Add();
+                    SysData.DataRow lNewRow = gRefOperonsWB.Rows.Add();
                     lNewRow["operon"] = lItems[0];
                     lNewRow["gene"] = lItems[i];
                     lNewRow["op_id"] = _op_id;
@@ -246,7 +286,7 @@ namespace GINtool
             }
 
             RemoveTask(TASKS.LOAD_OPERON_DATA);
-            return gRefOperons.Rows.Count > 0;
+            return gRefOperonsWB.Rows.Count > 0;
         }
 
 
@@ -307,7 +347,7 @@ namespace GINtool
                     gRegulonColNames[i++] = col.ColumnName;
                 }
                 // generate database frequency table
-                CreateTableStatistics();
+                // CreateTableStatistics();
             }
 
             RemoveTask(TASKS.LOAD_REGULON_DATA);
