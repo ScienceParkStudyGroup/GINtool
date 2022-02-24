@@ -16,12 +16,13 @@ namespace GINtool
         /// Create the distribution plot
         /// </summary>
         /// <param name="aOutput"></param>        
-        private void DistributionPlot(List<FC_BSU> aOutput)
+        // private void DistributionPlot(List<FC_BSU> aOutput)
+        private void DistributionPlot(List<BsuLinkedItems> aOutput)
         {
             gApplication.EnableEvents = false;
             gApplication.DisplayAlerts = false;
 
-            SysData.DataTable _fc_BSU_ = ReformatResults(aOutput);
+            SysData.DataTable _fc_BSU_ = CreateRegulonUsageTable(aOutput);
             SysData.DataTable _fc_BSU = GetDistinctRecords(_fc_BSU_, new string[] { "Gene", "FC" });
 
             (List<double> sFC, List<int> sIdx) = SortedFoldChanges(_fc_BSU);
@@ -42,25 +43,30 @@ namespace GINtool
         /// </summary>
         /// <param name="aOutput"></param>
         /// <param name="aSummary"></param>
-        /// <param name="cat_Elements"></param>
+        /// <param name="cat_Elements">The selected elements from the dialog</param>
         /// <param name="topTenFC"></param>
         /// <param name="topTenP"></param>
         /// <param name="outputTable"></param>
-        private void SpreadingPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements, int topTenFC = -1, int topTenP = -1, bool outputTable = false)
+        //private void SpreadingPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements, int topTenFC = -1, int topTenP = -1, bool outputTable = false)
+        private void SpreadingPlot(List<cat_elements> cat_Elements, int topTenFC = -1, int topTenP = -1, bool outputTable = false)
         {
 
             AddTask(TASKS.CATEGORY_CHART);
 
-            SysData.DataTable _fc_BSU = ReformatResults(aOutput);
+            //SysData.DataTable _fc_BSU = ReformatRegulonResults(aOutput);
+            if (gRegulonTable is null)
+                gRegulonTable = CreateRegulonUsageTable(gList);
+                
+            // SysData.DataTable _fc_BSU = ReformatRegulonResults(aOutput);
             cat_Elements = GetUniqueElements(cat_Elements);
 
             // HashSet ensures unique list
             HashSet<string> lRegulons = new HashSet<string>();
 
-            foreach (SysData.DataRow row in aSummary.Rows)
+            foreach (SysData.DataRow row in gRegulonTable.Rows)
                 lRegulons.Add(row.ItemArray[0].ToString());
 
-            SysData.DataView dataView = _fc_BSU.AsDataView();
+            SysData.DataView dataView = gRegulonTable.AsDataView();
             element_fc catPlotData;
             if (Properties.Settings.Default.useCat)
             {
@@ -99,7 +105,7 @@ namespace GINtool
         {
             AddTask(TASKS.REGULON_CHART);
 
-            SysData.DataTable _fc_BSU = ReformatResults(aOutput);
+            SysData.DataTable _fc_BSU = ReformatRegulonResults(aOutput);
 
             cat_Elements = GetUniqueElements(cat_Elements);
 

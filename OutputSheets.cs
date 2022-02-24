@@ -9,7 +9,6 @@ using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 using SysData = System.Data;
 
-
 namespace GINtool
 {
     public partial class GinRibbon
@@ -89,7 +88,7 @@ namespace GINtool
         /// </summary>
         /// <param name="aList"></param>
         /// <returns></returns>
-        private SysData.DataTable ReformatResults(List<FC_BSU> aList)
+        private SysData.DataTable ReformatRegulonResults(List<FC_BSU> aList)
         {
             // find unique regulons
 
@@ -429,7 +428,7 @@ namespace GINtool
 
             string lastColumn = lTable.Columns[lTable.Columns.Count - 1].ColumnName;
             lastColumn = lastColumn.Replace("col_", "");
-            int maxreg = Int16.Parse(lastColumn);
+            int maxreg = ClassExtensions.ParseInt(lastColumn, 0);
 
             for (int i = 0; i < maxreg; i++)
                 lNewSheet.Cells[1, i + 6] = string.Format("Regulon_{0}", i + 1);

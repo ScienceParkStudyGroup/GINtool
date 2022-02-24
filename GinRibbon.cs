@@ -79,7 +79,7 @@ namespace GINtool
         List<FC_BSU> gOutput = null;
         SysData.DataTable gSummary = null;
         List<BsuLinkedItems> gList = null;
-        SysData.DataTable gCombineInfo = null;
+        SysData.DataTable gRegulonTable = null;
         SysData.DataTable gBestTable = null;
 
 
@@ -160,7 +160,7 @@ namespace GINtool
         /// <param name="value"></param>
         /// <returns></returns>
         private SysData.DataRow[] LookupCategory(string value)
-        {
+        {         
             // needs to be replaced by genes table entry
             SysData.DataRow[] filteredRows = gCategoriesWB.Select(string.Format("[{0}] LIKE '%{1}%'", Properties.Settings.Default.catBSUColum, value));
 
@@ -424,7 +424,11 @@ namespace GINtool
         {
 
             AddTask(TASKS.AUGMENTING_WITH_REGULON_DATA);
-       
+
+            // create a view and sort it to improve querying performance..
+            DataView _regulonView = new DataView(gRegulonWB);
+            _regulonView.Sort = Properties.Settings.Default.referenceBSU;
+
             // loop of the number of rows in rangeBSU
 
             foreach (BsuLinkedItems _it in theInputData)
@@ -445,13 +449,17 @@ namespace GINtool
 
                         if (item.Length > 0)
                         {
-                            _it.Regulons.Add(new RegulonItem(item, direction));
-
                             if (gUpItems.Contains(direction))
+                            {
                                 _it.REGULON_UP.Add(r);
+                                _it.Regulons.Add(new RegulonItem(item, "UP"));
+                            }
 
                             if (gDownItems.Contains(direction))
+                            {
+                                _it.Regulons.Add(new RegulonItem(item, "DOWN"));
                                 _it.REGULON_DOWN.Add(r);
+                            }
                         }
 
                     }
@@ -472,7 +480,10 @@ namespace GINtool
         {
 
             AddTask(TASKS.AUGMENTING_WITH_CATEGORY_DATA);
-                  
+
+            DataView _catView = new DataView(gCategoriesWB);
+            _catView.Sort = Properties.Settings.Default.catBSUColum;
+
             // loop of the number of rows in rangeBSU
 
             foreach (BsuLinkedItems _it in theInputData)
@@ -771,7 +782,7 @@ namespace GINtool
         private List<BsuLinkedItems> AugmentWithGeneInfo(List<Excel.Range> theCells)
         {
 
-            AddTask(TASKS.AUGMENTING_WITH_REGULON_DATA);
+            AddTask(TASKS.AUGMENTING_WITH_GENES_INFO);
 
             // Copy the data from the selected cells as determined in the dialog earlier.
             object[,] rangeBSU = theCells[2].Value2;
@@ -783,6 +794,20 @@ namespace GINtool
             List<BsuLinkedItems> lList = new List<BsuLinkedItems>();
 
             // loop of the number of rows in rangeBSU
+            //SysData.DataTable _BSUTable = new SysData.DataTable();
+
+            //SysData.DataColumn BSUColumn = new SysData.DataColumn("ID", Type.GetType("System.String"));
+            //SysData.DataColumn FCColumn = new DataColumn("FC", Type.GetType("System.Double"));
+            //SysData.DataColumn PvalColumn = new DataColumn("PValue", Type.GetType("System.Double"));            
+            //SysData.DataColumn descriptionColumn = new SysData.DataColumn("ID", Type.GetType("System.String"));
+            //SysData.DataColumn functionColumn = new SysData.DataColumn("ID", Type.GetType("System.String"));
+            
+            //_BSUTable.Columns.Add(BSUColumn);
+            //_BSUTable.Columns.Add(FCColumn);
+            //_BSUTable.Columns.Add(PvalColumn);
+            //_BSUTable.Columns.Add(descriptionColumn);
+            //_BSUTable.Columns.Add(functionColumn);
+
 
             for (int _r = 1; _r <= rangeBSU.Length; _r++)
             {
@@ -803,6 +828,9 @@ namespace GINtool
                 // create a mapping entry .. not annotated with category data (yet!)
                 BsuLinkedItems lMap = new BsuLinkedItems(lFC, lPvalue, lBSU);
 
+                //DataRow dataRow = _BSUTable.Rows.Add();
+
+
                 //  double check if BSU has a value 
                 if ((lMap.BSU.Length > 0) & !(gGenesWB is null))
                 {
@@ -810,16 +838,30 @@ namespace GINtool
                     // SysData.DataRow[] results = LookupCategory(lMap.BSU);
                     SysData.DataRow[] results = LookupGeneInfo(lMap.BSU);
                     if (results.Length > 0)
-                    {                        
+                    {
                         lMap.GeneName = results[0][Properties.Settings.Default.genesNameColumn].ToString();
                         lMap.GeneDescription = results[0][Properties.Settings.Default.genesDescriptionColumn].ToString();
                         lMap.GeneFunction = results[0][Properties.Settings.Default.genesFunctionColumn].ToString();
                     }
-                 
+
+                    //dataRow["ID"] = lMap.BSU;
+                    //dataRow["FC"] = lMap.FC;
+                    //dataRow["PValue"] = lMap.PVALUE;                    
                 }
+
+
+
+
 
                 lList.Add(lMap);
             }
+
+            //if (!(gGenesWB is null))
+            //{
+               
+            //}
+
+            RemoveTask(TASKS.AUGMENTING_WITH_GENES_INFO);
 
             // to be implemented (combine data with gene info table (i.e. function/description)                        
             return lList;
@@ -1270,26 +1312,26 @@ namespace GINtool
                     if (!UseCategoryData())
                     { 
                         //if ((gOutput == null || gSummary == null) || gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
-                        if ((gSummary == null) || gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
-                        {
-                            //(gOutput, gList) = GenerateOutput();
-                            (gOutput, gList) = GenerateOutput();
+                        if ((gRegulonTable == null) || gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
+                        {                            
+                            //gList = ReadDataAndAugment();
 
-                            if (gOutput != null && gList != null)
-                            {
-                                UnSetFlags(UPDATE_FLAGS.TMapped);
-                                (gSummary, gCombineInfo) = CreateRegulonUsageTable(gOutput);
-                                UnSetFlags(UPDATE_FLAGS.TCombined);
-                            }
+                            //if (gList != null)
+                            //{
+                                //UnSetFlags(UPDATE_FLAGS.TMapped);
+                                gRegulonTable = CreateRegulonUsageTable(gList);
+                                //UnSetFlags(UPDATE_FLAGS.TCombined);
+                            //}
                         } 
                     }
 
 
+                    //if ((gOutput != null && gSummary != null && dlg.GetSelection().Count() > 0))
                     if ((gOutput != null && gSummary != null && dlg.GetSelection().Count() > 0))
                     {
                         if (Properties.Settings.Default.catPlot)
                         {
-                            SpreadingPlot(gOutput, gSummary, dlg.GetSelection(), topTenFC: dlg.getTopFC(), topTenP: dlg.getTopP(), outputTable: dlg.selectTableOutput());
+                            SpreadingPlot(dlg.GetSelection(), topTenFC: dlg.getTopFC(), topTenP: dlg.getTopP(), outputTable: dlg.selectTableOutput());
 
                         }
 
@@ -1305,20 +1347,24 @@ namespace GINtool
 
             if (Properties.Settings.Default.distPlot)
             {
-                if (gOutput == null || gSummary == null || gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
+                //if (gOutput == null || gSummary == null || gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
+                if (gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
                 {
-                    (gOutput, gList) = GenerateOutput();
-                    if (gOutput != null && gList != null)
+                    //(gOutput, gList) = ReadDataAndAugment();                    
+                    gList = ReadDataAndAugment();
+                    //if (gOutput != null && gList != null)
+                    if (gRegulonTable != null)
                     {
                         UnSetFlags(UPDATE_FLAGS.TMapped);
-                        (gSummary, gCombineInfo) = CreateRegulonUsageTable(gOutput);
+                        //(gSummary, gRegulonTable) = CreateRegulonUsageTable(gOutput);
+                        gRegulonTable = CreateRegulonUsageTable(gList);
                         UnSetFlags(UPDATE_FLAGS.TCombined);
                     }
                 }
 
-                if (gOutput != null)
+                if (gList != null)
                 {
-                    DistributionPlot(gOutput);
+                    DistributionPlot(gList);
                 }
             }
         }
@@ -1350,22 +1396,25 @@ namespace GINtool
 
             // combined info should contain best table info, gSummary is best table .. 
 
-            if ((gSummary == null && gCombineInfo == null) || NeedsUpdate(UPDATE_FLAGS.TSummary))
+            //if ((gSummary == null && gRegulonTable == null) || NeedsUpdate(UPDATE_FLAGS.TSummary))
+            if ((gRegulonTable == null) || NeedsUpdate(UPDATE_FLAGS.TSummary))
             {
                 
-                (gSummary, gCombineInfo) = CreateRegulonUsageTable(gOutput);
+                //(gSummary, gRegulonTable) = CreateRegulonUsageTable(gOutput);
+                gRegulonTable = CreateRegulonUsageTable(gList);
                 UnSetFlags(UPDATE_FLAGS.TSummary);
             }
 
-            if (gSummary != null && Properties.Settings.Default.tblSummary)
-                CreateSummarySheet(gSummary);
+            //if (gSummary != null && Properties.Settings.Default.tblSummary)
+            //    CreateSummarySheet(gSummary);
 
 
-            CreateBestDataTable(gOutput, gSummary, null);
+            //CreateBestDataTable(gList, gSummary, null);
+            CreateBestDataTable(gList, null);
 
             if (Properties.Settings.Default.tblCombine) // can combine table/sheet because it's a quick routine
             {
-                (SysData.DataTable lCombined, SysData.DataTable lClrTable) = CreateCombinedTable(gCombineInfo, gList);
+                (SysData.DataTable lCombined, SysData.DataTable lClrTable) = CreateCombinedTable(gRegulonTable, gList);
                 CreateCombinedSheet(lCombined, lClrTable);
                 UnSetFlags(UPDATE_FLAGS.TCombined);
 
@@ -2430,7 +2479,8 @@ namespace GINtool
                 gRangeFC = sd.getFC();
                 gRangeP = sd.getP();
 
-                (gOutput, gList) = GenerateOutput();
+                //(gOutput, gList) = ReadDataAndAugment();
+                 gList = ReadDataAndAugment();
 
                 if (gList is null)
                     return;

@@ -10,6 +10,15 @@ namespace GINtool
 {
     internal static class ClassExtensions
     {
+        public static int ParseInt(string str, int defaultVal= 0)
+        {
+            int _val;  bool _res = int.TryParse(str,out _val);
+            if (_res)
+                return _val;
+            else
+                return defaultVal;
+        }
+
         public static DateTime Tomorrow(this DateTime date)
         {
             return date.AddDays(1);

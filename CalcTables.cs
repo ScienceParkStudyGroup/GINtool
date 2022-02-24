@@ -156,12 +156,22 @@ namespace GINtool
             }
         }
 
+        private SysData.DataTable MappedCategoryTable()
+        {
+            return null;
+        }
+
+        private SysData.DataTable MappedOperonTable()
+        {
+            return null;
+        }
+
         /// <summary>
         /// The main routine after mouse selection update. It reads in the data from the excel sheet to return Raw input in a list of BSU structures and a List of genes and their associated regulons 
         /// </summary>
         /// <param name="suppressOutput"></param>
         /// <returns></returns>        
-        private (List<FC_BSU>, List<BsuLinkedItems>) GenerateOutput()
+        private List<BsuLinkedItems> ReadDataAndAugment()
         {
 
             AddTask(TASKS.READ_SHEET_DATA);
@@ -182,7 +192,7 @@ namespace GINtool
             else
             {
                 RemoveTask(TASKS.READ_SHEET_DATA);
-                return (gOutput, gList);
+                return gList;
             }
 
             int nrRows = gRangeP.Rows.Count;
@@ -192,26 +202,20 @@ namespace GINtool
             {
                 List<BsuLinkedItems> lResults = AugmentWithGeneInfo(theInputCells);
                 
-                if (Properties.Settings.Default.useCat)
-                {                    
-                    lResults = AugmentWithCategoryData(lResults);
-                    RemoveTask(TASKS.READ_SHEET_DATA);
-                    return (null, lResults);
-                }
-                else
-                {
-                    // check the up-down data in the regulon table .. 
+                if (gCategoryFileSelected)
+                    lResults = AugmentWithCategoryData(lResults);                    
+                if (gRegulonFileSelected)    
                     lResults = AugmentWithRegulonData(lResults);                    
-                    RemoveTask(TASKS.READ_SHEET_DATA);
-                    return (null, lResults);
-                }              
+                                
+                RemoveTask(TASKS.READ_SHEET_DATA);
+                return lResults;
             }
             catch
             {
                 MessageBox.Show("Are you sure the columns are properly mapped?");
                 RemoveTask(TASKS.READ_SHEET_DATA);
 
-                return (null, null);
+                return null;
             }
 
         }
@@ -551,238 +555,282 @@ namespace GINtool
         /// </summary>
         /// <param name="aList"></param>
         /// <returns></returns>
-        private (SysData.DataTable, SysData.DataTable) CreateRegulonUsageTable(List<FC_BSU> aList)
+        private SysData.DataTable CreateRegulonUsageTable(List<BsuLinkedItems> aList)
         {
+
+
+            SysData.DataTable lTable = new SysData.DataTable("MappedRegulons");
+            SysData.DataColumn regColumn = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
+            SysData.DataColumn geneColumn = new SysData.DataColumn("Gene", Type.GetType("System.String"));
+            
+            /* Need to check if we do need all of them */
+            SysData.DataColumn pvalColumn = new SysData.DataColumn("Pvalue", Type.GetType("System.Double"));
+            SysData.DataColumn fcColumn = new SysData.DataColumn("FC", Type.GetType("System.Double"));
+            SysData.DataColumn dirColumn = new SysData.DataColumn("DIR", Type.GetType("System.Int32"));
+            SysData.DataColumn functionColumn = new SysData.DataColumn("GeneFunction", Type.GetType("System.String"));
+            SysData.DataColumn decsColumn = new SysData.DataColumn("GeneDescription", Type.GetType("System.String"));
+
+
+
+            lTable.Columns.Add(regColumn);
+            lTable.Columns.Add(geneColumn);
+            lTable.Columns.Add(fcColumn);
+            lTable.Columns.Add(pvalColumn);
+            lTable.Columns.Add(dirColumn);
+            lTable.Columns.Add(functionColumn);
+            lTable.Columns.Add(decsColumn);
+
+            foreach (BsuLinkedItems _it in aList)
             {
-                SysData.DataTable _fc_BSU = ReformatResults(aList);
+                List<RegulonItem> _regulons = _it.Regulons;
+                foreach (RegulonItem __it in _regulons)
+                {
+                    SysData.DataRow lRow = lTable.Rows.Add();
+                    lRow["Regulon"] = __it.Name;
+                    lRow["DIR"] = __it.Direction == "UP" ? 1 : 0;
+                    lRow["Gene"] = _it.GeneName;
+                    lRow["FC"] = _it.FC;
+                    lRow["GeneFunction"] = _it.GeneFunction;
+                    lRow["GeneDescription"] = _it.GeneDescription;
+                }
+                
+            }
 
-                //SysData.DataTable lTable = new SysData.DataTable();
-                SysData.DataTable lTableCombine = new SysData.DataTable(); // table for combined summary
-
-                string _down = "\u2193";
-                string _up = "\u2191";
-
-                double lFClow = Properties.Settings.Default.fcLOW;
-                double lFCmid = Properties.Settings.Default.fcMID;
-                double lFChigh = Properties.Settings.Default.fcHIGH;
-
-                // find number of unique regulons
-                HashSet<string> lUnique = new HashSet<string>();
-
-                for (int r = 0; r < aList.Count; r++)
-                    lUnique.Add(aList[r].BSU);
-
-                //// add the columns per defined FC range
-                //SysData.DataColumn col = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
-                //lTable.Columns.Add(col);
+                            
+            return lTable;
 
 
-                //col = new SysData.DataColumn("Count", Type.GetType("System.Int16"));
-                //lTable.Columns.Add(col);
-                //col = new SysData.DataColumn("CountData", Type.GetType("System.Int16"));
-                //lTable.Columns.Add(col);
+
+            //{
+            //    SysData.DataTable _fc_BSU = ReformatRegulonResults(aList);
+
+            //    //SysData.DataTable lTable = new SysData.DataTable();
+            //    SysData.DataTable lTableCombine = new SysData.DataTable(); // table for combined summary
+
+            //    string _down = "\u2193";
+            //    string _up = "\u2191";
+
+            //    double lFClow = Properties.Settings.Default.fcLOW;
+            //    double lFCmid = Properties.Settings.Default.fcMID;
+            //    double lFChigh = Properties.Settings.Default.fcHIGH;
+
+            //    // find number of unique regulons
+            //    HashSet<string> lUnique = new HashSet<string>();
+
+            //    for (int r = 0; r < aList.Count; r++)
+            //        lUnique.Add(aList[r].BSU);
+
+            //    //// add the columns per defined FC range
+            //    //SysData.DataColumn col = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
+            //    //lTable.Columns.Add(col);
 
 
-                //for (int i = 3; i >= 0; i--)
-                //{
-                //    col = new SysData.DataColumn(string.Format("up{0}", i + 1), Type.GetType("System.Double"));
-                //    lTable.Columns.Add(col);
-                //}
-
-                //for (int i = 0; i < 4; i++)
-                //{
-                //    col = new SysData.DataColumn(string.Format("down{0}", i + 1), Type.GetType("System.Double"));
-                //    lTable.Columns.Add(col);
-                //}
-
-                //col = new SysData.DataColumn("totrel", Type.GetType("System.Int16"));
-                //lTable.Columns.Add(col);
-
-                //col = new SysData.DataColumn("percrel", Type.GetType("System.Double"));
-                //lTable.Columns.Add(col);
+            //    //col = new SysData.DataColumn("Count", Type.GetType("System.Int16"));
+            //    //lTable.Columns.Add(col);
+            //    //col = new SysData.DataColumn("CountData", Type.GetType("System.Int16"));
+            //    //lTable.Columns.Add(col);
 
 
-                //for (int i = 3; i >= 0; i--)
-                //{
-                //    col = new SysData.DataColumn(string.Format("perc_up{0}", i + 1), Type.GetType("System.Double"));
-                //    lTable.Columns.Add(col);
-                //}
+            //    //for (int i = 3; i >= 0; i--)
+            //    //{
+            //    //    col = new SysData.DataColumn(string.Format("up{0}", i + 1), Type.GetType("System.Double"));
+            //    //    lTable.Columns.Add(col);
+            //    //}
 
-                //for (int i = 0; i < 4; i++)
-                //{
-                //    col = new SysData.DataColumn(string.Format("perc_down{0}", i + 1), Type.GetType("System.Double"));
-                //    lTable.Columns.Add(col);
-                //}
+            //    //for (int i = 0; i < 4; i++)
+            //    //{
+            //    //    col = new SysData.DataColumn(string.Format("down{0}", i + 1), Type.GetType("System.Double"));
+            //    //    lTable.Columns.Add(col);
+            //    //}
 
+            //    //col = new SysData.DataColumn("totrel", Type.GetType("System.Int16"));
+            //    //lTable.Columns.Add(col);
 
-                //// if activation
-                //col = new SysData.DataColumn("perc_UP", Type.GetType("System.Double"));
-                //lTable.Columns.Add(col);
-
-
-                //col = new SysData.DataColumn("activated", Type.GetType("System.String"));
-                //lTable.Columns.Add(col);
-
-                //// if repression
-
-                //col = new SysData.DataColumn("perc_DOWN", Type.GetType("System.Double"));
-                //lTable.Columns.Add(col);
+            //    //col = new SysData.DataColumn("percrel", Type.GetType("System.Double"));
+            //    //lTable.Columns.Add(col);
 
 
-                //col = new SysData.DataColumn("repressed", Type.GetType("System.String"));
-                //lTable.Columns.Add(col);
+            //    //for (int i = 3; i >= 0; i--)
+            //    //{
+            //    //    col = new SysData.DataColumn(string.Format("perc_up{0}", i + 1), Type.GetType("System.Double"));
+            //    //    lTable.Columns.Add(col);
+            //    //}
 
-                //if (gOperonOutput)
-                //{
-                //    col = new SysData.DataColumn("operon", Type.GetType("System.String"));
-                //    lTable.Columns.Add(col);
-                //}
+            //    //for (int i = 0; i < 4; i++)
+            //    //{
+            //    //    col = new SysData.DataColumn(string.Format("perc_down{0}", i + 1), Type.GetType("System.Double"));
+            //    //    lTable.Columns.Add(col);
+            //    //}
 
 
-                /* define the combined table */
+            //    //// if activation
+            //    //col = new SysData.DataColumn("perc_UP", Type.GetType("System.Double"));
+            //    //lTable.Columns.Add(col);
 
-                SysData.DataColumn col = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
-                lTableCombine.Columns.Add(col);
+
+            //    //col = new SysData.DataColumn("activated", Type.GetType("System.String"));
+            //    //lTable.Columns.Add(col);
+
+            //    //// if repression
+
+            //    //col = new SysData.DataColumn("perc_DOWN", Type.GetType("System.Double"));
+            //    //lTable.Columns.Add(col);
+
+
+            //    //col = new SysData.DataColumn("repressed", Type.GetType("System.String"));
+            //    //lTable.Columns.Add(col);
+
+            //    //if (gOperonOutput)
+            //    //{
+            //    //    col = new SysData.DataColumn("operon", Type.GetType("System.String"));
+            //    //    lTable.Columns.Add(col);
+            //    //}
+
+
+            //    /* define the combined table */
+
+            //    SysData.DataColumn col = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
+            //    lTableCombine.Columns.Add(col);
 
                 
-                col = new SysData.DataColumn("totrelperc", Type.GetType("System.Double"));
-                lTableCombine.Columns.Add(col);
+            //    col = new SysData.DataColumn("totrelperc", Type.GetType("System.Double"));
+            //    lTableCombine.Columns.Add(col);
 
-                col = new SysData.DataColumn("perc_DOWN", Type.GetType("System.Double"));
-                lTableCombine.Columns.Add(col);
-                col = new SysData.DataColumn("perc_UP", Type.GetType("System.Double"));
-                lTableCombine.Columns.Add(col);
-
-
-                col = new SysData.DataColumn("nr_DOWN", Type.GetType("System.Int16"));
-                lTableCombine.Columns.Add(col);
-                col = new SysData.DataColumn("nr_UP", Type.GetType("System.Int16"));
-                lTableCombine.Columns.Add(col);
+            //    col = new SysData.DataColumn("perc_DOWN", Type.GetType("System.Double"));
+            //    lTableCombine.Columns.Add(col);
+            //    col = new SysData.DataColumn("perc_UP", Type.GetType("System.Double"));
+            //    lTableCombine.Columns.Add(col);
 
 
-
-                // file the table
-                foreach (string reg in lUnique)
-                {
-                    int up1 = 0;
-                    int up2 = 0;
-                    int up3 = 0;
-                    int up4 = 0;
-                    int down1 = 0;
-                    int down2 = 0;
-                    int down3 = 0;
-                    int down4 = 0;
-
-                    // lookup regulon in global statistic table
-                    SysData.DataRow[] _tmp2 = gRefStats.Select(string.Format("Regulon='{0}'", reg));
-
-                    // calculate usage statistics in dataset
-                    SysData.DataRow[] _tmp = _fc_BSU.Select(string.Format("Regulon='{0}'", reg));
-
-                    (int repressedUP, int activatedUP, int repressedDOWN, int activatedDOWN, int nrTOT) = CalculateFPRatio(_tmp);
-
-                    // up1-up4, down1-down4 contain the observed regulations of the genes with a specific fc
-
-                    for (int _r = 0; _r < _tmp.Length; _r++)
-                    {
-                        double fc = (double)_tmp[_r]["FC"];
-                        if (fc > 0 & fc <= lFClow)
-                            up1 += 1;
-                        if (fc > lFClow & fc <= lFCmid)
-                            up2 += 1;
-                        if (fc > lFCmid & fc <= lFChigh)
-                            up3 += 1;
-                        if (fc > lFChigh)
-                            up4 += 1;
-
-                        if (fc < 0 & fc >= -lFClow)
-                            down1 += 1;
-                        if (fc < -lFClow & fc >= -lFCmid)
-                            down2 += 1;
-                        if (fc < -lFCmid & fc >= -lFChigh)
-                            down3 += 1;
-                        if (fc < -lFChigh)
-                            down4 += 1;
-
-                    }
-
-                    // add a new row to the main table
-
-                    //SysData.DataRow lNewRow = lTable.Rows.Add();
-
-                    //lNewRow["CountData"] = _tmp.Length;
-                    //int _lcount = Int16.Parse(_tmp2[0]["Count"].ToString());
-
-                    //lNewRow["Count"] = _lcount;
+            //    col = new SysData.DataColumn("nr_DOWN", Type.GetType("System.Int16"));
+            //    lTableCombine.Columns.Add(col);
+            //    col = new SysData.DataColumn("nr_UP", Type.GetType("System.Int16"));
+            //    lTableCombine.Columns.Add(col);
 
 
-                    //lNewRow["Regulon"] = reg;
-                    //lNewRow["down1"] = down1;
-                    //lNewRow["down2"] = down2;
-                    //lNewRow["down3"] = down3;
-                    //lNewRow["down4"] = down4;
-                    //lNewRow["up1"] = up1;
-                    //lNewRow["up2"] = up2;
-                    //lNewRow["up3"] = up3;
-                    //lNewRow["up4"] = up4;
 
-                    //lNewRow["perc_up1"] = (double)up1 / (double)_tmp.Length;
-                    //lNewRow["perc_up2"] = (double)up2 / (double)_tmp.Length;
-                    //lNewRow["perc_up3"] = (double)up3 / (double)_tmp.Length;
-                    //lNewRow["perc_up4"] = (double)up4 / (double)_tmp.Length;
-                    //lNewRow["perc_down1"] = (double)down1 / (double)_tmp.Length;
-                    //lNewRow["perc_down2"] = (double)down2 / (double)_tmp.Length;
-                    //lNewRow["perc_down3"] = (double)down3 / (double)_tmp.Length;
-                    //lNewRow["perc_down4"] = (double)down4 / (double)_tmp.Length;
+            //    // file the table
+            //    foreach (string reg in lUnique)
+            //    {
+            //        int up1 = 0;
+            //        int up2 = 0;
+            //        int up3 = 0;
+            //        int up4 = 0;
+            //        int down1 = 0;
+            //        int down2 = 0;
+            //        int down3 = 0;
+            //        int down4 = 0;
 
-                    //// skip up1 and down1 .. they do not fall in the relevant class
-                    //lNewRow["totrel"] = up2 + up3 + up4 + down2 + down3 + down4; // nrTOT;
-                    //lNewRow["percrel"] = (double)(up2 + up3 + up4 + down2 + down3 + down4) / (double)_lcount; // nrTOT;
+            //        // lookup regulon in global statistic table
+            //        SysData.DataRow[] _tmp2 = gRefStats.Select(string.Format("Regulon='{0}'", reg));
 
-                    //// nrUP and nrDOWN contain the counts of those genes that were defined as up or down regulated that had a 'significant' fc.
-                    //// this was, false positive can be identified
-                    //if (nrTOT > 0)
-                    //{
-                    //    lNewRow["perc_DOWN"] = (double)(repressedDOWN + activatedDOWN) / (double)(nrTOT);
-                    //    lNewRow["perc_UP"] = (double)(repressedUP + activatedUP) / (double)(nrTOT);
-                    //}
+            //        // calculate usage statistics in dataset
+            //        SysData.DataRow[] _tmp = _fc_BSU.Select(string.Format("Regulon='{0}'", reg));
 
-                    //lNewRow["activated"] = repressedUP.ToString() + _down + activatedUP.ToString() + _up;
-                    //lNewRow["repressed"] = activatedDOWN.ToString() + _down + repressedDOWN.ToString() + _up;
+            //        (int repressedUP, int activatedUP, int repressedDOWN, int activatedDOWN, int nrTOT) = CalculateFPRatio(_tmp);
 
-                    // add a new row to the combined table
+            //        // up1-up4, down1-down4 contain the observed regulations of the genes with a specific fc
 
-                    SysData.DataRow lNewRow = lTableCombine.Rows.Add();
+            //        for (int _r = 0; _r < _tmp.Length; _r++)
+            //        {
+            //            double fc = (double)_tmp[_r]["FC"];
+            //            if (fc > 0 & fc <= lFClow)
+            //                up1 += 1;
+            //            if (fc > lFClow & fc <= lFCmid)
+            //                up2 += 1;
+            //            if (fc > lFCmid & fc <= lFChigh)
+            //                up3 += 1;
+            //            if (fc > lFChigh)
+            //                up4 += 1;
 
-                    // skip the up1 and down1 values, they don't make the cut.
-                    double lRat = 0;
-                    if (int.TryParse(_tmp2[0]["Count"].ToString(), out int totcount))
-                    {
-                        int totrel = up2 + up3 + up4 + down2 + down3 + down4;
-                        lRat = (double)totrel / (double)totcount;
+            //            if (fc < 0 & fc >= -lFClow)
+            //                down1 += 1;
+            //            if (fc < -lFClow & fc >= -lFCmid)
+            //                down2 += 1;
+            //            if (fc < -lFCmid & fc >= -lFChigh)
+            //                down3 += 1;
+            //            if (fc < -lFChigh)
+            //                down4 += 1;
 
-                    }
+            //        }
 
-                    lNewRow["totrelperc"] = lRat;
-                    lNewRow["Regulon"] = reg;
+            //        // add a new row to the main table
 
-                    if (nrTOT > 0)
-                    {
-                        lNewRow["perc_DOWN"] = (double)(repressedDOWN + activatedDOWN) / (double)(nrTOT);
-                        lNewRow["perc_UP"] = (double)(repressedUP + activatedUP) / (double)(nrTOT);
-                    }
+            //        //SysData.DataRow lNewRow = lTable.Rows.Add();
 
-                    lNewRow["nr_DOWN"] = repressedDOWN + activatedDOWN;
-                    lNewRow["nr_UP"] = repressedUP + activatedUP;
+            //        //lNewRow["CountData"] = _tmp.Length;
+            //        //int _lcount = Int16.Parse(_tmp2[0]["Count"].ToString());
 
-                }
+            //        //lNewRow["Count"] = _lcount;
 
-                //SysData.DataView dv = lTable.DefaultView;
-                //dv.Sort = "totrel desc";
 
-                //return (dv.ToTable(), lTableCombine);
-                return (null, lTableCombine);
-            }
+            //        //lNewRow["Regulon"] = reg;
+            //        //lNewRow["down1"] = down1;
+            //        //lNewRow["down2"] = down2;
+            //        //lNewRow["down3"] = down3;
+            //        //lNewRow["down4"] = down4;
+            //        //lNewRow["up1"] = up1;
+            //        //lNewRow["up2"] = up2;
+            //        //lNewRow["up3"] = up3;
+            //        //lNewRow["up4"] = up4;
+
+            //        //lNewRow["perc_up1"] = (double)up1 / (double)_tmp.Length;
+            //        //lNewRow["perc_up2"] = (double)up2 / (double)_tmp.Length;
+            //        //lNewRow["perc_up3"] = (double)up3 / (double)_tmp.Length;
+            //        //lNewRow["perc_up4"] = (double)up4 / (double)_tmp.Length;
+            //        //lNewRow["perc_down1"] = (double)down1 / (double)_tmp.Length;
+            //        //lNewRow["perc_down2"] = (double)down2 / (double)_tmp.Length;
+            //        //lNewRow["perc_down3"] = (double)down3 / (double)_tmp.Length;
+            //        //lNewRow["perc_down4"] = (double)down4 / (double)_tmp.Length;
+
+            //        //// skip up1 and down1 .. they do not fall in the relevant class
+            //        //lNewRow["totrel"] = up2 + up3 + up4 + down2 + down3 + down4; // nrTOT;
+            //        //lNewRow["percrel"] = (double)(up2 + up3 + up4 + down2 + down3 + down4) / (double)_lcount; // nrTOT;
+
+            //        //// nrUP and nrDOWN contain the counts of those genes that were defined as up or down regulated that had a 'significant' fc.
+            //        //// this was, false positive can be identified
+            //        //if (nrTOT > 0)
+            //        //{
+            //        //    lNewRow["perc_DOWN"] = (double)(repressedDOWN + activatedDOWN) / (double)(nrTOT);
+            //        //    lNewRow["perc_UP"] = (double)(repressedUP + activatedUP) / (double)(nrTOT);
+            //        //}
+
+            //        //lNewRow["activated"] = repressedUP.ToString() + _down + activatedUP.ToString() + _up;
+            //        //lNewRow["repressed"] = activatedDOWN.ToString() + _down + repressedDOWN.ToString() + _up;
+
+            //        // add a new row to the combined table
+
+            //        SysData.DataRow lNewRow = lTableCombine.Rows.Add();
+
+            //        // skip the up1 and down1 values, they don't make the cut.
+            //        double lRat = 0;
+            //        if (int.TryParse(_tmp2[0]["Count"].ToString(), out int totcount))
+            //        {
+            //            int totrel = up2 + up3 + up4 + down2 + down3 + down4;
+            //            lRat = (double)totrel / (double)totcount;
+
+            //        }
+
+            //        lNewRow["totrelperc"] = lRat;
+            //        lNewRow["Regulon"] = reg;
+
+            //        if (nrTOT > 0)
+            //        {
+            //            lNewRow["perc_DOWN"] = (double)(repressedDOWN + activatedDOWN) / (double)(nrTOT);
+            //            lNewRow["perc_UP"] = (double)(repressedUP + activatedUP) / (double)(nrTOT);
+            //        }
+
+            //        lNewRow["nr_DOWN"] = repressedDOWN + activatedDOWN;
+            //        lNewRow["nr_UP"] = repressedUP + activatedUP;
+
+            //    }
+
+            //    //SysData.DataView dv = lTable.DefaultView;
+            //    //dv.Sort = "totrel desc";
+
+            //    //return (dv.ToTable(), lTableCombine);
+            //    return (null, lTableCombine);
+            //}
         }
 
 
@@ -939,9 +987,9 @@ namespace GINtool
         }
 
 
-        private void CreateBestDataTable(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements)
+        private void CreateBestDataTable(List<BsuLinkedItems> aOutput, SysData.DataTable aSummary)
         {
-            SysData.DataTable _fc_BSU = ReformatResults(aOutput);
+            SysData.DataTable _fc_BSU = CreateRegulonUsageTable(aOutput);
             
             string[] catcols = new string[] { "cat1", "cat2", "cat3", "cat4", "cat5" };
             string[] regColumn = new string[] { Properties.Settings.Default.referenceRegulon };
@@ -961,7 +1009,8 @@ namespace GINtool
                 //BuildTree(dataTable, treeView1.Nodes.Add("Regulons"), 1);
             }
 
-
+            // hier moet de complete lijst van data gebruikt worden 
+            List<cat_elements> cat_Elements = null;
 
             cat_Elements = GetUniqueElements(cat_Elements);            
             

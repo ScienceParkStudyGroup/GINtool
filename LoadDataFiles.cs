@@ -126,6 +126,8 @@ namespace GINtool
 
                 }
             }
+            
+            //gCategoriesWB.PrimaryKey = new DataColumn[] { gCategoriesWB.Columns[BSUcol]};
 
             RemoveTask(TASKS.LOAD_CATEGORY_DATA);
 
@@ -316,6 +318,9 @@ namespace GINtool
                     gGenesColNames[i++] = col.ColumnName;
                 }
             }
+
+            gGenesWB.PrimaryKey = new DataColumn[] { gGenesWB.Columns[Properties.Settings.Default.genesBSUColumn] };
+
 
             RemoveTask(TASKS.LOAD_GENES_DATA);
             return gGenesWB != null;
