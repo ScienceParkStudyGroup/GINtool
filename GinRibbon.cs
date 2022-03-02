@@ -51,7 +51,7 @@ namespace GINtool
         string[] gCategoryColNames = null;
 
 
-        readonly string gCategoryGeneColumn = "locus_tag"; // the fixed column name that refers to the genes inthe category csv file
+        //readonly string gCategoryGeneColumn = "locus_tag"; // the fixed column name that refers to the genes inthe category csv file
         Excel.Application gApplication = null;
 
         /// <value>the main list of all association types listed in the main regulon table</value>
@@ -80,6 +80,7 @@ namespace GINtool
         SysData.DataTable gSummary = null;
         List<BsuLinkedItems> gList = null;
         SysData.DataTable gRegulonTable = null;
+        SysData.DataTable gCategoryTable = null;
         SysData.DataTable gBestTable = null;
 
 
@@ -494,12 +495,21 @@ namespace GINtool
                     // find the entries that are linked by the same gene
                     // SysData.DataRow[] results = LookupCategory(lMap.BSU);
                     SysData.DataRow[] results = LookupCategory(_it.BSU);
-                    if (results.Length>0)
+                    foreach(DataRow row in results)
+                    //if (results.Length>0)
                     {
-                        string catName = results[0][Properties.Settings.Default.catBSUColum].ToString();
-                        string catID = results[0][Properties.Settings.Default.catBSUColum].ToString();
+                        string[] c1 = new string[] { row["cat1"].ToString(), row["cat2"].ToString(), row["cat3"].ToString(), row["cat4"].ToString(), row["cat5"].ToString() };
+                        string catName = "";
+                        foreach(string s in c1)
+                        {
+                            if (s.Length > 0)
+                                catName = s;
+                        }
+                        
+                        string genID = row[Properties.Settings.Default.catBSUColum].ToString();
+                        string catID = " (" + row["catid_short"].ToString() + ")";
 
-                        CategoryItem _lCat = new CategoryItem(catName, catID);
+                        CategoryItem _lCat = new CategoryItem(catName+catID, genID);
                         _it.Categories.Add(_lCat);
                         
                     }
@@ -1391,18 +1401,27 @@ namespace GINtool
             if (NoUpdate())
                 return;
 
-            if (Properties.Settings.Default.tblMap)
-                CreateMappingSheet(gList);
+            
 
             // combined info should contain best table info, gSummary is best table .. 
 
+
+            if(gRegulonFileSelected && gRegulonTable is null)
             //if ((gSummary == null && gRegulonTable == null) || NeedsUpdate(UPDATE_FLAGS.TSummary))
-            if ((gRegulonTable == null) || NeedsUpdate(UPDATE_FLAGS.TSummary))
+            // if ((gRegulonTable == null) || NeedsUpdate(UPDATE_FLAGS.TSummary))
             {
                 
                 //(gSummary, gRegulonTable) = CreateRegulonUsageTable(gOutput);
                 gRegulonTable = CreateRegulonUsageTable(gList);
-                UnSetFlags(UPDATE_FLAGS.TSummary);
+                //UnSetFlags(UPDATE_FLAGS.TSummary);
+            }
+            if (gCategoryFileSelected && gCategoryTable is null)
+            //if ((gRegulonTable == null) || NeedsUpdate(UPDATE_FLAGS.TSummary))
+            {
+
+                //(gSummary, gRegulonTable) = CreateRegulonUsageTable(gOutput);
+                gCategoryTable = CreateCategoryUsageTable(gList);
+                //UnSetFlags(UPDATE_FLAGS.TSummary);
             }
 
             //if (gSummary != null && Properties.Settings.Default.tblSummary)
@@ -1411,6 +1430,11 @@ namespace GINtool
 
             //CreateBestDataTable(gList, gSummary, null);
             CreateBestDataTable(gList, null);
+
+
+            if (Properties.Settings.Default.tblMap)
+                CreateMappingSheet(gList);
+
 
             if (Properties.Settings.Default.tblCombine) // can combine table/sheet because it's a quick routine
             {
@@ -1510,12 +1534,13 @@ namespace GINtool
                 HashSet<string> genes = new HashSet<string>();
                 foreach (DataRow _row in dataViewCat.ToTable().Rows)
                 {
-                    genes.Add(_row[gCategoryGeneColumn].ToString());
+                    genes.Add(_row[Properties.Settings.Default.catBSUColum].ToString());
                 }
 
                 string genesFormat = string.Join(",", genes.ToArray());
                 genesFormat = string.Join(",", genesFormat.Split(',').Select(x => $"'{x}'"));
-                dataView.RowFilter = String.Format("Gene in ({0})", genesFormat);
+                // GENE_ID moet ergens gedefinieerd worden
+                dataView.RowFilter = String.Format("Gene_ID in ({0})", genesFormat); 
 
                 SysData.DataTable _dt = dataView.ToTable(true, "Gene", "FC", "Pvalue");
 

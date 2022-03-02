@@ -56,7 +56,7 @@ namespace GINtool
             // long list of columns... make cleaner later..
 
             gCategoriesWB.Columns.Add(IDcol, Type.GetType("System.String"));
-            gCategoriesWB.Columns.Add("cat_short", Type.GetType("System.String"));
+            gCategoriesWB.Columns.Add("catid_short", Type.GetType("System.String"));
             gCategoriesWB.Columns.Add(BSUcol, Type.GetType("System.String"));
             gCategoriesWB.Columns.Add("gene", Type.GetType("System.String"));
             gCategoriesWB.Columns.Add("cat1", Type.GetType("System.String"));
@@ -99,7 +99,7 @@ namespace GINtool
                 {
                     lNewRow[IDcol] = lItems[0];
                     string[] splits = lItems[0].ToString().Split(' ');
-                    lNewRow["cat_short"] = splits[splits.Count() - 1];
+                    lNewRow["catid_short"] = splits[splits.Count() - 1];
                     lNewRow[BSUcol] = lItems[1];
                     lNewRow["Gene"] = lItems[2];
                     lNewRow["cat1"] = lItems[3];

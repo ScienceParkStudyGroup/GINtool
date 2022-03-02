@@ -216,6 +216,7 @@
     <Compile Include="dlgUpDown.Designer.cs">
       <DependentUpon>dlgUpDown.cs</DependentUpon>
     </Compile>
+    <Compile Include="ItemSelection.cs" />
     <Compile Include="LoadDataFiles.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -365,10 +366,10 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>GINtool_2_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>GINtool_1_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>24A69DAA120DA1CFEFE736B1E5712CFF090275F6</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>CF7170495EAC9DA8F5533CD114BF4EE1B8FEF162</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>

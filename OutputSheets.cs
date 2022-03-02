@@ -22,12 +22,25 @@ namespace GINtool
             SysData.DataTable myTable = new System.Data.DataTable("mytable");
             SysData.DataTable clrTable = new System.Data.DataTable("colortable");
 
-            int maxcol = lResults[0].Regulons.Count;
+            int maxcol = UseCategoryData() ? lResults[0].Categories.Count: lResults[0].Regulons.Count;
 
-            // count max number of columns neccesary
-            for (int r = 1; r < lResults.Count; r++)
-                if (maxcol < lResults[r].Regulons.Count)
-                    maxcol = lResults[r].Regulons.Count;
+
+            if (UseCategoryData())
+            {
+                // count max number of columns neccesary
+                for (int r = 1; r < lResults.Count; r++)
+                    if (maxcol < lResults[r].Categories.Count)
+                        maxcol = lResults[r].Categories.Count;
+            }
+
+            else
+            { 
+                // count max number of columns neccesary
+                for (int r = 1; r < lResults.Count; r++)
+                    if (maxcol < lResults[r].Regulons.Count)
+                        maxcol = lResults[r].Regulons.Count;
+            }
+
 
             // add BSU/gene/p-value/fc columns
 
@@ -63,17 +76,31 @@ namespace GINtool
                 newRow["fc"] = lResults[r].FC;
                 newRow["pval"] = lResults[r].PVALUE;
 
-                newRow["count_col"] = lResults[r].REGULON_TOT;
+                newRow["count_col"] = UseCategoryData() ? lResults[r].Categories.Count:lResults[r].REGULON_TOT;
                 SysData.DataRow clrRow = clrTable.Rows.Add();
 
-                for (int c = 0; c < lResults[r].Regulons.Count; c++)
-                    newRow[string.Format("col_{0}", c + 1)] = lResults[r].Regulons[c];
+                if (UseCategoryData())
+                {
+                    for (int c = 0; c < lResults[r].Categories.Count; c++)
+                        newRow[string.Format("col_{0}", c + 1)] = lResults[r].Categories[c].Name;
 
-                for (int c = 0; c < lResults[r].REGULON_UP.Count; c++)
-                    clrRow[lResults[r].REGULON_UP[c]] = 1;
+                    //for (int c = 0; c < lResults[r].REGULON_UP.Count; c++)
+                    //    clrRow[lResults[r].REGULON_UP[c]] = 1;
 
-                for (int c = 0; c < lResults[r].REGULON_DOWN.Count; c++)
-                    clrRow[lResults[r].REGULON_DOWN[c]] = -1;
+                    //for (int c = 0; c < lResults[r].REGULON_DOWN.Count; c++)
+                    //    clrRow[lResults[r].REGULON_DOWN[c]] = -1;
+                }
+                else
+                {
+                    for (int c = 0; c < lResults[r].Regulons.Count; c++)
+                        newRow[string.Format("col_{0}", c + 1)] = lResults[r].Regulons[c].Name;
+
+                    //for (int c = 0; c < lResults[r].REGULON_UP.Count; c++)
+                    //    clrRow[lResults[r].REGULON_UP[c]] = 1;
+
+                    //for (int c = 0; c < lResults[r].REGULON_DOWN.Count; c++)
+                    //    clrRow[lResults[r].REGULON_DOWN[c]] = -1;
+                }
 
             }
 
@@ -424,14 +451,14 @@ namespace GINtool
             lNewSheet.Cells[1, 2] = "GENE";
             lNewSheet.Cells[1, 3] = "FC";
             lNewSheet.Cells[1, 4] = "PVALUE";
-            lNewSheet.Cells[1, 5] = "TOT REGULONS";
+            lNewSheet.Cells[1, 5] = UseCategoryData() ? "TOT CATEGORIES" : "TOT REGULONS";
 
             string lastColumn = lTable.Columns[lTable.Columns.Count - 1].ColumnName;
             lastColumn = lastColumn.Replace("col_", "");
             int maxreg = ClassExtensions.ParseInt(lastColumn, 0);
 
             for (int i = 0; i < maxreg; i++)
-                lNewSheet.Cells[1, i + 6] = string.Format("Regulon_{0}", i + 1);
+                lNewSheet.Cells[1, i + 6] = string.Format(UseCategoryData() ? "Category_{0}":"Regulon_{0}", i + 1);
 
             // copy data to excel sheet
 

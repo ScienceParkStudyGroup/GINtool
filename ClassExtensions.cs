@@ -10,6 +10,7 @@ namespace GINtool
 {
     internal static class ClassExtensions
     {
+       
         public static int ParseInt(string str, int defaultVal= 0)
         {
             int _val;  bool _res = int.TryParse(str,out _val);

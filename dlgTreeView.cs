@@ -546,6 +546,45 @@ namespace GINtool
 
         }
 
+        public void SelectAllNodes(bool useCat=false)
+        {
+            List<TreeNode> selection = new List<TreeNode>();
+
+            int maxCategories = udCat.Items.Count - 1;
+
+            if (!useCat)
+            {
+                foreach (TreeNode node in treeView1.TopNode.Nodes)
+                    selection.Add(node);
+            }
+            else
+            {
+                // coding level is reverse of order
+                selection = SelectCategoryLevel(maxCategories - udCat.SelectedIndex);
+            }
+
+            foreach (TreeNode node in selection)
+            {
+                string fp = node.FullPath;
+                int nodeIndex = node.Index;
+                // remove last part of tree
+                int rstr = fp.LastIndexOf('\\');
+                if (rstr > 0) fp = fp.Remove(rstr);
+                // add position information in Tag field
+                node.Tag = node.Tag + "_" + fp + "_" + nodeIndex.ToString();
+
+                treeView1.Nodes.Remove(node);
+
+                if (node != null)
+                {
+                    treeView2.Nodes.Add(node);
+                    addToSelection(node);
+                }
+
+            }
+            UpdateCounter();
+        }
+
 
         private void btnAllSel_Click(object sender, EventArgs e)
         {
