@@ -101,11 +101,11 @@ namespace GINtool
         /// <param name="aSummary"></param>        
         /// <param name="cat_Elements"></param>        
         /// <param name="splitNP"></param>
-        private void RankingPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements)
+        private void RankingPlot(List<cat_elements> cat_Elements, SysData.DataTable aSummary)
         {
             AddTask(TASKS.REGULON_CHART);
 
-            SysData.DataTable _fc_BSU = ReformatRegulonResults(aOutput);
+            //SysData.DataTable _fc_BSU = ReformatRegulonResults(aOutput);
 
             cat_Elements = GetUniqueElements(cat_Elements);
 
@@ -115,7 +115,7 @@ namespace GINtool
             //foreach (SysData.DataRow row in aSummary.Rows)
             //    lRegulons.Add(row.ItemArray[0].ToString());
 
-            SysData.DataView dataView = _fc_BSU.AsDataView();
+            SysData.DataView dataView = aSummary.AsDataView();
             element_fc catPlotData;
             if (Properties.Settings.Default.useCat)
             {

@@ -95,5 +95,63 @@ namespace GINtool
                 theApp.EnableEvents = true;                
             }
         }
+
+
+        public static string[] ReadExcelToDatableHeader(Excel.Application theApp, string worksheetName, string saveAsLocation, int HeaderLine, int ColumnStart)
+        {
+
+            if (theApp != null)
+                theApp.EnableEvents = false;
+            else
+                return null;
+
+            DataTable dataTable = new DataTable();
+            Excel.Application excel;
+            Excel.Workbook excelworkBook;
+            Excel.Worksheet excelSheet;
+            Excel.Range range;
+            try
+            {
+                // Get Application object.
+                excel = theApp;
+                excel.ScreenUpdating = false;
+                //excel.Visible = false;
+                excel.DisplayAlerts = false;
+                // Creation a new Workbook                
+                excelworkBook = excel.Workbooks.Open(saveAsLocation);
+                excel.ActiveWindow.Visible = false;
+                // Work sheet                
+                excelSheet = (Excel.Worksheet)excelworkBook.Worksheets.Item[worksheetName];
+                range = excelSheet.UsedRange;
+                int cl = range.Columns.Count;
+                List<string> list = new List<string>();
+                for (int j = ColumnStart; j <= cl; j++)
+                {
+                    list.Add(Convert.ToString(range.Cells[HeaderLine, j].Value2));
+                }
+
+                //now close the workbook and make the function return the data table        
+                excel.ScreenUpdating = true;
+                excelworkBook.Activate();
+                excel.ActiveWindow.Visible = true;
+                excelworkBook.Close();
+                theApp.EnableEvents = true;
+                theApp.Visible = true;
+                excelSheet = null;
+                range = null;
+                excelworkBook = null;
+
+                return list.ToArray();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return null;
+            }
+            finally
+            {
+                theApp.EnableEvents = true;
+            }
+        }
     }
 }

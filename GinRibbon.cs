@@ -163,14 +163,17 @@ namespace GINtool
         private SysData.DataRow[] LookupCategory(string value)
         {         
             // needs to be replaced by genes table entry
-            SysData.DataRow[] filteredRows = gCategoriesWB.Select(string.Format("[{0}] LIKE '%{1}%'", Properties.Settings.Default.catBSUColum, value));
+            //SysData.DataRow[] filteredRows = gCategoriesWB.Select(string.Format("[{0}] LIKE '%{1}%'", Properties.Settings.Default.catBSUColum, value));
+            //SysData.DataRow[] filteredRows = gCategoriesWB.Select(string.Format("[locus_tag] LIKE '%{0}%'", value));
+            SysData.DataRow[] filteredRows = gCategoriesWB.Select(string.Format("[locus_tag] = '{0}'", value));
 
             // copy data to temporary table
             SysData.DataTable dt = gCategoriesWB.Clone();
             foreach (SysData.DataRow dr in filteredRows)
                 dt.ImportRow(dr);
             // return only unique values
-            SysData.DataTable dt_unique = GetDistinctRecords(dt, gCategoryColNames);
+            // SysData.DataTable dt_unique = GetDistinctRecords(dt, gCategoryColNames);
+            SysData.DataTable dt_unique = GetDistinctRecords(dt, new string[] { });
             return dt_unique.Select();
         }
 
@@ -483,7 +486,7 @@ namespace GINtool
             AddTask(TASKS.AUGMENTING_WITH_CATEGORY_DATA);
 
             DataView _catView = new DataView(gCategoriesWB);
-            _catView.Sort = Properties.Settings.Default.catBSUColum;
+            _catView.Sort = "locus_tag"; // Properties.Settings.Default.catBSUColum;
 
             // loop of the number of rows in rangeBSU
 
@@ -506,7 +509,8 @@ namespace GINtool
                                 catName = s;
                         }
                         
-                        string genID = row[Properties.Settings.Default.catBSUColum].ToString();
+                        //string genID = row[Properties.Settings.Default.catBSUColum].ToString();
+                        string genID = row["locus_tag"].ToString();
                         string catID = " (" + row["catid_short"].ToString() + ")";
 
                         CategoryItem _lCat = new CategoryItem(catName+catID, genID);
@@ -980,6 +984,10 @@ namespace GINtool
             ddGenesFunction.Items.Clear();
             ddGenesDescription.Items.Clear();
 
+            /// temporary fix... need to be removed later
+            if (gGenesColNames is null)
+                LoadGenesDataColumns();
+
             foreach (string s in gGenesColNames)
             {
                 RibbonDropDownItem ddItem1 = Factory.CreateRibbonDropDownItem();
@@ -1274,7 +1282,7 @@ namespace GINtool
 
                 if(gCategoryFileSelected)
                 {
-                    Fill_CategoryDropDownBoxes();
+                    //Fill_CategoryDropDownBoxes();
                     // load comboboxes for the category file (if necessary)
                 }
 
@@ -1303,6 +1311,12 @@ namespace GINtool
                 return;
             }
 
+            if (gRegulonFileSelected && gRegulonTable is null)            
+                gRegulonTable = CreateRegulonUsageTable(gList);            
+            
+            if (gCategoryFileSelected && gCategoryTable is null)            
+                gCategoryTable = CreateCategoryUsageTable(gList);
+                
 
             if ((Properties.Settings.Default.catPlot || Properties.Settings.Default.regPlot)) //& gNeedsUpdate.Check(UPDATE_FLAGS.PCat))
             {
@@ -1319,38 +1333,44 @@ namespace GINtool
 
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    if (!UseCategoryData())
-                    { 
-                        //if ((gOutput == null || gSummary == null) || gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
-                        if ((gRegulonTable == null) || gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
-                        {                            
-                            //gList = ReadDataAndAugment();
+                    //if (!UseCategoryData())
+                    //{ 
+                    //    //if ((gOutput == null || gSummary == null) || gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
+                    //    if ((gRegulonTable == null) || gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
+                    //    {                            
+                    //        //gList = ReadDataAndAugment();
 
-                            //if (gList != null)
-                            //{
-                                //UnSetFlags(UPDATE_FLAGS.TMapped);
-                                gRegulonTable = CreateRegulonUsageTable(gList);
-                                //UnSetFlags(UPDATE_FLAGS.TCombined);
-                            //}
-                        } 
-                    }
+                    //        //if (gList != null)
+                    //        //{
+                    //            //UnSetFlags(UPDATE_FLAGS.TMapped);
+                    //            gRegulonTable = CreateRegulonUsageTable(gList);
+                    //            //UnSetFlags(UPDATE_FLAGS.TCombined);
+                    //        //}
+                    //    } 
+                    //}
 
+                    if (Properties.Settings.Default.regPlot && gList!=null)
+                        RankingPlot(dlg.GetSelection(), UseCategoryData() ? gCategoryTable : gRegulonTable);
 
+                    if (Properties.Settings.Default.catPlot && gList!=null)
+                        SpreadingPlot(dlg.GetSelection(), topTenFC: dlg.getTopFC(), topTenP: dlg.getTopP(), outputTable: dlg.selectTableOutput());
+
+                    ////if ((gOutput != null && gSummary != null && dlg.GetSelection().Count() > 0))
                     //if ((gOutput != null && gSummary != null && dlg.GetSelection().Count() > 0))
-                    if ((gOutput != null && gSummary != null && dlg.GetSelection().Count() > 0))
-                    {
-                        if (Properties.Settings.Default.catPlot)
-                        {
-                            SpreadingPlot(dlg.GetSelection(), topTenFC: dlg.getTopFC(), topTenP: dlg.getTopP(), outputTable: dlg.selectTableOutput());
+                    //{
+                    //    if (Properties.Settings.Default.catPlot)
+                    //    {
+                    //        SpreadingPlot(dlg.GetSelection(), topTenFC: dlg.getTopFC(), topTenP: dlg.getTopP(), outputTable: dlg.selectTableOutput());
 
-                        }
+                    //    }
 
-                        if (Properties.Settings.Default.regPlot && gList != null)
-                        {
-                            RankingPlot(gOutput, gSummary, dlg.GetSelection());
-                        }
+                    //    if (Properties.Settings.Default.regPlot && gList != null)
+                    //    {
+                    //        //RankingPlot(gOutput, gSummary, dlg.GetSelection());
+                    //    }
+                    //}
                     }
-                }
+                //}
 
             }
 
@@ -1436,13 +1456,13 @@ namespace GINtool
                 CreateMappingSheet(gList);
 
 
-            if (Properties.Settings.Default.tblCombine) // can combine table/sheet because it's a quick routine
-            {
-                (SysData.DataTable lCombined, SysData.DataTable lClrTable) = CreateCombinedTable(gRegulonTable, gList);
-                CreateCombinedSheet(lCombined, lClrTable);
-                UnSetFlags(UPDATE_FLAGS.TCombined);
+            //if (Properties.Settings.Default.tblCombine) // can combine table/sheet because it's a quick routine
+            //{                
+            //    (SysData.DataTable lCombined, SysData.DataTable lClrTable) = CreateCombinedTable(gCatOutput ? gCategoryTable : gRegulonTable, gList);             
+            //    CreateCombinedSheet(lCombined, lClrTable);
+            //    UnSetFlags(UPDATE_FLAGS.TCombined);
 
-            }
+            //}
 
 
             if (Properties.Settings.Default.tblOperon && gOperonOutput) // can combine table/sheet because it's a quick routine
@@ -1534,7 +1554,8 @@ namespace GINtool
                 HashSet<string> genes = new HashSet<string>();
                 foreach (DataRow _row in dataViewCat.ToTable().Rows)
                 {
-                    genes.Add(_row[Properties.Settings.Default.catBSUColum].ToString());
+                    //genes.Add(_row[Properties.Settings.Default.catBSUColum].ToString());
+                    genes.Add(_row["locus_tag"].ToString());
                 }
 
                 string genesFormat = string.Join(",", genes.ToArray());
@@ -1809,32 +1830,23 @@ namespace GINtool
 
 
             //default sort option is by average FC.
-            if (Properties.Settings.Default.useSort)
-            {
-                double[] __values = element_Fcs.All.Select(x => x.fc_average).ToArray();
-                var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
+            //if (Properties.Settings.Default.useSort & ! ((topTenFC > 0) | (topTenP>0)))
+            //{
 
-                List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
-                element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList();
+            //}
 
-                if (Properties.Settings.Default.sortAscending)
-                    element_Fcs.All.Reverse();
-            }
-            else if (topTenFC > 0) // top X FC is based on abs average FC.
+            if (topTenFC > 0) // top X FC is based on abs average FC.
             {
                 // only useful if top N selected is smaller then total number of items
                 if (topTenFC < element_Fcs.All.Count)
                 {
                     double[] __values = element_Fcs.All.Select(x => x.fc_average).ToArray();
                     var sortedElements = __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => Math.Abs(x.Key)).ToList();
-                    List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
+                    //List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
                     // remove elements with no genes associated
                     element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList().Where(x => x.fc_values.Length > 0).ToList();
                     element_Fcs.All = element_Fcs.All.GetRange(0, topTenFC);
                 }
-                // reverse if selected
-                if (!Properties.Settings.Default.sortAscending)
-                    element_Fcs.All.Reverse();
             }
             else if (topTenP > 0) // top X p-value is based on descending, because of -log10(p) transformation
             {
@@ -1844,17 +1856,23 @@ namespace GINtool
                     // assertion... it's -10 log(p) -> so the higher, the better
                     double[] __values = element_Fcs.All.Select(x => -Math.Log(x.p_average)).ToArray();
                     var sortedElements = __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
-                    List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
+                    //List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
                     // remove elements with no genes associated
                     element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList().Where(x => x.fc_values.Length > 0).ToList();
                     element_Fcs.All = element_Fcs.All.GetRange(0, topTenP);
                 }
-
-                // reverse if selected
-                if (!Properties.Settings.Default.sortAscending)
-                    element_Fcs.All.Reverse();
             }
+            //
+            {
+                double[] ___values = element_Fcs.All.Select(x => x.fc_average).ToArray();
+                var _sortedElements = (!Properties.Settings.Default.sortAscending) ? ___values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : ___values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
 
+                //List<int> _sortedIndex = _sortedElements.Select(x => x.Value).ToList();
+                element_Fcs.All = _sortedElements.Select(x => element_Fcs.All[x.Value]).ToList();
+
+                //if (!Properties.Settings.Default.sortAscending)
+                //    element_Fcs.All.Reverse();
+            }
 
             return element_Fcs;
         }
@@ -2226,6 +2244,9 @@ namespace GINtool
                     Properties.Settings.Default.useCat = true; // here for testing
                     cbUseCategories.Checked = true;
                     cbUseRegulons.Checked = false;
+
+                    if(LoadCategoryDataColumns())
+                        Fill_CategoryDropDownBoxes();
 
                 }
             }
@@ -2666,6 +2687,24 @@ namespace GINtool
             SetFlags(UPDATE_FLAGS.ALL);
         }
 
+        private void ddCatName_SelectionChanged(object sender, RibbonControlEventArgs e)
+        {
+            Properties.Settings.Default.catCatDescriptionColumn = ddCatName.SelectedItem.Label;
+            SetFlags(UPDATE_FLAGS.ALL);
+        }
+
+        private void ddCatID_SelectionChanged(object sender, RibbonControlEventArgs e)
+        {
+            Properties.Settings.Default.catCatIDColumn = ddCatID.SelectedItem.Label;
+            SetFlags(UPDATE_FLAGS.ALL);
+        }
+
+        private void ddCatBSU_SelectionChanged(object sender, RibbonControlEventArgs e)
+        {
+            Properties.Settings.Default.catBSUColum = ddCatBSU.SelectedItem.Label;
+            SetFlags(UPDATE_FLAGS.ALL);
+
+        }
     }
 
     /// <summary>

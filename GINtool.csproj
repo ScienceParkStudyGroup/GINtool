@@ -366,10 +366,10 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>GINtool_1_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>GINtool_2_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>CF7170495EAC9DA8F5533CD114BF4EE1B8FEF162</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>24A69DAA120DA1CFEFE736B1E5712CFF090275F6</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>
