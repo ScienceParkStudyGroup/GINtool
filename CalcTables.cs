@@ -8,6 +8,8 @@ using System.Linq;
 using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 using SysData = System.Data;
+using System.Text.RegularExpressions;
+
 
 namespace GINtool
 {
@@ -808,18 +810,79 @@ namespace GINtool
         }
 
 
-        private void CreateBestDataTable(List<BsuLinkedItems> aOutput, SysData.DataTable aSummary)
+        private void CreateBestDataTable(List<BsuLinkedItems> aOutput, SysData.DataTable aMappingTable)
         {
             //SysData.DataTable _fc_BSU = CreateRegulonUsageTable(aOutput);
 
             //string[] catcols = new string[] { "cat1", "cat2", "cat3", "cat4", "cat5" };
             //string[] regColumn = new string[] { Properties.Settings.Default.referenceRegulon };
 
-            List<cat_elements> cat_Elements = null;
+            List<cat_elements> cat_Elements = new List<cat_elements>();
+
+           // HashSet<cat_elements> cat_Elements1 = new HashSet<cat_elements>();
+            string lastColumn = aMappingTable.Columns[aMappingTable.Columns.Count - 1].ColumnName;
+            lastColumn = lastColumn.Replace("col_", "");
+            int maxreg = ClassExtensions.ParseInt(lastColumn, 0);
+            int firstColumn = 5;
+
             if (UseCategoryData())
-                cat_Elements = ItemSelection.SelectAllElements(gCategoriesWB, true);
-            else            
-                cat_Elements = ItemSelection.SelectAllElements(gRegulonWB, false);            
+            {                                
+                string pattern = @"(\d)+";
+                Regex rg = new Regex(pattern);
+
+                for (int row = 0; row < aMappingTable.Rows.Count; row++)
+                {
+                    for (int i = firstColumn; i < (firstColumn + maxreg); i++)
+                    {
+                        cat_elements cat_Elements2 = new cat_elements();
+                        string element = aMappingTable.Rows[row][i].ToString();
+                        List<int> _ids= new List<int>();
+                        if (element != "")
+                        {
+                            MatchCollection mc = rg.Matches(element);
+                            for (int _i = 0; _i < mc.Count; _i++)
+                                _ids.Add(Int32.Parse(mc[_i].Value));
+                            
+                            string formatted_ids = String.Join(".",_ids.ToArray());
+
+                            string catName = element.Split(new string[] { "("+formatted_ids+")" },StringSplitOptions.None)[0];
+
+                            cat_Elements2.catName = catName;
+                            cat_Elements2.elTag = formatted_ids;
+                            cat_Elements2.elements = new string[] { formatted_ids };
+                            cat_Elements.Add(cat_Elements2);
+                        }
+
+                    }
+                }
+                
+            }
+            else
+            {
+                for (int row = 0; row < aMappingTable.Rows.Count; row++)
+                {
+                    for (int i = firstColumn; i < (firstColumn + maxreg); i++)
+                    {
+                        cat_elements cat_Elements2 = new cat_elements();
+                        string element = aMappingTable.Rows[row][i].ToString();                        
+                        if (element != "")
+                        {                            
+                            string catName = element;
+
+                            cat_Elements2.catName = catName;
+                            cat_Elements2.elTag = "";
+                            cat_Elements2.elements = new string[] { "" };
+                            cat_Elements.Add(cat_Elements2);
+                        }
+                    }
+                }                
+            }
+            
+
+            //if (UseCategoryData())
+            //    cat_Elements = ItemSelection.SelectAllElements(gCategoriesWB, true);
+            //else            
+                
 
             cat_Elements = GetUniqueElements(cat_Elements);
 

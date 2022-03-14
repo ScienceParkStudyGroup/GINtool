@@ -10,6 +10,8 @@ using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 using SysData = System.Data;
 
+//certificate CdF7RoqS9KXLvWtk6OZf
+
 
 namespace GINtool
 {
@@ -208,15 +210,28 @@ namespace GINtool
             btnSelect.Enabled = enable;
             btApply.Enabled = enable;
 
+            // genes items
+            
             ddGenesBSU.Enabled = enable;
             ddGenesDescription.Enabled = enable;
             ddGenesFunction.Enabled = enable;
             ddGnsName.Enabled = enable;
 
+            // regulon items
+
             ddBSU.Enabled = enable;
             ddGene.Enabled = enable;
             ddRegulon.Enabled = enable;
             ddDir.Enabled = enable;
+
+            // category items
+
+            ddCatID.Enabled = enable;
+            ddCatName.Enabled = enable;
+            ddCatBSU.Enabled = enable;
+
+
+
             btPlot.Enabled = enable;
             cbUseCategories.Enabled = enable;
             cbMapping.Enabled = enable;
@@ -241,28 +256,90 @@ namespace GINtool
             gApplication = Globals.ThisAddIn.GetExcelApplication();
             btnRegulonFileName.Label = Properties.Settings.Default.referenceFile;
 
-            if (btnRegulonFileName.Label.Length > 0)
+            if (btnRegulonFileName.Label.Length > 0 & btnRegulonFileName.Label!="not defined yet")
             {
-                System.IO.FileInfo fInfo = new System.IO.FileInfo(btnRegulonFileName.Label);
-                gLastFolder = fInfo.DirectoryName;
-
+                try
+                {
+                    System.IO.FileInfo fInfo = new System.IO.FileInfo(btnRegulonFileName.Label);
+                    gLastFolder = fInfo.DirectoryName;
+                    if (LoadRegulonDataColumns())
+                        Fill_RegulonDropDownBoxes();
+                }
+                catch(Exception ex)
+                {
+                    gApplication.StatusBar.Text = ex.Message;
+                    // show error dialog here
+                }
             }
 
             btnGenesFileSelected.Label = Properties.Settings.Default.genesFileName;
             if (btnGenesFileSelected.Label.Length > 0)
             {
-                System.IO.FileInfo fInfo = new System.IO.FileInfo(btnGenesFileSelected.Label);
-                gLastFolder = fInfo.DirectoryName;
+                try
+                {
+                    System.IO.FileInfo fInfo = new System.IO.FileInfo(btnGenesFileSelected.Label);
+                    gLastFolder = fInfo.DirectoryName;
+                    if (LoadGenesDataColumns())
+                        Fill_GenesDropDownBoxes();
+                }
+                catch (Exception ex)
+                {
+                    gApplication.StatusBar.Text = ex.Message;
+                }
             }
 
             btnOperonFile.Label = Properties.Settings.Default.operonFile;
+            if (btnOperonFile.Label.Length > 0)
+            {
+                try
+                {
+                    System.IO.FileInfo fInfo = new System.IO.FileInfo(btnOperonFile.Label);
+                    gLastFolder = fInfo.DirectoryName;
+                    //if (LoadOperonDataColumns())
+                    //    Fill_OperonDropDownBoxes();
+                }
+                catch(System.Exception ex)
+                {
+                    gApplication.StatusBar.Text = ex.Message;
+
+                }
+            }
+
             btnCatFile.Label = Properties.Settings.Default.categoryFile;
+            if (btnCatFile.Label.Length > 0)
+            {
+                try
+                {
+                    System.IO.FileInfo fInfo = new System.IO.FileInfo(btnCatFile.Label);
+                    gLastFolder = fInfo.DirectoryName;
+                    if (LoadCategoryDataColumns())
+                        Fill_CategoryDropDownBoxes();
+                }
+                catch(Exception ex)
+                {
+                    gApplication.StatusBar.Text = ex.Message;
+
+                }
+            }
+
+            if (Properties.Settings.Default.categoryFile.Length == 0 & Properties.Settings.Default.referenceFile.Length>0)
+            {
+                cbUseCategories.Checked = false;
+                cbUseRegulons.Checked = true;
+                Properties.Settings.Default.useCat = false;
+            }
+
+
+            //btnOperonFile.Label = Properties.Settings.Default.operonFile;
+            //btnCatFile.Label = Properties.Settings.Default.categoryFile;
             cbOrderFC.Checked = Properties.Settings.Default.useSort;
             cbDescending.Checked = !Properties.Settings.Default.sortAscending;
             cbAscending.Checked = Properties.Settings.Default.sortAscending;
 
-            btnGenesFileMapping.Checked = Properties.Settings.Default.genesMappingVisible;
-            cbOperonMapping.Checked = Properties.Settings.Default.operonMappingVisible;
+            cbGenesFileMapping.Checked = false; // Properties.Settings.Default.genesMappingVisible;
+            cbRegulonMapping.Checked = false; // Properties.Settings.Default.regulonMappingVisible;
+            cbCategoryMapping.Checked = false;
+            
 
             //operonMappingVisible
 
@@ -273,15 +350,10 @@ namespace GINtool
             cbOperon.Checked = Properties.Settings.Default.tblOperon;
 
             cbClustered.Checked = Properties.Settings.Default.catPlot;
-            cbDistribution.Checked = Properties.Settings.Default.distPlot;            
+            cbDistribution.Checked = Properties.Settings.Default.distPlot;
 
-            if (Properties.Settings.Default.categoryFile.Length == 0)
-            {
-                cbUseCategories.Checked = false; 
-                cbUseRegulons.Checked = true;
-                Properties.Settings.Default.useCat = false;
 
-            }
+          
 
             cbUseCategories.Checked = Properties.Settings.Default.useCat;
             cbUseRegulons.Checked = !Properties.Settings.Default.useCat;
@@ -301,15 +373,7 @@ namespace GINtool
 
             LoadPersistentSettings();
 
-            if (Properties.Settings.Default.operonFile.Length == 0)
-                btnOperonFile.Label = "No file selected";
-
-
-            if (Properties.Settings.Default.categoryFile.Length == 0 || Properties.Settings.Default.catSheet.Length == 0)
-            {
-                btnCatFile.Label = "No file selected";                
-            }
-
+          
             gAvailItems = PropertyItems("directionMapUnassigned");
             gUpItems = PropertyItems("directionMapUp");
             gDownItems = PropertyItems("directionMapDown");
@@ -985,8 +1049,8 @@ namespace GINtool
             ddGenesDescription.Items.Clear();
 
             /// temporary fix... need to be removed later
-            if (gGenesColNames is null)
-                LoadGenesDataColumns();
+            //if (gGenesColNames is null)
+            //    LoadGenesDataColumns();
 
             foreach (string s in gGenesColNames)
             {
@@ -1449,11 +1513,13 @@ namespace GINtool
 
 
             //CreateBestDataTable(gList, gSummary, null);
-            CreateBestDataTable(gList, null);
+            
+
+            //if (Properties.Settings.Default.tblMap)
+            SysData.DataTable lMapping = CreateMappingSheet(gList);
 
 
-            if (Properties.Settings.Default.tblMap)
-                CreateMappingSheet(gList);
+            CreateBestDataTable(gList, lMapping);
 
 
             //if (Properties.Settings.Default.tblCombine) // can combine table/sheet because it's a quick routine
@@ -1545,6 +1611,8 @@ namespace GINtool
             List<summaryInfo> _Pos = new List<summaryInfo>();
             List<summaryInfo> _Neg = new List<summaryInfo>();
 
+            List<string> chk_Genes = new List<string>();
+
             foreach (cat_elements ce in cat_Elements)
             {
                 string categories = string.Join(",", ce.elements.ToArray());
@@ -1595,6 +1663,7 @@ namespace GINtool
 
                         double fc = (double)_dt.Rows[i]["FC"];
 
+                        chk_Genes.Add(_dt.Rows[i]["Gene"].ToString());
                         _genesA.Add(_dt.Rows[i]["Gene"].ToString());
                         _fcsA.Add(fc);
                         _pvaluesA.Add(double.Parse(_dt.Rows[i]["Pvalue"].ToString()));
@@ -2087,7 +2156,7 @@ namespace GINtool
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Button1_Click(object sender, RibbonControlEventArgs e)
+        private void ButtonSelectRegulonFile(object sender, RibbonControlEventArgs e)
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
@@ -2107,6 +2176,15 @@ namespace GINtool
 
                     System.IO.FileInfo fInfo = new System.IO.FileInfo(Properties.Settings.Default.referenceFile);
                     gLastFolder = fInfo.DirectoryName;
+
+                    if (LoadRegulonDataColumns())
+                    {
+                        Fill_RegulonDropDownBoxes();
+                        //cbRegulonMapping.Checked = true;
+                        ShowMappingPanel(MAPPING_PANEL.REGULON_LINKAGE,true);
+                    }
+
+
                 }
             }
         }
@@ -2245,8 +2323,12 @@ namespace GINtool
                     cbUseCategories.Checked = true;
                     cbUseRegulons.Checked = false;
 
-                    if(LoadCategoryDataColumns())
+                    if (LoadCategoryDataColumns())
+                    {
                         Fill_CategoryDropDownBoxes();
+                        cbCategoryMapping.Checked = true;
+                        ShowMappingPanel(MAPPING_PANEL.CATEGORY_LINKAGE, true);
+                    }
 
                 }
             }
@@ -2303,7 +2385,10 @@ namespace GINtool
             ShowSettingPannels(toggleButton1.Checked);
             grpPlot.Visible = !toggleButton1.Checked;
             grpTable.Visible = !toggleButton1.Checked;
-            grpDta.Visible = !toggleButton1.Checked;            
+            grpDta.Visible = !toggleButton1.Checked; 
+            grpFocus.Visible = !toggleButton1.Checked;
+            grpFilter.Visible = !toggleButton1.Checked;
+
         }
 
         /// <summary>
@@ -2313,13 +2398,24 @@ namespace GINtool
         private void ShowSettingPannels(bool show)
         {
             grpReference.Visible = show;
-            grpGenesMapping.Visible = Properties.Settings.Default.genesMappingVisible & show;
-            grpMap.Visible = Properties.Settings.Default.operonMappingVisible & show;
-            grpUpDown.Visible = Properties.Settings.Default.operonMappingVisible & show;
-            grpColMapCategory.Visible = Properties.Settings.Default.categoryMappingsVisible & show;
+
+            grpGenesMapping.Visible = false;
+            //Properties.Settings.Default.genesMappingVisible & show;
+            grpMap.Visible = false;
+            //Properties.Settings.Default.regulonMappingVisible & show;
+            //grpUpDown.Visible = Properties.Settings.Default.regulonMappingVisible & show;
+            grpColMapCategory.Visible = false;
+            //Properties.Settings.Default.categoryMappingsVisible & show;
+
+            cbCategoryMapping.Checked = false;
+            cbGenesFileMapping.Checked = false;
+            cbRegulonMapping.Checked = false;
+
+
             grpFC.Visible = show;
             grpCutOff.Visible = show;
-            grpDirection.Visible = show;
+            grpDirection.Visible = show;            
+
         }
 
         /// <summary>
@@ -2327,10 +2423,16 @@ namespace GINtool
         /// </summary>
         private void UpdateMappingPanels()
         {
-            grpGenesMapping.Visible = Properties.Settings.Default.genesMappingVisible;
-            grpMap.Visible = Properties.Settings.Default.operonMappingVisible;
-            grpUpDown.Visible = Properties.Settings.Default.operonMappingVisible;
-            grpColMapCategory.Visible = Properties.Settings.Default.categoryMappingsVisible;
+            grpGenesMapping.Visible = cbGenesFileMapping.Checked;
+            grpMap.Visible = cbRegulonMapping.Checked;            
+            grpColMapCategory.Visible = cbCategoryMapping.Checked;
+
+            bool _bShowOther = !(grpGenesMapping.Visible | grpMap.Visible | grpColMapCategory.Visible);
+                                        
+            grpFC.Visible = _bShowOther;
+            grpCutOff.Visible = _bShowOther;
+            grpDirection.Visible = _bShowOther;
+
         }
 
         /// <summary>
@@ -2378,6 +2480,16 @@ namespace GINtool
         "Augmenting with gene data", "Augmenting with with regulon data", "Augmenting with category data", "Read sheet data", "Read sheet categorized data", 
             "Update mapping table", "Update summary table", "Update combined table", "Update operon table", "Color cells", "Create category chart", 
             "Create regulon chart" };
+
+
+        public enum MAPPING_PANEL: int
+        {
+            GENE_INFO = 0,
+            REGULON_LINKAGE = 1,
+            REGULON_INFO = 2,
+            OPERON_INFO = 3,
+            CATEGORY_LINKAGE = 4
+        };
 
         /// <summary>
         /// enumeration of binary flags that can be set/unset.
@@ -2597,46 +2709,96 @@ namespace GINtool
             //Properties.Settings.Default.referenceRegulon
         }
 
+
+        //private void SetProp(string prop, object val)
+        //{
+        //    Properties.Settings.Default[prop] = val;
+        //}
+
+        private void ShowMappingPanel(MAPPING_PANEL aPanel, bool bShow)
+        {
+            // set all other checkboxes to false;
+            RibbonCheckBox[] checkboxes = new RibbonCheckBox[] { cbGenesFileMapping, cbRegulonMapping, null, null, cbCategoryMapping };            
+            for (int i=0;i<checkboxes.Length;i++)
+            {
+                if (checkboxes[i]!= null && i!= (int)aPanel)
+                {
+                    checkboxes[i].Checked = false;
+                }
+            }
+            //switch (aPanel)
+            //{
+            //    case MAPPING_PANEL.CATEGORY_LINKAGE:
+            //        SetProp("categoryMappingsVisible", bShow);
+            //        break;
+            //    case MAPPING_PANEL.GENE_INFO:
+            //        SetProp("genesMappingVisible", bShow);
+            //        break;
+            //    case MAPPING_PANEL.REGULON_LINKAGE:
+            //        SetProp("regulonMappingVisible", bShow);
+            //        break;
+            //    case MAPPING_PANEL.REGULON_INFO:
+            //        // to be implemented
+            //        break;
+            //    case MAPPING_PANEL.OPERON_INFO:
+            //        // to be implemented
+            //        break;
+            //    default:
+            //        break;
+            //}
+
+            UpdateMappingPanels();
+
+        }
+
+
         private void btnGenesFileMapping_Click(object sender, RibbonControlEventArgs e)
         {
-            if (btnGenesFileMapping.Checked)
-            {
-                Properties.Settings.Default.operonMappingVisible = false;
-                cbOperonMapping.Checked = false;
-                Properties.Settings.Default.categoryMappingsVisible = false;
-                cbCategoryMapping.Checked = false;
-            }
-            Properties.Settings.Default.genesMappingVisible = btnGenesFileMapping.Checked;
-            UpdateMappingPanels();
+
+            ShowMappingPanel(MAPPING_PANEL.GENE_INFO, cbGenesFileMapping.Checked);
+            //if (btnGenesFileMapping.Checked)
+            //{
+            //    Properties.Settings.Default.regulonMappingVisible = false;
+            //    cbRegulonMapping.Checked = false;
+            //    Properties.Settings.Default.categoryMappingsVisible = false;
+            //    cbCategoryMapping.Checked = false;
+            //}
+            //Properties.Settings.Default.genesMappingVisible = btnGenesFileMapping.Checked;
+            //UpdateMappingPanels();
 
         }
 
         private void checkBox1_Click(object sender, RibbonControlEventArgs e)
         {
-            if(cbOperonMapping.Checked)
-            {                
-                Properties.Settings.Default.genesMappingVisible = false;
-                Properties.Settings.Default.categoryMappingsVisible = false;
-                btnGenesFileMapping.Checked = false;
-                cbCategoryMapping.Checked = false;
-            }
-            Properties.Settings.Default.operonMappingVisible = cbOperonMapping.Checked;
 
-            UpdateMappingPanels();
+            ShowMappingPanel(MAPPING_PANEL.REGULON_LINKAGE, cbRegulonMapping.Checked);
+
+            //if (cbRegulonMapping.Checked)
+            //{                
+            //    Properties.Settings.Default.genesMappingVisible = false;
+            //    Properties.Settings.Default.categoryMappingsVisible = false;
+            //    btnGenesFileMapping.Checked = false;
+            //    cbCategoryMapping.Checked = false;
+            //}
+            //Properties.Settings.Default.regulonMappingVisible = cbRegulonMapping.Checked;
+
+            //UpdateMappingPanels();
         }
 
 
         private void cbCategoryMapping_Click(object sender, RibbonControlEventArgs e)
         {
-            if (cbCategoryMapping.Checked)
-            {
-                Properties.Settings.Default.genesMappingVisible = false;
-                Properties.Settings.Default.operonMappingVisible = false;                
-                cbOperonMapping.Checked = false;
-                btnGenesFileMapping.Checked = false;
-            }
-            Properties.Settings.Default.categoryMappingsVisible = cbCategoryMapping.Checked;
-            UpdateMappingPanels();
+            ShowMappingPanel(MAPPING_PANEL.CATEGORY_LINKAGE, cbCategoryMapping.Checked);
+
+            //if (cbCategoryMapping.Checked)
+            //{
+            //    Properties.Settings.Default.genesMappingVisible = false;
+            //    Properties.Settings.Default.regulonMappingVisible = false;                
+            //    cbRegulonMapping.Checked = false;
+            //    btnGenesFileMapping.Checked = false;
+            //}
+            //Properties.Settings.Default.categoryMappingsVisible = cbCategoryMapping.Checked;
+            //UpdateMappingPanels();
         }
 
         private void btnSelectGenesFile_Click(object sender, RibbonControlEventArgs e)
@@ -2658,7 +2820,19 @@ namespace GINtool
 
                     System.IO.FileInfo fInfo = new System.IO.FileInfo(Properties.Settings.Default.genesFileName);
                     gLastFolder = fInfo.DirectoryName;
-                }
+
+                    if (LoadGenesDataColumns())
+                    {
+                        Fill_GenesDropDownBoxes();
+                        cbGenesFileMapping.Checked = true;
+                        //ddGnsName.Enabled = true;
+                        //ddGenesBSU.Enabled = true;
+                        //ddGenesFunction.Enabled = true;
+                        ShowMappingPanel(MAPPING_PANEL.GENE_INFO, true);
+                    }
+                    
+
+                }               
             }
         }
 

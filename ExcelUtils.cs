@@ -75,7 +75,8 @@ namespace GINtool
                 //now close the workbook and make the function return the data table        
                 excel.ScreenUpdating = true;
                 excelworkBook.Activate();
-                excel.ActiveWindow.Visible = true;
+                if(excel.ActiveWindow!=null)
+                    excel.ActiveWindow.Visible = true;
                 excelworkBook.Close();
                 theApp.EnableEvents = true;
                 theApp.Visible = true;
@@ -133,7 +134,8 @@ namespace GINtool
                 //now close the workbook and make the function return the data table        
                 excel.ScreenUpdating = true;
                 excelworkBook.Activate();
-                excel.ActiveWindow.Visible = true;
+                if(excel.ActiveWindow!=null)
+                    excel.ActiveWindow.Visible = true;
                 excelworkBook.Close();
                 theApp.EnableEvents = true;
                 theApp.Visible = true;

@@ -136,6 +136,11 @@ namespace GINtool
 
         private bool LoadCategoryData()
         {
+            if (Properties.Settings.Default.categoryFile.Length == 0 || Properties.Settings.Default.catSheet.Length == 0)
+            {
+                btnCatFile.Label = "No file selected";
+                return false;
+            }
 
             AddTask(TASKS.LOAD_CATEGORY_DATA);
 
@@ -155,9 +160,7 @@ namespace GINtool
             DataView __uCat = _uCat.DefaultView;
             __uCat.Sort = String.Format("[{0}] asc", Properties.Settings.Default.catCatIDColumn);
             _uCat = __uCat.ToTable();
-
            
-
 
             // long list of columns... make cleaner later..
 
@@ -340,24 +343,9 @@ namespace GINtool
             {
                 btnCatFile.Label = "No file selected";
                 return false;
-            }
+            }            
 
-            AddTask(TASKS.LOAD_CATEGORY_DATA);
-
-            string[]  _tmp = ExcelUtils.ReadExcelToDatableHeader(gApplication, Properties.Settings.Default.catSheet, Properties.Settings.Default.categoryFile, 1, 1);
-
-
-            if (_tmp != null)
-            {
-                gCategoryColNames = new string[_tmp.Length];
-                int i = 0;
-                foreach (string col in _tmp)
-                {
-                    gCategoryColNames[i++] = col;
-                }
-            }
-         
-            RemoveTask(TASKS.LOAD_CATEGORY_DATA);
+            gCategoryColNames = ExcelUtils.ReadExcelToDatableHeader(gApplication, Properties.Settings.Default.catSheet, Properties.Settings.Default.categoryFile, 1, 1);
 
             return gCategoryColNames.Length > 0;
         }
@@ -422,22 +410,10 @@ namespace GINtool
                 return false;
             }
 
-            AddTask(TASKS.LOAD_GENES_DATA);
-            string[] _tmp = ExcelUtils.ReadExcelToDatableHeader(gApplication, Properties.Settings.Default.genesSheetName, Properties.Settings.Default.genesFileName, 1, 1);
+            gGenesColNames = ExcelUtils.ReadExcelToDatableHeader(gApplication, Properties.Settings.Default.genesSheetName, Properties.Settings.Default.genesFileName, 1, 1);
 
-
-            if (_tmp != null)
-            {
-                gGenesColNames = new string[_tmp.Length];
-                int i = 0;
-                foreach (string col in _tmp)
-                {
-                    gGenesColNames[i++] = col;
-                }
-            }            
-
-            RemoveTask(TASKS.LOAD_GENES_DATA);
-            return gGenesWB != null;
+            
+            return gGenesColNames.Length>0;
 
         }
 
@@ -465,7 +441,6 @@ namespace GINtool
             return gGenesWB != null;
 
         }
-
 
         /// <summary>
         /// Load the main Regulon data as downloaded from http://subtiwiki.uni-goettingen.de/. 
@@ -496,6 +471,19 @@ namespace GINtool
 
             RemoveTask(TASKS.LOAD_REGULON_DATA);
             return gRegulonWB != null;
+        }
+
+        private bool LoadRegulonDataColumns()
+        {
+            if (Properties.Settings.Default.referenceFile.Length == 0 || Properties.Settings.Default.referenceSheetName.Length == 0)
+            {
+                btnRegulonFileName.Label = "No file selected";
+                return false;
+            }            
+
+            gRegulonColNames = ExcelUtils.ReadExcelToDatableHeader(gApplication, Properties.Settings.Default.referenceSheetName, Properties.Settings.Default.referenceFile, 1, 1);
+            
+            return gRegulonColNames.Length > 0;
         }
 
 

@@ -86,12 +86,6 @@
     <Setting Name="useSort" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="genesMappingVisible" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="operonMappingVisible" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="genesFileName" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
@@ -118,9 +112,6 @@
     </Setting>
     <Setting Name="catCatDescriptionColumn" Type="System.String" Scope="User">
       <Value Profile="(Default)">description</Value>
-    </Setting>
-    <Setting Name="categoryMappingsVisible" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

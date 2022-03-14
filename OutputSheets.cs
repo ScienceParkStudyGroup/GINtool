@@ -434,7 +434,7 @@ namespace GINtool
         /// Create the worksheet that contains the basic mapping gene - regulon table
         /// </summary>
         /// <param name="bsuRegulons"></param>
-        private void CreateMappingSheet(List<BsuLinkedItems> bsuRegulons)
+        private SysData.DataTable CreateMappingSheet(List<BsuLinkedItems> bsuRegulons)
         {
             (SysData.DataTable lTable, SysData.DataTable clrTbl) = PrepareResultTable(bsuRegulons);
 
@@ -475,6 +475,7 @@ namespace GINtool
 
             RemoveTask(TASKS.UPDATE_MAPPED_TABLE);
 
+            return lTable;
         }
 
 

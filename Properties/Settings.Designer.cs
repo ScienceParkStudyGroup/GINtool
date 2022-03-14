@@ -358,30 +358,6 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool genesMappingVisible {
-            get {
-                return ((bool)(this["genesMappingVisible"]));
-            }
-            set {
-                this["genesMappingVisible"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool operonMappingVisible {
-            get {
-                return ((bool)(this["operonMappingVisible"]));
-            }
-            set {
-                this["operonMappingVisible"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string genesFileName {
             get {
@@ -485,18 +461,6 @@ namespace GINtool.Properties {
             }
             set {
                 this["catCatDescriptionColumn"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool categoryMappingsVisible {
-            get {
-                return ((bool)(this["categoryMappingsVisible"]));
-            }
-            set {
-                this["categoryMappingsVisible"] = value;
             }
         }
     }
