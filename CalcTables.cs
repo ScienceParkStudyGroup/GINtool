@@ -877,30 +877,28 @@ namespace GINtool
                     }
                 }                
             }
-            
+
 
             //if (UseCategoryData())
             //    cat_Elements = ItemSelection.SelectAllElements(gCategoriesWB, true);
             //else            
-                
 
+            
             cat_Elements = GetUniqueElements(cat_Elements);
 
             SysData.DataView dataView = Properties.Settings.Default.useCat ? gCategoryTable.AsDataView() : gRegulonTable.AsDataView();
             element_fc catPlotData;
-            if (Properties.Settings.Default.useCat)
-            {
-                
-                catPlotData = CatElements2ElementsFC(dataView, cat_Elements);
-            }
+            if (Properties.Settings.Default.useCat)                            
+                catPlotData = CatElements2ElementsFC(dataView, cat_Elements);            
             else
                 catPlotData = Regulons2ElementsFC(dataView, cat_Elements);
 
-
-            (List<element_rank> plotData, List<summaryInfo> _all, List<summaryInfo> _pos, List<summaryInfo> _neg, List<summaryInfo> _best) = CreateRankingPlotData(catPlotData);
-
-            
-            CreateRankingDataSheet(catPlotData, _all, _pos, _neg, _best);
+         
+            if (catPlotData.All != null)
+            {
+                (List<element_rank> plotData, List<summaryInfo> _all, List<summaryInfo> _pos, List<summaryInfo> _neg, List<summaryInfo> _best) = CreateRankingPlotData(catPlotData);
+                CreateRankingDataSheet(catPlotData, _all, _pos, _neg, _best);
+            }
 
         }
 

@@ -12,6 +12,7 @@ namespace GINtool
 {
     public partial class GinRibbon
     {
+       
         /// <summary>
         /// Create the distribution plot
         /// </summary>
@@ -50,14 +51,21 @@ namespace GINtool
         //private void SpreadingPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements, int topTenFC = -1, int topTenP = -1, bool outputTable = false)
         private void SpreadingPlot(List<cat_elements> cat_Elements, int topTenFC = -1, int topTenP = -1, bool outputTable = false)
         {
-
+            
             AddTask(TASKS.CATEGORY_CHART);
 
-            //SysData.DataTable _fc_BSU = ReformatRegulonResults(aOutput);
-            if (gRegulonTable is null)
-                gRegulonTable = CreateRegulonUsageTable(gList);
+            Func<DataView, List<cat_elements>, int, int, element_fc> CatElementsPtr = null;        
+
+            ////SysData.DataTable _fc_BSU = ReformatRegulonResults(aOutput);
+            //if (gRegulonTable is null | NeedsUpdate(UPDATE_FLAGS.TRegulon))
+            //{
+            //    gRegulonTable = CreateRegulonUsageTable(GetDataSelection());
                 
-            // SysData.DataTable _fc_BSU = ReformatRegulonResults(aOutput);
+
+            //if (gCategoryTable is null | NeedsUpdate(UPDATE_FLAGS.TCategory))
+            //    gRegulonTable = CreateRegulonUsageTable(GetDataSelection());
+
+            //// SysData.DataTable _fc_BSU = ReformatRegulonResults(aOutput);
             cat_Elements = GetUniqueElements(cat_Elements);
 
             // HashSet ensures unique list
@@ -68,12 +76,21 @@ namespace GINtool
 
             SysData.DataView dataView = gRegulonTable.AsDataView();
             element_fc catPlotData;
+            //if (Properties.Settings.Default.useCat)
+            //{
+            //    //funcPtr = CatElements2ElementsFC(dataView, cat_Elements, topTenFC, topTenP);
+            // CatElementsPtr = Properties.Settings.Default.useCat ? CatElements2ElementsFC : Regulons2ElementsFC;
+            //}
+            //else
+            //    //catPlotData = Regulons2ElementsFC(dataView, cat_Elements, topTenFC: topTenFC, topTenP: topTenP); // need to alter caller
+            //    CatElementsPtr = Regulons2ElementsFC;// need to alter caller
+
             if (Properties.Settings.Default.useCat)
-            {
-                catPlotData = CatElements2ElementsFC(dataView, cat_Elements, topTenFC, topTenP);
-            }
+                CatElementsPtr = CatElements2ElementsFC;
             else
-                catPlotData = Regulons2ElementsFC(dataView, cat_Elements, topTenFC: topTenFC, topTenP: topTenP); // need to alter caller
+                CatElementsPtr = Regulons2ElementsFC;
+            
+            catPlotData = CatElementsPtr(dataView, cat_Elements, topTenFC, topTenP);
 
             string postFix = topTenFC > -1 ? string.Format("Top{0}FC", topTenFC) : (topTenP > -1 ? string.Format("Top{0}P", topTenP) : "");
             string chartBase = (Properties.Settings.Default.useCat ? string.Format("CatSpreadPlot{0}_", postFix) : string.Format("RegSpreadPlot{0}_", postFix));

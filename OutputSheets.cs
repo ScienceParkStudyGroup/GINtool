@@ -22,6 +22,9 @@ namespace GINtool
             SysData.DataTable myTable = new System.Data.DataTable("mytable");
             SysData.DataTable clrTable = new System.Data.DataTable("colortable");
 
+            if (lResults.Count == 0)
+                return (null, null);
+
             int maxcol = UseCategoryData() ? lResults[0].Categories.Count: lResults[0].Regulons.Count;
 
 
@@ -410,7 +413,7 @@ namespace GINtool
 
             // Combine positive and negative mode results to obtain a 'best' result
 
-            lTable = ElementsToTable(bestSort);
+            lTable = ElementsToTable(bestSort,bestMode:true);
 
             //List<summaryInfo> _best;
             //    (lTable, _best) = BestElementScore(theElements);
@@ -437,6 +440,9 @@ namespace GINtool
         private SysData.DataTable CreateMappingSheet(List<BsuLinkedItems> bsuRegulons)
         {
             (SysData.DataTable lTable, SysData.DataTable clrTbl) = PrepareResultTable(bsuRegulons);
+
+            if(lTable == null)
+                return null;
 
             AddTask(TASKS.UPDATE_MAPPED_TABLE);
 

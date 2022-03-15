@@ -78,8 +78,8 @@ namespace GINtool
         Excel.Range gRangeFC;
         Excel.Range gRangeP;
 
-        List<FC_BSU> gOutput = null;
-        SysData.DataTable gSummary = null;
+        //List<FC_BSU> gOutput = null;
+        //SysData.DataTable gSummary = null;
         List<BsuLinkedItems> gList = null;
         SysData.DataTable gRegulonTable = null;
         SysData.DataTable gCategoryTable = null;
@@ -145,7 +145,7 @@ namespace GINtool
         private SysData.DataRow[] LookupRegulon(string value)
         {
             // needs to be replaced by genes table entry
-            SysData.DataRow[] filteredRows = gRegulonWB.Select(string.Format("[{0}] LIKE '%{1}%'", Properties.Settings.Default.referenceBSU, value));            
+            SysData.DataRow[] filteredRows = gRegulonWB.Select(string.Format("[{0}] LIKE '%{1}%'", Properties.Settings.Default.referenceBSU, value));
 
             // copy data to temporary table
             SysData.DataTable dt = gRegulonWB.Clone();
@@ -163,7 +163,7 @@ namespace GINtool
         /// <param name="value"></param>
         /// <returns></returns>
         private SysData.DataRow[] LookupCategory(string value)
-        {         
+        {
             // needs to be replaced by genes table entry
             //SysData.DataRow[] filteredRows = gCategoriesWB.Select(string.Format("[{0}] LIKE '%{1}%'", Properties.Settings.Default.catBSUColum, value));
             //SysData.DataRow[] filteredRows = gCategoriesWB.Select(string.Format("[locus_tag] LIKE '%{0}%'", value));
@@ -211,7 +211,7 @@ namespace GINtool
             btApply.Enabled = enable;
 
             // genes items
-            
+
             ddGenesBSU.Enabled = enable;
             ddGenesDescription.Enabled = enable;
             ddGenesFunction.Enabled = enable;
@@ -238,13 +238,19 @@ namespace GINtool
             cbSummary.Enabled = enable;
             cbCombined.Enabled = enable;
             cbOperon.Enabled = enable;
-            cbOrderFC.Enabled = enable;
+            //cbOrderFC.Enabled = enable;
             cbUsePValues.Enabled = enable;
             cbUseFoldChanges.Enabled = enable;
+            cbNoFilter.Enabled = enable;
             toggleButton1.Enabled = true;
             cbAscending.Enabled = enable;
             cbDescending.Enabled = enable;
             cbUseRegulons.Enabled = enable;
+            cbUseCategories.Enabled = enable;
+
+
+
+
         }
 
 
@@ -256,7 +262,7 @@ namespace GINtool
             gApplication = Globals.ThisAddIn.GetExcelApplication();
             btnRegulonFileName.Label = Properties.Settings.Default.referenceFile;
 
-            if (btnRegulonFileName.Label.Length > 0 & btnRegulonFileName.Label!="not defined yet")
+            if (btnRegulonFileName.Label.Length > 0 & btnRegulonFileName.Label != "not defined yet")
             {
                 try
                 {
@@ -265,7 +271,7 @@ namespace GINtool
                     if (LoadRegulonDataColumns())
                         Fill_RegulonDropDownBoxes();
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     gApplication.StatusBar.Text = ex.Message;
                     // show error dialog here
@@ -298,7 +304,7 @@ namespace GINtool
                     //if (LoadOperonDataColumns())
                     //    Fill_OperonDropDownBoxes();
                 }
-                catch(System.Exception ex)
+                catch (System.Exception ex)
                 {
                     gApplication.StatusBar.Text = ex.Message;
 
@@ -315,14 +321,14 @@ namespace GINtool
                     if (LoadCategoryDataColumns())
                         Fill_CategoryDropDownBoxes();
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     gApplication.StatusBar.Text = ex.Message;
 
                 }
             }
 
-            if (Properties.Settings.Default.categoryFile.Length == 0 & Properties.Settings.Default.referenceFile.Length>0)
+            if (Properties.Settings.Default.categoryFile.Length == 0 & Properties.Settings.Default.referenceFile.Length > 0)
             {
                 cbUseCategories.Checked = false;
                 cbUseRegulons.Checked = true;
@@ -332,14 +338,14 @@ namespace GINtool
 
             //btnOperonFile.Label = Properties.Settings.Default.operonFile;
             //btnCatFile.Label = Properties.Settings.Default.categoryFile;
-            cbOrderFC.Checked = Properties.Settings.Default.useSort;
+            //cbOrderFC.Checked = Properties.Settings.Default.useSort;
             cbDescending.Checked = !Properties.Settings.Default.sortAscending;
             cbAscending.Checked = Properties.Settings.Default.sortAscending;
 
             cbGenesFileMapping.Checked = false; // Properties.Settings.Default.genesMappingVisible;
             cbRegulonMapping.Checked = false; // Properties.Settings.Default.regulonMappingVisible;
             cbCategoryMapping.Checked = false;
-            
+
 
             //operonMappingVisible
 
@@ -353,13 +359,21 @@ namespace GINtool
             cbDistribution.Checked = Properties.Settings.Default.distPlot;
 
 
-          
+
 
             cbUseCategories.Checked = Properties.Settings.Default.useCat;
             cbUseRegulons.Checked = !Properties.Settings.Default.useCat;
 
             cbUsePValues.Checked = Properties.Settings.Default.use_pvalues;
-            cbUseFoldChanges.Checked = !Properties.Settings.Default.use_pvalues;
+            cbUseFoldChanges.Checked = Properties.Settings.Default.use_foldchange;
+            cbNoFilter.Checked = (cbUsePValues.Checked == false) && (cbUseFoldChanges.Checked == false);
+
+            // load the up/down definitions 
+
+            gAvailItems = PropertyItems("directionMapUnassigned");
+            gUpItems = PropertyItems("directionMapUp");
+            gDownItems = PropertyItems("directionMapDown");
+
         }
 
         /// <summary>
@@ -370,13 +384,7 @@ namespace GINtool
 
         private void GinRibbon_Load(object sender, RibbonUIEventArgs e)
         {
-
             LoadPersistentSettings();
-
-          
-            gAvailItems = PropertyItems("directionMapUnassigned");
-            gUpItems = PropertyItems("directionMapUp");
-            gDownItems = PropertyItems("directionMapDown");
 
             InitFields();
 
@@ -386,13 +394,11 @@ namespace GINtool
 
             gExcelErrorValues = ((int[])Enum.GetValues(typeof(ExcelUtils.CVErrEnum))).ToList();
 
-
             gCategoryFileSelected = System.IO.File.Exists(Properties.Settings.Default.categoryFile);
             gRegulonFileSelected = System.IO.File.Exists(Properties.Settings.Default.referenceFile);
             gGenesFileSelected = System.IO.File.Exists(Properties.Settings.Default.genesFileName);
 
             btLoad.Enabled = (System.IO.File.Exists(Properties.Settings.Default.referenceFile) | System.IO.File.Exists(Properties.Settings.Default.categoryFile)) & System.IO.File.Exists(Properties.Settings.Default.genesFileName);
-            
 
         }
 
@@ -404,8 +410,8 @@ namespace GINtool
         private void EnableOutputOptions(bool enable)
         {
             ebLow.Enabled = enable;
-            ebMid.Enabled = enable;
-            ebHigh.Enabled = enable;
+            //ebMid.Enabled = enable;
+            //ebHigh.Enabled = enable;
             editMinPval.Enabled = enable;
 
             cbMapping.Enabled = enable;
@@ -416,14 +422,15 @@ namespace GINtool
             cbDistribution.Enabled = enable;
             chkRegulon.Enabled = enable;
 
-            cbOrderFC.Enabled = enable;
-            cbUseCategories.Enabled = enable && gCatOutput;
-            cbUseRegulons.Enabled = enable && !gCatOutput;
+            //cbOrderFC.Enabled = enable;
+            cbUseCategories.Enabled = enable && gCategoryFileSelected;
+            cbUseRegulons.Enabled = enable && gRegulonFileSelected;
 
             cbOperon.Enabled = enable && gOperonOutput;
 
             cbUsePValues.Enabled = enable;
             cbUseFoldChanges.Enabled = enable;
+            cbNoFilter.Enabled = enable;
 
             cbAscending.Enabled = enable;
             cbDescending.Enabled = enable;
@@ -556,33 +563,33 @@ namespace GINtool
 
             foreach (BsuLinkedItems _it in theInputData)
             {
-            
+
                 if ((_it.BSU.Length > 0) & !(gCategoriesWB is null))
                 {
                     // find the entries that are linked by the same gene
                     // SysData.DataRow[] results = LookupCategory(lMap.BSU);
                     SysData.DataRow[] results = LookupCategory(_it.BSU);
-                    foreach(DataRow row in results)
+                    foreach (DataRow row in results)
                     //if (results.Length>0)
                     {
                         string[] c1 = new string[] { row["cat1"].ToString(), row["cat2"].ToString(), row["cat3"].ToString(), row["cat4"].ToString(), row["cat5"].ToString() };
                         string catName = "";
-                        foreach(string s in c1)
+                        foreach (string s in c1)
                         {
                             if (s.Length > 0)
                                 catName = s;
                         }
-                        
+
                         //string genID = row[Properties.Settings.Default.catBSUColum].ToString();
                         string genID = row["locus_tag"].ToString();
                         string catID = " (" + row["catid_short"].ToString() + ")";
 
-                        CategoryItem _lCat = new CategoryItem(catName+catID, genID);
+                        CategoryItem _lCat = new CategoryItem(catName + catID, genID);
                         _it.Categories.Add(_lCat);
-                        
+
                     }
 
-                }                
+                }
             }
 
             RemoveTask(TASKS.AUGMENTING_WITH_CATEGORY_DATA);
@@ -699,7 +706,7 @@ namespace GINtool
         }
 
 
-       
+
 
         /// <summary>
         /// Copy the text in tables to a worksheet using a single assignment to an Excel.Range
@@ -879,7 +886,7 @@ namespace GINtool
             //SysData.DataColumn PvalColumn = new DataColumn("PValue", Type.GetType("System.Double"));            
             //SysData.DataColumn descriptionColumn = new SysData.DataColumn("ID", Type.GetType("System.String"));
             //SysData.DataColumn functionColumn = new SysData.DataColumn("ID", Type.GetType("System.String"));
-            
+
             //_BSUTable.Columns.Add(BSUColumn);
             //_BSUTable.Columns.Add(FCColumn);
             //_BSUTable.Columns.Add(PvalColumn);
@@ -936,7 +943,7 @@ namespace GINtool
 
             //if (!(gGenesWB is null))
             //{
-               
+
             //}
 
             RemoveTask(TASKS.AUGMENTING_WITH_GENES_INFO);
@@ -966,7 +973,7 @@ namespace GINtool
         }
 
         /// <summary>
-        /// Load the user-defined up/down definitions
+        /// Load the possible up/down definitions
         /// </summary>
         private void LoadDirectionOptions()
         {
@@ -1048,9 +1055,6 @@ namespace GINtool
             ddGenesFunction.Items.Clear();
             ddGenesDescription.Items.Clear();
 
-            /// temporary fix... need to be removed later
-            //if (gGenesColNames is null)
-            //    LoadGenesDataColumns();
 
             foreach (string s in gGenesColNames)
             {
@@ -1091,7 +1095,7 @@ namespace GINtool
             ddGnsName.Enabled = true;
             ddGenesBSU.Enabled = true;
             ddGenesFunction.Enabled = true;
-            ddGenesDescription.Enabled = true;            
+            ddGenesDescription.Enabled = true;
 
             gApplication.EnableEvents = true;
 
@@ -1105,7 +1109,7 @@ namespace GINtool
 
             ddCatID.Items.Clear();
             ddCatName.Items.Clear();
-            ddCatBSU.Items.Clear();            
+            ddCatBSU.Items.Clear();
 
             foreach (string s in gCategoryColNames)
             {
@@ -1136,7 +1140,7 @@ namespace GINtool
 
             ddCatID.Enabled = true;
             ddCatName.Enabled = true;
-            ddCatBSU.Enabled = true;            
+            ddCatBSU.Enabled = true;
 
             gApplication.EnableEvents = true;
 
@@ -1148,10 +1152,8 @@ namespace GINtool
         /// </summary>
         private void ResetTables()
         {
-            gOutput = null;
+
             gList = null;
-            gSummary = null;
-            //gInputRange = null;
             gOldRangeBSU = "";
             gOldRangeFC = "";
             gOldRangeP = "";
@@ -1169,23 +1171,11 @@ namespace GINtool
         private void LoadFCDefaults()
         {
             ebLow.Text = Properties.Settings.Default.fcLOW.ToString();
-            ebMid.Text = Properties.Settings.Default.fcMID.ToString();
-            ebHigh.Text = Properties.Settings.Default.fcHIGH.ToString();
+            //ebMid.Text = Properties.Settings.Default.fcMID.ToString();
+            //ebHigh.Text = Properties.Settings.Default.fcHIGH.ToString();
             editMinPval.Text = Properties.Settings.Default.pvalue_cutoff.ToString();
         }
 
-
-        //private void EnableItems(bool enable)
-        //{
-        //    btLoad.Enabled = enable;
-        //    ddBSU.Enabled = enable;
-        //    ddRegulon.Enabled = enable;
-        //    ddGene.Enabled = enable;
-        //    //btPlot.Enabled = enable;
-        //    //edtMaxGroups.Enabled = enable;
-        //    //btnPalette.Enabled = enable;
-
-        //}
 
 
         /// <summary>
@@ -1225,6 +1215,9 @@ namespace GINtool
             StoreValue("directionMapUp", gUpItems);
             StoreValue("directionMapDown", gDownItems);
 
+            if (gUpItems.Count > 0 | gDownItems.Count > 0)
+                gApplication.StatusBar = false;
+
             SetFlags(UPDATE_FLAGS.ALL);
 
         }
@@ -1253,15 +1246,15 @@ namespace GINtool
         {
 
             bool low = false;
-            bool mid = false;
-            bool high = false;
+            //bool mid = false;
+            //bool high = false;
 
             if (bx.Equals(ebLow))
                 low = true;
-            if (bx.Equals(ebMid))
-                mid = true;
-            if (bx.Equals(ebHigh))
-                high = true;
+            //if (bx.Equals(ebMid))
+            //    mid = true;
+            //if (bx.Equals(ebHigh))
+            //    high = true;
 
             // can still add range checks e.g. high > mid > low  
 
@@ -1271,10 +1264,10 @@ namespace GINtool
                 bx.Text = val.ToString();
                 if (low)
                     Properties.Settings.Default.fcLOW = val;
-                if (mid)
-                    Properties.Settings.Default.fcMID = val;
-                if (high)
-                    Properties.Settings.Default.fcHIGH = val;
+                //if (mid)
+                //    Properties.Settings.Default.fcMID = val;
+                //if (high)
+                //    Properties.Settings.Default.fcHIGH = val;
 
                 SetFlags(UPDATE_FLAGS.FC_dependent);
             }
@@ -1282,10 +1275,10 @@ namespace GINtool
             {
                 if (low)
                     ebLow.Text = Properties.Settings.Default.fcLOW.ToString();
-                if (mid)
-                    ebMid.Text = Properties.Settings.Default.fcMID.ToString();
-                if (high)
-                    ebHigh.Text = Properties.Settings.Default.fcHIGH.ToString();
+                //if (mid)
+                //    ebMid.Text = Properties.Settings.Default.fcMID.ToString();
+                //if (high)
+                //    ebHigh.Text = Properties.Settings.Default.fcHIGH.ToString();
             }
         }
 
@@ -1299,27 +1292,7 @@ namespace GINtool
             ValidateTextBoxData(ebLow);
         }
 
-        /// <summary>
-        /// Check changes in textbox Mid
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void TextBox_Mid_TextChanged(object sender, RibbonControlEventArgs e)
-        {
-            ValidateTextBoxData(ebMid);
-        }
-
-        /// <summary>
-        /// Check changes in textbox High
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-
-        private void TextBox_High_TextChanged(object sender, RibbonControlEventArgs e)
-        {
-            ValidateTextBoxData(ebHigh);
-        }
-
+        
         /// <summary>
         /// The main routine after the load button has been selected
         /// </summary>
@@ -1330,21 +1303,34 @@ namespace GINtool
             gApplication.EnableEvents = false;
             if (LoadGenesData() & (LoadRegulonData() | LoadCategoryData()))
             {
-                
+
                 gOperonOutput = LoadOperonData();
                 //gCatOutput = LoadCategoryDataNewFormat();
                 //gCatOutput = LoadCategoryData();
 
-                Fill_GenesDropDownBoxes();
+                //Fill_GenesDropDownBoxes();
 
                 if (gRegulonFileSelected)
                 {
-                    Fill_RegulonDropDownBoxes();
+                    //Fill_RegulonDropDownBoxes();
                     if (gDownItems.Count == 0 && gUpItems.Count == 0 && gAvailItems.Count == 0)
+                    {
                         LoadDirectionOptions();
+                        //if (gAvailItems.Count == 0 || (gDownItems.Count == 0 | gUpItems.Count == 0))
+                        //    MessageBox.Show("select defintions of up and down regulation");
+
+                    }
+
+                    if (gAvailItems.Count > 0 & (gDownItems.Count == 0 & gUpItems.Count == 0))
+                    {
+                        gApplication.StatusBar = "Select defintions of up and down regulation first before running regulon augmentation!";
+                        //gApplication.StatusBar
+                    }
+
+
                 }
 
-                if(gCategoryFileSelected)
+                if (gCategoryFileSelected)
                 {
                     //Fill_CategoryDropDownBoxes();
                     // load comboboxes for the category file (if necessary)
@@ -1375,12 +1361,27 @@ namespace GINtool
                 return;
             }
 
-            if (gRegulonFileSelected && gRegulonTable is null)            
-                gRegulonTable = CreateRegulonUsageTable(gList);            
-            
-            if (gCategoryFileSelected && gCategoryTable is null)            
-                gCategoryTable = CreateCategoryUsageTable(gList);
-                
+            if (gRegulonFileSelected && (gRegulonTable is null || NeedsUpdate(UPDATE_FLAGS.TRegulon)))
+            {
+
+                gRegulonTable = CreateRegulonUsageTable(GetDataSelection());
+                UnSetFlags(UPDATE_FLAGS.TRegulon);
+            }
+            if (gCategoryFileSelected && (gCategoryTable is null || NeedsUpdate(UPDATE_FLAGS.TCategory)))
+            {
+
+                gCategoryTable = CreateCategoryUsageTable(GetDataSelection());
+                UnSetFlags(UPDATE_FLAGS.TCategory);
+            }
+
+
+            //if (gRegulonFileSelected && gRegulonTable is null)
+            //    gRegulonTable = CreateRegulonUsageTable(GetDataSelection());
+
+            //if (gCategoryFileSelected && gCategoryTable is null)
+            //    gCategoryTable = CreateCategoryUsageTable(GetDataSelection());
+
+
 
             if ((Properties.Settings.Default.catPlot || Properties.Settings.Default.regPlot)) //& gNeedsUpdate.Check(UPDATE_FLAGS.PCat))
             {
@@ -1413,10 +1414,17 @@ namespace GINtool
                     //    } 
                     //}
 
-                    if (Properties.Settings.Default.regPlot && gList!=null)
+
+
+
+
+                    if (Properties.Settings.Default.regPlot && gList != null)
                         RankingPlot(dlg.GetSelection(), UseCategoryData() ? gCategoryTable : gRegulonTable);
 
-                    if (Properties.Settings.Default.catPlot && gList!=null)
+
+
+
+                    if (Properties.Settings.Default.catPlot && gList != null)
                         SpreadingPlot(dlg.GetSelection(), topTenFC: dlg.getTopFC(), topTenP: dlg.getTopP(), outputTable: dlg.selectTableOutput());
 
                     ////if ((gOutput != null && gSummary != null && dlg.GetSelection().Count() > 0))
@@ -1433,7 +1441,7 @@ namespace GINtool
                     //        //RankingPlot(gOutput, gSummary, dlg.GetSelection());
                     //    }
                     //}
-                    }
+                }
                 //}
 
             }
@@ -1441,24 +1449,24 @@ namespace GINtool
 
             if (Properties.Settings.Default.distPlot)
             {
-                //if (gOutput == null || gSummary == null || gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
-                if (gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
-                {
-                    //(gOutput, gList) = ReadDataAndAugment();                    
-                    gList = ReadDataAndAugment();
-                    //if (gOutput != null && gList != null)
-                    if (gRegulonTable != null)
-                    {
-                        UnSetFlags(UPDATE_FLAGS.TMapped);
-                        //(gSummary, gRegulonTable) = CreateRegulonUsageTable(gOutput);
-                        gRegulonTable = CreateRegulonUsageTable(gList);
-                        UnSetFlags(UPDATE_FLAGS.TCombined);
-                    }
-                }
+                ////if (gOutput == null || gSummary == null || gNeedsUpdate.Check(UPDATE_FLAGS.TMapped))
+                //if (gNeedsUpdate.Check(UPDATE_FLAGS.TRegulon) || gNeedsUpdate.Check(UPDATE_FLAGS.TCategory))
+                //{
+                //    //(gOutput, gList) = ReadDataAndAugment();                    
+                //    // gList = ReadDataAndAugment();
+                //    //if (gOutput != null && gList != null)
+                //    if (gRegulonTable != null)
+                //    {                        
+                //        //(gSummary, gRegulonTable) = CreateRegulonUsageTable(gOutput);
+                //        gRegulonTable = CreateRegulonUsageTable(gList);
+                //        //UnSetFlags(UPDATE_FLAGS.TCategory);
+                //        UnSetFlags(UPDATE_FLAGS.TRegulon);
+                //    }
+                //}
 
                 if (gList != null)
                 {
-                    DistributionPlot(gList);
+                    DistributionPlot(GetDataSelection());
                 }
             }
         }
@@ -1485,27 +1493,19 @@ namespace GINtool
             if (NoUpdate())
                 return;
 
-            
+            // combined info should contain best table info
 
-            // combined info should contain best table info, gSummary is best table .. 
-
-
-            if(gRegulonFileSelected && gRegulonTable is null)
-            //if ((gSummary == null && gRegulonTable == null) || NeedsUpdate(UPDATE_FLAGS.TSummary))
-            // if ((gRegulonTable == null) || NeedsUpdate(UPDATE_FLAGS.TSummary))
+            if (gRegulonFileSelected && (gRegulonTable is null || NeedsUpdate(UPDATE_FLAGS.TRegulon)))
             {
                 
-                //(gSummary, gRegulonTable) = CreateRegulonUsageTable(gOutput);
-                gRegulonTable = CreateRegulonUsageTable(gList);
-                //UnSetFlags(UPDATE_FLAGS.TSummary);
-            }
-            if (gCategoryFileSelected && gCategoryTable is null)
-            //if ((gRegulonTable == null) || NeedsUpdate(UPDATE_FLAGS.TSummary))
+                gRegulonTable = CreateRegulonUsageTable(GetDataSelection());
+                UnSetFlags(UPDATE_FLAGS.TRegulon);
+            } 
+            if (gCategoryFileSelected && (gCategoryTable is null || NeedsUpdate(UPDATE_FLAGS.TCategory)))
             {
-
-                //(gSummary, gRegulonTable) = CreateRegulonUsageTable(gOutput);
-                gCategoryTable = CreateCategoryUsageTable(gList);
-                //UnSetFlags(UPDATE_FLAGS.TSummary);
+                
+                gCategoryTable = CreateCategoryUsageTable(GetDataSelection());
+                UnSetFlags(UPDATE_FLAGS.TCategory);
             }
 
             //if (gSummary != null && Properties.Settings.Default.tblSummary)
@@ -1513,13 +1513,11 @@ namespace GINtool
 
 
             //CreateBestDataTable(gList, gSummary, null);
-            
+
 
             //if (Properties.Settings.Default.tblMap)
-            SysData.DataTable lMapping = CreateMappingSheet(gList);
-
-
-            CreateBestDataTable(gList, lMapping);
+            SysData.DataTable lMapping = CreateMappingSheet(GetDataSelection());
+            CreateBestDataTable(GetDataSelection(), lMapping);
 
 
             //if (Properties.Settings.Default.tblCombine) // can combine table/sheet because it's a quick routine
@@ -1533,7 +1531,7 @@ namespace GINtool
 
             if (Properties.Settings.Default.tblOperon && gOperonOutput) // can combine table/sheet because it's a quick routine
             {
-                SysData.DataTable tblOperon = CreateOperonTable(gList);
+                SysData.DataTable tblOperon = CreateOperonTable(GetDataSelection());
                 CreateOperonSheet(tblOperon);
                 UnSetFlags(UPDATE_FLAGS.TOperon);
             }
@@ -1618,7 +1616,7 @@ namespace GINtool
                 string categories = string.Join(",", ce.elements.ToArray());
                 categories = string.Join(",", categories.Split(',').Select(x => $"'{x}'"));
                 dataViewCat.RowFilter = String.Format("catid_short in ({0})", categories);
-
+                
                 HashSet<string> genes = new HashSet<string>();
                 foreach (DataRow _row in dataViewCat.ToTable().Rows)
                 {
@@ -1629,112 +1627,107 @@ namespace GINtool
                 string genesFormat = string.Join(",", genes.ToArray());
                 genesFormat = string.Join(",", genesFormat.Split(',').Select(x => $"'{x}'"));
                 // GENE_ID moet ergens gedefinieerd worden
-                dataView.RowFilter = String.Format("Gene_ID in ({0})", genesFormat); 
+                dataView.RowFilter = String.Format("Gene_ID in ({0})", genesFormat);
+                if (dataView.Count > 0) // set this to true to output all results.. also the zeros
+                { 
+                    SysData.DataTable _dt = dataView.ToTable(true, "Gene", "FC", "Pvalue");
 
-                SysData.DataTable _dt = dataView.ToTable(true, "Gene", "FC", "Pvalue");
+                    summaryInfo __All = new summaryInfo();
+                    summaryInfo __Pos = new summaryInfo();
+                    summaryInfo __Neg = new summaryInfo();
 
-                summaryInfo __All = new summaryInfo();
-                summaryInfo __Pos = new summaryInfo();
-                summaryInfo __Neg = new summaryInfo();
-
-                __All.catName = string.Format("{0} ({1})", ce.catName, _dt.Rows.Count);
-                __Pos.catName = string.Format("{0} ({1})", ce.catName, _dt.Rows.Count);
-                __Neg.catName = string.Format("{0} ({1})", ce.catName, _dt.Rows.Count);
-
-
-                List<double> _fcsA = new List<double>();
-                List<string> _genesA = new List<string>();
-                List<double> _pvaluesA = new List<double>();
+                    __All.catName = string.Format("{0} ({1})", ce.catName, _dt.Rows.Count);
+                    __Pos.catName = string.Format("{0} ({1})", ce.catName, _dt.Rows.Count);
+                    __Neg.catName = string.Format("{0} ({1})", ce.catName, _dt.Rows.Count);
 
 
-                List<double> _fcsP = new List<double>();
-                List<string> _genesP = new List<string>();
-                List<double> _pvaluesP = new List<double>();
+                    List<double> _fcsA = new List<double>();
+                    List<string> _genesA = new List<string>();
+                    List<double> _pvaluesA = new List<double>();
 
-                List<double> _fcsN = new List<double>();
-                List<string> _genesN = new List<string>();
-                List<double> _pvaluesN = new List<double>();
 
-                if (_dt.Rows.Count > 0)
-                {
+                    List<double> _fcsP = new List<double>();
+                    List<string> _genesP = new List<string>();
+                    List<double> _pvaluesP = new List<double>();
 
-                    for (int i = 0; i < _dt.Rows.Count; i++)
+                    List<double> _fcsN = new List<double>();
+                    List<string> _genesN = new List<string>();
+                    List<double> _pvaluesN = new List<double>();
+
+                    if (_dt.Rows.Count > 0)
                     {
 
-                        double fc = (double)_dt.Rows[i]["FC"];
-
-                        chk_Genes.Add(_dt.Rows[i]["Gene"].ToString());
-                        _genesA.Add(_dt.Rows[i]["Gene"].ToString());
-                        _fcsA.Add(fc);
-                        _pvaluesA.Add(double.Parse(_dt.Rows[i]["Pvalue"].ToString()));
-
-                        if (fc >= 0)
+                        for (int i = 0; i < _dt.Rows.Count; i++)
                         {
-                            _genesP.Add(_dt.Rows[i]["Gene"].ToString());
-                            _fcsP.Add(fc);
-                            _pvaluesP.Add(double.Parse(_dt.Rows[i]["Pvalue"].ToString()));
-                        }
-                        else if (fc < 0)
-                        {
-                            _genesN.Add(_dt.Rows[i]["Gene"].ToString());
-                            _fcsN.Add(fc);
-                            _pvaluesN.Add(double.Parse(_dt.Rows[i]["Pvalue"].ToString()));
+
+                            double fc = (double)_dt.Rows[i]["FC"];
+
+                            chk_Genes.Add(_dt.Rows[i]["Gene"].ToString());
+                            _genesA.Add(_dt.Rows[i]["Gene"].ToString());
+                            _fcsA.Add(fc);
+                            _pvaluesA.Add(double.Parse(_dt.Rows[i]["Pvalue"].ToString()));
+
+                            if (fc >= 0)
+                            {
+                                _genesP.Add(_dt.Rows[i]["Gene"].ToString());
+                                _fcsP.Add(fc);
+                                _pvaluesP.Add(double.Parse(_dt.Rows[i]["Pvalue"].ToString()));
+                            }
+                            else if (fc < 0)
+                            {
+                                _genesN.Add(_dt.Rows[i]["Gene"].ToString());
+                                _fcsN.Add(fc);
+                                _pvaluesN.Add(double.Parse(_dt.Rows[i]["Pvalue"].ToString()));
+                            }
                         }
                     }
+
+                    __Pos.fc_average = _fcsP.Count > 0 ? _fcsP.Average() : Double.NaN;
+                    __Neg.fc_average = _fcsN.Count > 0 ? _fcsN.Average() : Double.NaN;
+                    __All.fc_average = _fcsA.Count > 0 ? _fcsA.Average() : Double.NaN;
+
+                    __Pos.fc_values = _fcsP.Count > 0 ? _fcsP.ToArray() : new double[0];
+                    __Neg.fc_values = _fcsN.Count > 0 ? _fcsN.ToArray() : new double[0];
+                    __All.fc_values = _fcsA.Count > 0 ? _fcsA.ToArray() : new double[0];
+
+
+                    __Pos.genes = _genesP.Count > 0 ? _genesP.ToArray() : new string[0];
+                    __Neg.genes = _genesN.Count > 0 ? _genesN.ToArray() : new string[0];
+                    __All.genes = _genesA.Count > 0 ? _genesA.ToArray() : new string[0];
+
+
+                    __Pos.p_values = _pvaluesP.Count > 0 ? _pvaluesP.ToArray() : new double[0];
+                    __Neg.p_values = _pvaluesN.Count > 0 ? _pvaluesN.ToArray() : new double[0];
+                    __All.p_values = _pvaluesA.Count > 0 ? _pvaluesA.ToArray() : new double[0];
+
+                    __All.fc_mad = _fcsA.Count > 0 ? _fcsA.mad() : Double.NaN;
+                    __Pos.fc_mad = _fcsP.Count > 0 ? _fcsP.mad() : Double.NaN;
+                    __Neg.fc_mad = _fcsN.Count > 0 ? _fcsN.mad() : Double.NaN;
+
+
+                    __Pos.p_average = _pvaluesP.Count > 0 ? _pvaluesP.paverage() : Double.NaN;
+                    __Neg.p_average = _pvaluesN.Count > 0 ? _pvaluesN.paverage() : Double.NaN;
+                    __All.p_average = _pvaluesA.Count > 0 ? _pvaluesA.paverage() : Double.NaN;
+
+                    __Pos.p_mad = _pvaluesP.Count > 0 ? _pvaluesP.mad() : Double.NaN;
+                    __Neg.p_mad = _pvaluesN.Count > 0 ? _pvaluesN.mad() : Double.NaN;
+                    __All.p_mad = _pvaluesA.Count > 0 ? _pvaluesA.mad() : Double.NaN;
+
+                    _All.Add(__All);
+                    _Pos.Add(__Pos);
+                    _Neg.Add(__Neg);
                 }
-
-                __Pos.fc_average = _fcsP.Count > 0 ? _fcsP.Average() : Double.NaN;
-                __Neg.fc_average = _fcsN.Count > 0 ? _fcsN.Average() : Double.NaN;
-                __All.fc_average = _fcsA.Count > 0 ? _fcsA.Average() : Double.NaN;
-
-                __Pos.fc_values = _fcsP.Count > 0 ? _fcsP.ToArray() : new double[0];
-                __Neg.fc_values = _fcsN.Count > 0 ? _fcsN.ToArray() : new double[0];
-                __All.fc_values = _fcsA.Count > 0 ? _fcsA.ToArray() : new double[0];
-
-
-                __Pos.genes = _genesP.Count > 0 ? _genesP.ToArray() : new string[0];
-                __Neg.genes = _genesN.Count > 0 ? _genesN.ToArray() : new string[0];
-                __All.genes = _genesA.Count > 0 ? _genesA.ToArray() : new string[0];
-
-
-                __Pos.p_values = _pvaluesP.Count > 0 ? _pvaluesP.ToArray() : new double[0];
-                __Neg.p_values = _pvaluesN.Count > 0 ? _pvaluesN.ToArray() : new double[0];
-                __All.p_values = _pvaluesA.Count > 0 ? _pvaluesA.ToArray() : new double[0];
-
-                __All.fc_mad = _fcsA.Count > 0 ? _fcsA.mad() : Double.NaN;
-                __Pos.fc_mad = _fcsP.Count > 0 ? _fcsP.mad() : Double.NaN;
-                __Neg.fc_mad = _fcsN.Count > 0 ? _fcsN.mad() : Double.NaN;
-
-
-                __Pos.p_average = _pvaluesP.Count > 0 ? _pvaluesP.paverage() : Double.NaN;
-                __Neg.p_average = _pvaluesN.Count > 0 ? _pvaluesN.paverage() : Double.NaN;
-                __All.p_average = _pvaluesA.Count > 0 ? _pvaluesA.paverage() : Double.NaN;
-
-                __Pos.p_mad = _pvaluesP.Count > 0 ? _pvaluesP.mad() : Double.NaN;
-                __Neg.p_mad = _pvaluesN.Count > 0 ? _pvaluesN.mad() : Double.NaN;
-                __All.p_mad = _pvaluesA.Count > 0 ? _pvaluesA.mad() : Double.NaN;
-
-                _All.Add(__All);
-                _Pos.Add(__Pos);
-                _Neg.Add(__Neg);
             }
 
             element_Fcs.All = _All;
             element_Fcs.Activated = _Pos;
             element_Fcs.Repressed = _Neg;
 
-            // sort the values according to average FC and order in the preferred direction
-            if (Properties.Settings.Default.useSort)
-            {
-                double[] __values = element_Fcs.All.Select(x => x.fc_average).ToArray();
-                var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
+            if (element_Fcs.All is null)
+                return element_Fcs;
 
-                element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList();
 
-                if (Properties.Settings.Default.sortAscending)
-                    element_Fcs.All.Reverse();
-            }
-            else if (topTenFC > 0) // if top FC is selected only select the top X values using absolute FC values. The default order is descending
+            if (topTenFC > 0) // if top FC is selected only select the top X values using absolute FC values. The default order is descending
             {
                 // only useful if top N selected is smaller then total number of items
                 if (topTenFC < element_Fcs.All.Count)
@@ -1767,6 +1760,20 @@ namespace GINtool
                     element_Fcs.All.Reverse();
             }
 
+
+            // sort the values according to average FC and order in the preferred direction
+            //if (Properties.Settings.Default.useSort)
+            
+            {
+                double[] __values = element_Fcs.All.Select(x => x.fc_average).ToArray();
+                var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
+
+                element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList();
+
+                if (Properties.Settings.Default.sortAscending)
+                    element_Fcs.All.Reverse();
+            }
+
             return element_Fcs;
         }
 
@@ -1793,110 +1800,116 @@ namespace GINtool
 
                 SysData.DataTable _dataTable = dataView.ToTable();
 
-                // find genes for the regulon/category
-
-                summaryInfo __All = new summaryInfo();
-                summaryInfo __Act = new summaryInfo();
-                summaryInfo __Rep = new summaryInfo();
-
-                __All.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
-                __Act.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
-                __Rep.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
-
-                //total
-                List<double> _fcsT = new List<double>();
-                List<string> _genesT = new List<string>();
-                List<double> _pvaluesT = new List<double>();
-
-                //activatedd
-                List<double> _fcsA = new List<double>();
-                List<string> _genesA = new List<string>();
-                List<double> _pvaluesA = new List<double>();
-
-                // repressed
-                List<double> _fcsR = new List<double>();
-                List<string> _genesR = new List<string>();
-                List<double> _pvaluesR = new List<double>();
-
-
-                if (_dataTable.Rows.Count > 0)
+                if (true) //(_dataTable.Rows.Count > 0)
                 {
 
+                    // find genes for the regulon/category
 
-                    for (int i = 0; i < _dataTable.Rows.Count; i++)
+                    summaryInfo __All = new summaryInfo();
+                    summaryInfo __Act = new summaryInfo();
+                    summaryInfo __Rep = new summaryInfo();
+
+                    __All.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+                    __Act.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+                    __Rep.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+
+                    //total
+                    List<double> _fcsT = new List<double>();
+                    List<string> _genesT = new List<string>();
+                    List<double> _pvaluesT = new List<double>();
+
+                    //activatedd
+                    List<double> _fcsA = new List<double>();
+                    List<string> _genesA = new List<string>();
+                    List<double> _pvaluesA = new List<double>();
+
+                    // repressed
+                    List<double> _fcsR = new List<double>();
+                    List<string> _genesR = new List<string>();
+                    List<double> _pvaluesR = new List<double>();
+
+
+                    if (_dataTable.Rows.Count > 0)
                     {
-                        double fc = (double)_dataTable.Rows[i]["FC"];
-                        string _geneName = _dataTable.Rows[i]["Gene"].ToString();
-                        _genesT.Add(_geneName);
-                        _fcsT.Add(fc);
-                        _pvaluesT.Add(double.Parse(_dataTable.Rows[i]["Pvalue"].ToString()));
+
+                        for (int i = 0; i < _dataTable.Rows.Count; i++)
+                        {
+                            double fc = (double)_dataTable.Rows[i]["FC"];
+                            string _geneName = _dataTable.Rows[i]["Gene"].ToString();
+                            _genesT.Add(_geneName);
+                            _fcsT.Add(fc);
+                            _pvaluesT.Add(double.Parse(_dataTable.Rows[i]["Pvalue"].ToString()));
+                        }
+
+
+                        DataRow[] _inhibited = _dataTable.Select("(FC<0 AND DIR>0) OR (FC>0 AND DIR<=0) ");
+                        for (int i = 0; i < _inhibited.Length; i++)
+                        {
+                            double fc = (double)_inhibited[i]["FC"];
+                            string _geneName = _inhibited[i]["Gene"].ToString();
+                            _genesR.Add(_geneName);
+                            _fcsR.Add(fc);
+                            _pvaluesR.Add(double.Parse(_inhibited[i]["Pvalue"].ToString()));
+                        }
+
+
+                        DataRow[] _activated = _dataTable.Select("(FC>0 AND DIR>0) OR (FC<0 AND DIR<=0) ");
+                        for (int i = 0; i < _activated.Length; i++)
+                        {
+                            double fc = (double)_activated[i]["FC"];
+                            string _geneName = _activated[i]["Gene"].ToString();
+                            _genesA.Add(_geneName);
+                            _fcsA.Add(fc);
+                            _pvaluesA.Add(double.Parse(_activated[i]["Pvalue"].ToString()));
+                        }
+
                     }
 
 
-                    DataRow[] _inhibited = _dataTable.Select("(FC<0 AND DIR>0) OR (FC>0 AND DIR<0) ");
-                    for (int i = 0; i < _inhibited.Length; i++)
-                    {
-                        double fc = (double)_inhibited[i]["FC"];
-                        string _geneName = _inhibited[i]["Gene"].ToString();
-                        _genesR.Add(_geneName);
-                        _fcsR.Add(fc);
-                        _pvaluesR.Add(double.Parse(_inhibited[i]["Pvalue"].ToString()));
-                    }
+                    __Act.fc_average = _fcsA.Count > 0 ? _fcsA.AbsAverage() : Double.NaN;
+                    __Rep.fc_average = _fcsR.Count > 0 ? -_fcsR.AbsAverage() : Double.NaN;
+                    __All.fc_average = _fcsT.Count > 0 ? _fcsT.Average() : Double.NaN;
+
+                    __Act.fc_values = _fcsA.Count > 0 ? _fcsA.ToArray() : new double[0];// { 0 };
+                    __Rep.fc_values = _fcsR.Count > 0 ? _fcsR.ToArray() : new double[0];// { 0 };
+                    __All.fc_values = _fcsT.Count > 0 ? _fcsT.ToArray() : new double[0];// { 0 };
+
+                    __Act.fc_mad = _fcsA.Count > 0 ? _fcsA.AbsMad() : Double.NaN;
+                    __Rep.fc_mad = _fcsR.Count > 0 ? _fcsR.AbsMad() : Double.NaN;
+                    __All.fc_mad = _fcsT.Count > 0 ? _fcsT.mad() : Double.NaN;
+
+                    __Act.genes = _genesA.Count > 0 ? _genesA.ToArray() : new string[0]; // { "" };
+                    __Rep.genes = _genesR.Count > 0 ? _genesR.ToArray() : new string[0];// { "" };
+                    __All.genes = _genesT.Count > 0 ? _genesT.ToArray() : new string[0];// { "" };
 
 
-                    DataRow[] _activated = _dataTable.Select("(FC>0 AND DIR>0) OR (FC<0 AND DIR<0) ");
-                    for (int i = 0; i < _activated.Length; i++)
-                    {
-                        double fc = (double)_activated[i]["FC"];
-                        string _geneName = _activated[i]["Gene"].ToString();
-                        _genesA.Add(_geneName);
-                        _fcsA.Add(fc);
-                        _pvaluesA.Add(double.Parse(_activated[i]["Pvalue"].ToString()));
-                    }
+                    __Act.p_values = _pvaluesA.Count > 0 ? _pvaluesA.ToArray() : new double[0];// { };
+                    __Rep.p_values = _pvaluesR.Count > 0 ? _pvaluesR.ToArray() : new double[0];// { };
+                    __All.p_values = _pvaluesT.Count > 0 ? _pvaluesT.ToArray() : new double[0];// { };
 
+                    __Act.p_average = _pvaluesA.Count > 0 ? _pvaluesA.paverage() : Double.NaN;
+                    __Rep.p_average = _pvaluesR.Count > 0 ? _pvaluesR.paverage() : Double.NaN;
+                    __All.p_average = _pvaluesT.Count > 0 ? _pvaluesT.paverage() : Double.NaN;
+
+                    __Act.p_mad = _pvaluesA.Count > 0 ? _pvaluesA.mad() : Double.NaN;
+                    __Rep.p_mad = _pvaluesR.Count > 0 ? _pvaluesR.mad() : Double.NaN;
+                    __All.p_mad = _pvaluesT.Count > 0 ? _pvaluesT.mad() : Double.NaN;
+
+                    _All.Add(__All);
+                    _Act.Add(__Act);
+                    _Rep.Add(__Rep);
+                    
                 }
-
-
-                __Act.fc_average = _fcsA.Count > 0 ? _fcsA.AbsAverage() : Double.NaN;
-                __Rep.fc_average = _fcsR.Count > 0 ? -_fcsR.AbsAverage() : Double.NaN;
-                __All.fc_average = _fcsT.Count > 0 ? _fcsT.Average() : Double.NaN;
-
-                __Act.fc_values = _fcsA.Count > 0 ? _fcsA.ToArray() : new double[0];// { 0 };
-                __Rep.fc_values = _fcsR.Count > 0 ? _fcsR.ToArray() : new double[0];// { 0 };
-                __All.fc_values = _fcsT.Count > 0 ? _fcsT.ToArray() : new double[0];// { 0 };
-
-                __Act.fc_mad = _fcsA.Count > 0 ? _fcsA.AbsMad() : Double.NaN;
-                __Rep.fc_mad = _fcsR.Count > 0 ? _fcsR.AbsMad() : Double.NaN;
-                __All.fc_mad = _fcsT.Count > 0 ? _fcsT.mad() : Double.NaN;
-
-                __Act.genes = _genesA.Count > 0 ? _genesA.ToArray() : new string[0]; // { "" };
-                __Rep.genes = _genesR.Count > 0 ? _genesR.ToArray() : new string[0];// { "" };
-                __All.genes = _genesT.Count > 0 ? _genesT.ToArray() : new string[0];// { "" };
-
-
-                __Act.p_values = _pvaluesA.Count > 0 ? _pvaluesA.ToArray() : new double[0];// { };
-                __Rep.p_values = _pvaluesR.Count > 0 ? _pvaluesR.ToArray() : new double[0];// { };
-                __All.p_values = _pvaluesT.Count > 0 ? _pvaluesT.ToArray() : new double[0];// { };
-
-                __Act.p_average = _pvaluesA.Count > 0 ? _pvaluesA.paverage() : Double.NaN;
-                __Rep.p_average = _pvaluesR.Count > 0 ? _pvaluesR.paverage() : Double.NaN;
-                __All.p_average = _pvaluesT.Count > 0 ? _pvaluesT.paverage() : Double.NaN;
-
-                __Act.p_mad = _pvaluesA.Count > 0 ? _pvaluesA.mad() : Double.NaN;
-                __Rep.p_mad = _pvaluesR.Count > 0 ? _pvaluesR.mad() : Double.NaN;
-                __All.p_mad = _pvaluesT.Count > 0 ? _pvaluesT.mad() : Double.NaN;
-
-                _All.Add(__All);
-                _Act.Add(__Act);
-                _Rep.Add(__Rep);
-
-
-                element_Fcs.All = _All;
-                element_Fcs.Activated = _Act;
-                element_Fcs.Repressed = _Rep;
-
             }
 
+            element_Fcs.All = _All;
+            element_Fcs.Activated = _Act;
+            element_Fcs.Repressed = _Rep;
+
+            
+
+            if (element_Fcs.All is null)
+                return element_Fcs;
 
             //default sort option is by average FC.
             //if (Properties.Settings.Default.useSort & ! ((topTenFC > 0) | (topTenP>0)))
@@ -2096,29 +2109,35 @@ namespace GINtool
         }
 
 
-       
+
         /// <summary>
         /// Transform the ranking info to a summarized table 
         /// </summary>
         /// <param name="elements"></param>
-        /// <param name="dirMode"></param>
+        /// <param name="bestMode"></param>
         /// <returns></returns>
-        private DataTable ElementsToTable(List<summaryInfo> elements, bool dirMode = false)
+        private DataTable ElementsToTable(List<summaryInfo> elements, bool bestMode = false)
         {
 
             SysData.DataTable lTable = new SysData.DataTable("Elements");
 
             SysData.DataColumn regColumn = new SysData.DataColumn("Name", Type.GetType("System.String"));
             SysData.DataColumn dirColumn = new SysData.DataColumn("Direction", Type.GetType("System.String"));
+            SysData.DataColumn percColumn = new SysData.DataColumn("Percentage", Type.GetType("System.Double"));
             SysData.DataColumn cntColumn = new SysData.DataColumn("Count", Type.GetType("System.Int16"));
             SysData.DataColumn avgColumn = new SysData.DataColumn("Average", Type.GetType("System.Double"));
             SysData.DataColumn madColumn = new SysData.DataColumn("Mad", Type.GetType("System.Double"));
             SysData.DataColumn avgPColumn = new SysData.DataColumn("P_Average", Type.GetType("System.Double"));
 
             lTable.Columns.Add(regColumn);
-            if (dirMode)
+            if (bestMode)
+            {
                 lTable.Columns.Add(dirColumn);
-            lTable.Columns.Add(cntColumn);
+                lTable.Columns.Add(cntColumn);
+                lTable.Columns.Add(percColumn);
+            }
+            else
+                lTable.Columns.Add(cntColumn);
             lTable.Columns.Add(avgColumn);
             lTable.Columns.Add(madColumn);
 
@@ -2133,18 +2152,21 @@ namespace GINtool
                 string newname = hit == -1 ? names[0] : names[0].Substring(0, hit);
 
                 lRow["Name"] = newname;
-                if (dirMode)
+                if (bestMode)
                 {
-                    lRow["Direction"] = elements[r].fc_average > 0 ? "activation" : "repression";
+                    lRow["Direction"] = elements[r].fc_average > 0 ? "activation" : "repression";                    
+                    lRow["Percentage"] = elements[r].best_gene_percentage;
                 }
+                
                 lRow["Count"] = elements[r].p_values == null ? 0 : elements[r].p_values.Count();
+
                 if (!(elements[r].fc_average is Double.NaN))
                     lRow["Average"] = elements[r].fc_average;
                 if (!(elements[r].fc_mad is Double.NaN))
                     lRow["Mad"] = elements[r].fc_mad.ToString();
                 if (!(elements[r].p_average is Double.NaN))
                     lRow["P_Average"] = elements[r].p_average;
-
+                
             }
 
             return lTable;
@@ -2181,7 +2203,7 @@ namespace GINtool
                     {
                         Fill_RegulonDropDownBoxes();
                         //cbRegulonMapping.Checked = true;
-                        ShowMappingPanel(MAPPING_PANEL.REGULON_LINKAGE,true);
+                        ShowMappingPanel(MAPPING_PANEL.REGULON_LINKAGE, true);
                     }
 
 
@@ -2291,7 +2313,7 @@ namespace GINtool
         /// <param name="e"></param>
         private void CheckBox_OrderFC_Click(object sender, RibbonControlEventArgs e)
         {
-            Properties.Settings.Default.useSort = cbOrderFC.Checked;
+            //Properties.Settings.Default.useSort = cbOrderFC.Checked;
             //gOrderAscending = cbOrderFC.Checked;
         }
 
@@ -2317,7 +2339,7 @@ namespace GINtool
 
                     System.IO.FileInfo fInfo = new System.IO.FileInfo(Properties.Settings.Default.categoryFile);
                     gLastFolder = fInfo.DirectoryName;
-                    
+
                     btLoad.Enabled = gGenesFileSelected & (gRegulonFileSelected | gCategoryFileSelected);
                     Properties.Settings.Default.useCat = true; // here for testing
                     cbUseCategories.Checked = true;
@@ -2385,7 +2407,7 @@ namespace GINtool
             ShowSettingPannels(toggleButton1.Checked);
             grpPlot.Visible = !toggleButton1.Checked;
             grpTable.Visible = !toggleButton1.Checked;
-            grpDta.Visible = !toggleButton1.Checked; 
+            grpDta.Visible = !toggleButton1.Checked;
             grpFocus.Visible = !toggleButton1.Checked;
             grpFilter.Visible = !toggleButton1.Checked;
 
@@ -2412,9 +2434,9 @@ namespace GINtool
             cbRegulonMapping.Checked = false;
 
 
-            grpFC.Visible = show;
+            //grpFC.Visible = show;
             grpCutOff.Visible = show;
-            grpDirection.Visible = show;            
+            grpDirection.Visible = show;
 
         }
 
@@ -2424,12 +2446,12 @@ namespace GINtool
         private void UpdateMappingPanels()
         {
             grpGenesMapping.Visible = cbGenesFileMapping.Checked;
-            grpMap.Visible = cbRegulonMapping.Checked;            
+            grpMap.Visible = cbRegulonMapping.Checked;
             grpColMapCategory.Visible = cbCategoryMapping.Checked;
 
             bool _bShowOther = !(grpGenesMapping.Visible | grpMap.Visible | grpColMapCategory.Visible);
-                                        
-            grpFC.Visible = _bShowOther;
+
+            //grpFC.Visible = _bShowOther;
             grpCutOff.Visible = _bShowOther;
             grpDirection.Visible = _bShowOther;
 
@@ -2476,13 +2498,13 @@ namespace GINtool
             REGULON_CHART
         };
 
-        public string[] taks_strings = new string[] { "Ready", "Load genes data","Load regulon data", "Load operon data", "Load category data", 
-        "Augmenting with gene data", "Augmenting with with regulon data", "Augmenting with category data", "Read sheet data", "Read sheet categorized data", 
-            "Update mapping table", "Update summary table", "Update combined table", "Update operon table", "Color cells", "Create category chart", 
+        public string[] taks_strings = new string[] { "Ready", "Load genes data","Load regulon data", "Load operon data", "Load category data",
+        "Augmenting with gene data", "Augmenting with with regulon data", "Augmenting with category data", "Read sheet data", "Read sheet categorized data",
+            "Update mapping table", "Update summary table", "Update combined table", "Update operon table", "Color cells", "Create category chart",
             "Create regulon chart" };
 
 
-        public enum MAPPING_PANEL: int
+        public enum MAPPING_PANEL : int
         {
             GENE_INFO = 0,
             REGULON_LINKAGE = 1,
@@ -2496,19 +2518,19 @@ namespace GINtool
         /// </summary>
         public enum UPDATE_FLAGS : byte
         {
-            TSummary = 0b_0000_0001,
-            TCombined = 0b_0000_0010,
+            TRegulon = 0b_0000_0001,
+            TCategory = 0b_0000_0010,
             TOperon = 0b_0000_0100,
-            TMapped = 0b_0000_1000,
-            PRegulon = 0b_0001_0000,
+            TMapped = 0b_0000_1000, // kan andere bestemming krijgen
+            PRegulon = 0b_0001_0000, // kan andere bestemming krijgen
             PDist = 0b_0010_0000,
             PCat = 0b_0100_0000,
             POperon = 0b_1000_0000,
 
             ///<value>FC dependency of multiple tables</value>
-            FC_dependent = TCombined | POperon | TSummary,
+            FC_dependent = TCategory | POperon | TRegulon,
             ///<value>P-value dependency of multiple tables</value>
-            P_dependent = TCombined | POperon | TSummary,
+            P_dependent = TCategory | POperon | TRegulon,
 
             ///<value>everything needs to be updated</value>
             ALL = 0b_1111_1111,
@@ -2587,8 +2609,31 @@ namespace GINtool
             Properties.Settings.Default.categoryFile = "";
             btnCatFile.Label = "No file selected";
 
+        }
 
+        /// <summary>
+        /// Get the filtered dataset, based on Fold Change, P-value, combined or no filtering
+        /// </summary>
+        /// <returns></returns>
+        private List<BsuLinkedItems> GetDataSelection()
+        {
 
+            if (cbNoFilter.Checked)
+                return gList;
+
+            List<BsuLinkedItems> bsuLinkedItems = new List<BsuLinkedItems>();
+
+            foreach (BsuLinkedItems linkedItems in gList)
+            {
+                double lowFCVal = Properties.Settings.Default.fcLOW;
+                double lowPVal = Properties.Settings.Default.pvalue_cutoff;                
+                bool acceptPvalue = Properties.Settings.Default.use_pvalues ? linkedItems.PVALUE <= lowPVal : true;
+                bool acceptFC =  Properties.Settings.Default.use_foldchange ? Math.Abs(linkedItems.FC) >= lowFCVal : true;
+                if (acceptFC && acceptPvalue) 
+                    bsuLinkedItems.Add(linkedItems);
+
+            }
+            return bsuLinkedItems;
         }
 
         /// <summary>
@@ -2598,9 +2643,12 @@ namespace GINtool
         /// <param name="e"></param>
 
         private void CheckBox_UsePValues_Click(object sender, RibbonControlEventArgs e)
-        {
-            cbUseFoldChanges.Checked = !cbUsePValues.Checked;
+        {            
             Properties.Settings.Default.use_pvalues = cbUsePValues.Checked;
+            if(cbUsePValues.Checked)
+                cbNoFilter.Checked= false;
+            SetFlags(UPDATE_FLAGS.P_dependent);
+
         }
 
         /// <summary>
@@ -2609,9 +2657,29 @@ namespace GINtool
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void CheckBox_UseFoldChanges_Click(object sender, RibbonControlEventArgs e)
+        {            
+            Properties.Settings.Default.use_foldchange = cbUseFoldChanges.Checked;
+            if (cbUseFoldChanges.Checked)
+                cbNoFilter.Checked = false;
+
+            SetFlags(UPDATE_FLAGS.FC_dependent);
+
+        }
+
+        /// <summary>
+        /// No filtering was selected
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void cbNoFilter_Click(object sender, RibbonControlEventArgs e)
         {
-            cbUsePValues.Checked = !cbUseFoldChanges.Checked;
-            Properties.Settings.Default.use_pvalues = cbUsePValues.Checked;
+            cbUseFoldChanges.Checked = !cbNoFilter.Checked;
+            cbUsePValues.Checked = !cbNoFilter.Checked;
+            Properties.Settings.Default.use_foldchange = !cbNoFilter.Checked;
+            Properties.Settings.Default.use_pvalues = !cbNoFilter.Checked;
+
+            SetFlags(UPDATE_FLAGS.FC_dependent & UPDATE_FLAGS.P_dependent);
+
         }
 
 
@@ -2879,6 +2947,7 @@ namespace GINtool
             SetFlags(UPDATE_FLAGS.ALL);
 
         }
+
     }
 
     /// <summary>

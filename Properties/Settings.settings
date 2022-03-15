@@ -113,5 +113,8 @@
     <Setting Name="catCatDescriptionColumn" Type="System.String" Scope="User">
       <Value Profile="(Default)">description</Value>
     </Setting>
+    <Setting Name="use_foldchange" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

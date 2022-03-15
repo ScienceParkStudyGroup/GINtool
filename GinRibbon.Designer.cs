@@ -38,23 +38,19 @@
             this.group1 = this.Factory.CreateRibbonGroup();
             this.grpDta = this.Factory.CreateRibbonGroup();
             this.grpFilter = this.Factory.CreateRibbonGroup();
-            this.checkBox1 = this.Factory.CreateRibbonCheckBox();
+            this.cbNoFilter = this.Factory.CreateRibbonCheckBox();
             this.cbUsePValues = this.Factory.CreateRibbonCheckBox();
             this.cbUseFoldChanges = this.Factory.CreateRibbonCheckBox();
             this.grpFocus = this.Factory.CreateRibbonGroup();
             this.cbUseCategories = this.Factory.CreateRibbonCheckBox();
             this.cbUseRegulons = this.Factory.CreateRibbonCheckBox();
             this.grpTable = this.Factory.CreateRibbonGroup();
-            this.separator6 = this.Factory.CreateRibbonSeparator();
             this.cbMapping = this.Factory.CreateRibbonCheckBox();
             this.cbSummary = this.Factory.CreateRibbonCheckBox();
             this.dbTblRanking = this.Factory.CreateRibbonCheckBox();
-            this.separator5 = this.Factory.CreateRibbonSeparator();
             this.cbCombined = this.Factory.CreateRibbonCheckBox();
             this.cbOperon = this.Factory.CreateRibbonCheckBox();
             this.grpPlot = this.Factory.CreateRibbonGroup();
-            this.cbOrderFC = this.Factory.CreateRibbonCheckBox();
-            this.separator2 = this.Factory.CreateRibbonSeparator();
             this.cbDistribution = this.Factory.CreateRibbonCheckBox();
             this.cbClustered = this.Factory.CreateRibbonCheckBox();
             this.chkRegulon = this.Factory.CreateRibbonCheckBox();
@@ -76,10 +72,7 @@
             this.ddCatID = this.Factory.CreateRibbonDropDown();
             this.ddCatName = this.Factory.CreateRibbonDropDown();
             this.ddCatBSU = this.Factory.CreateRibbonDropDown();
-            this.grpFC = this.Factory.CreateRibbonGroup();
             this.ebLow = this.Factory.CreateRibbonEditBox();
-            this.ebMid = this.Factory.CreateRibbonEditBox();
-            this.ebHigh = this.Factory.CreateRibbonEditBox();
             this.grpCutOff = this.Factory.CreateRibbonGroup();
             this.editMinPval = this.Factory.CreateRibbonEditBox();
             this.grpDirection = this.Factory.CreateRibbonGroup();
@@ -126,7 +119,6 @@
             this.grpGenesMapping.SuspendLayout();
             this.grpMap.SuspendLayout();
             this.grpColMapCategory.SuspendLayout();
-            this.grpFC.SuspendLayout();
             this.grpCutOff.SuspendLayout();
             this.grpDirection.SuspendLayout();
             this.SuspendLayout();
@@ -143,7 +135,6 @@
             this.TabGINtool.Groups.Add(this.grpGenesMapping);
             this.TabGINtool.Groups.Add(this.grpMap);
             this.TabGINtool.Groups.Add(this.grpColMapCategory);
-            this.TabGINtool.Groups.Add(this.grpFC);
             this.TabGINtool.Groups.Add(this.grpCutOff);
             this.TabGINtool.Groups.Add(this.grpDirection);
             this.TabGINtool.Label = "GIN tool";
@@ -165,16 +156,17 @@
             // 
             // grpFilter
             // 
-            this.grpFilter.Items.Add(this.checkBox1);
+            this.grpFilter.Items.Add(this.cbNoFilter);
             this.grpFilter.Items.Add(this.cbUsePValues);
             this.grpFilter.Items.Add(this.cbUseFoldChanges);
             this.grpFilter.Label = "filter settings";
             this.grpFilter.Name = "grpFilter";
             // 
-            // checkBox1
+            // cbNoFilter
             // 
-            this.checkBox1.Label = "no filter";
-            this.checkBox1.Name = "checkBox1";
+            this.cbNoFilter.Label = "no filter";
+            this.cbNoFilter.Name = "cbNoFilter";
+            this.cbNoFilter.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.cbNoFilter_Click);
             // 
             // cbUsePValues
             // 
@@ -211,20 +203,14 @@
             // 
             // grpTable
             // 
-            this.grpTable.Items.Add(this.separator6);
             this.grpTable.Items.Add(this.cbMapping);
             this.grpTable.Items.Add(this.cbSummary);
             this.grpTable.Items.Add(this.dbTblRanking);
-            this.grpTable.Items.Add(this.separator5);
             this.grpTable.Items.Add(this.cbCombined);
             this.grpTable.Items.Add(this.cbOperon);
             this.grpTable.Items.Add(this.btApply);
             this.grpTable.Label = "tables";
             this.grpTable.Name = "grpTable";
-            // 
-            // separator6
-            // 
-            this.separator6.Name = "separator6";
             // 
             // cbMapping
             // 
@@ -247,16 +233,14 @@
             this.dbTblRanking.Label = "ranking";
             this.dbTblRanking.Name = "dbTblRanking";
             this.dbTblRanking.ScreenTip = "create a table with ranked regulons/categories";
-            // 
-            // separator5
-            // 
-            this.separator5.Name = "separator5";
+            this.dbTblRanking.Visible = false;
             // 
             // cbCombined
             // 
             this.cbCombined.Checked = true;
             this.cbCombined.Label = "combined";
             this.cbCombined.Name = "cbCombined";
+            this.cbCombined.Visible = false;
             this.cbCombined.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CheckBox_Combined_Click);
             // 
             // cbOperon
@@ -267,25 +251,12 @@
             // 
             // grpPlot
             // 
-            this.grpPlot.Items.Add(this.cbOrderFC);
-            this.grpPlot.Items.Add(this.separator2);
             this.grpPlot.Items.Add(this.cbDistribution);
             this.grpPlot.Items.Add(this.cbClustered);
             this.grpPlot.Items.Add(this.chkRegulon);
             this.grpPlot.Items.Add(this.btPlot);
             this.grpPlot.Label = "plots";
             this.grpPlot.Name = "grpPlot";
-            // 
-            // cbOrderFC
-            // 
-            this.cbOrderFC.Checked = true;
-            this.cbOrderFC.Label = "sort results";
-            this.cbOrderFC.Name = "cbOrderFC";
-            this.cbOrderFC.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CheckBox_OrderFC_Click);
-            // 
-            // separator2
-            // 
-            this.separator2.Name = "separator2";
             // 
             // cbDistribution
             // 
@@ -461,42 +432,18 @@
             this.ddCatBSU.ShowImage = true;
             this.ddCatBSU.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ddCatBSU_SelectionChanged);
             // 
-            // grpFC
-            // 
-            this.grpFC.Items.Add(this.ebLow);
-            this.grpFC.Items.Add(this.ebMid);
-            this.grpFC.Items.Add(this.ebHigh);
-            this.grpFC.Label = "fc ranges";
-            this.grpFC.Name = "grpFC";
-            this.grpFC.Visible = false;
-            // 
             // ebLow
             // 
-            this.ebLow.Label = "low";
+            this.ebLow.Label = "fold change";
             this.ebLow.Name = "ebLow";
             this.ebLow.ScreenTip = "Set the value for the minimum FC category";
             this.ebLow.Text = null;
             this.ebLow.TextChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.TextBox_Low_TextChanged);
             // 
-            // ebMid
-            // 
-            this.ebMid.Label = "mid";
-            this.ebMid.Name = "ebMid";
-            this.ebMid.ScreenTip = "Set the value for the medium FC category";
-            this.ebMid.Text = null;
-            this.ebMid.TextChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.TextBox_Mid_TextChanged);
-            // 
-            // ebHigh
-            // 
-            this.ebHigh.Label = "high";
-            this.ebHigh.Name = "ebHigh";
-            this.ebHigh.ScreenTip = "Set the value for the highest FC category";
-            this.ebHigh.Text = null;
-            this.ebHigh.TextChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.TextBox_High_TextChanged);
-            // 
             // grpCutOff
             // 
             this.grpCutOff.Items.Add(this.editMinPval);
+            this.grpCutOff.Items.Add(this.ebLow);
             this.grpCutOff.Label = "cut-offs";
             this.grpCutOff.Name = "grpCutOff";
             this.grpCutOff.Visible = false;
@@ -806,8 +753,6 @@
             this.grpMap.PerformLayout();
             this.grpColMapCategory.ResumeLayout(false);
             this.grpColMapCategory.PerformLayout();
-            this.grpFC.ResumeLayout(false);
-            this.grpFC.PerformLayout();
             this.grpCutOff.ResumeLayout(false);
             this.grpCutOff.PerformLayout();
             this.grpDirection.ResumeLayout(false);
@@ -825,10 +770,7 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonDropDown ddBSU;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btRegDirMap;
         internal Microsoft.Office.Tools.Ribbon.RibbonDropDown ddDir;
-        internal Microsoft.Office.Tools.Ribbon.RibbonGroup grpFC;
         internal Microsoft.Office.Tools.Ribbon.RibbonEditBox ebLow;
-        internal Microsoft.Office.Tools.Ribbon.RibbonEditBox ebMid;
-        internal Microsoft.Office.Tools.Ribbon.RibbonEditBox ebHigh;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btApply;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup grpReference;
         internal Microsoft.Office.Tools.Ribbon.RibbonSplitButton splitButton1;
@@ -848,13 +790,11 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup grpPlot;
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbUseCategories;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btPlot;
-        internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbOrderFC;
         internal Microsoft.Office.Tools.Ribbon.RibbonSplitButton splitButton4;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btnSelectCatFile;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btnClearCatFile;
         internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator1;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btnCatFile;
-        internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator2;
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbDistribution;
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbClustered;
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox chkRegulon;
@@ -867,8 +807,6 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup grpTable;
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbUsePValues;
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbUseFoldChanges;
-        internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator6;
-        internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator5;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup grpDta;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup grpDirection;
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbAscending;
@@ -888,7 +826,7 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonDropDown ddGenesDescription;
         internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator8;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup grpFilter;
-        internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox checkBox1;
+        internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbNoFilter;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup grpFocus;
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox dbTblRanking;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup grpColMapCategory;

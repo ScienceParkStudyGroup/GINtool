@@ -463,5 +463,17 @@ namespace GINtool.Properties {
                 this["catCatDescriptionColumn"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool use_foldchange {
+            get {
+                return ((bool)(this["use_foldchange"]));
+            }
+            set {
+                this["use_foldchange"] = value;
+            }
+        }
     }
 }
