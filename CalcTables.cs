@@ -283,10 +283,10 @@ namespace GINtool
         /// <summary>
         ///  Create a combined table that combines the raw data and regulon summaries
         /// </summary>
-        /// <param name="aUsageTbl"></param>
+        /// <param name="aUsageTbl">the tabel with mapped categories/regulons</param>
         /// <param name="lLst"></param>
         /// <returns></returns>
-        private (SysData.DataTable, SysData.DataTable) CreateCombinedTable(SysData.DataTable aUsageTbl, List<BsuLinkedItems> lLst)
+        private (SysData.DataTable, SysData.DataTable) CreateCombinedTable(SysData.DataTable aUsageTbl, List<BsuLinkedItems> lLst, List<summaryInfo> bestResults)
         {
             SysData.DataTable lTable = new SysData.DataTable();
             SysData.DataTable lColorTable = new SysData.DataTable();
@@ -352,7 +352,7 @@ namespace GINtool
 
                         int clrInt = posAssoc ? 1 : negAssoc ? -1 : 0;
 
-                        SysData.DataRow[] lHit = aUsageTbl.Select(string.Format("Regulon = '{0}'", lLst[r].Regulons[i]));
+                        SysData.DataRow[] lHit = aUsageTbl.Select(string.Format("Regulon = '{0}'", lLst[r].Regulons[i].Name));
                         double nrUP = Double.Parse(lHit[0]["nr_UP"].ToString());
                         double nrDOWN = Double.Parse(lHit[0]["nr_DOWN"].ToString());
                         Double.TryParse(lHit[0]["perc_UP"].ToString(), out double percUP);
@@ -425,6 +425,13 @@ namespace GINtool
             col = new SysData.DataColumn("Gene", Type.GetType("System.String"));
             lTable.Columns.Add(col);
 
+
+            col = new SysData.DataColumn("Function", Type.GetType("System.String"));
+            lTable.Columns.Add(col);
+
+            col = new SysData.DataColumn("Description", Type.GetType("System.String"));
+            lTable.Columns.Add(col);
+
             col = new SysData.DataColumn("operon", Type.GetType("System.String"));
             lTable.Columns.Add(col);
 
@@ -437,12 +444,21 @@ namespace GINtool
             col = new SysData.DataColumn("operon_genes", Type.GetType("System.String"));
             lTable.Columns.Add(col);
 
-            for (int nr = 0; nr < maxGenesPerOperon; nr++)
+            for (int nr = 0; nr < gMaxGenesPerOperon; nr++) // remove extra columns later if necessary
             {
                 col = new SysData.DataColumn(string.Format("gene_{0}", nr + 1), Type.GetType("System.Double"));
                 lTable.Columns.Add(col);
             }
 
+            int maxColumnsUsed = 0;
+
+
+            //List<string> genesIDs = new List<string>();
+            //foreach(BsuLinkedItems item in lLst)            
+            //    genesIDs.Add("'"+item.GeneName+"'");
+
+            //string _filter = String.Join(",", genesIDs.ToArray());
+            //SysData.DataRow[] _lt = gRefOperonsWB.Select(String.Format("gene in ({0})", _filter));
 
             //double lowVal = Properties.Settings.Default.fcLOW;
 
@@ -501,6 +517,16 @@ namespace GINtool
                 // count nr of operons
                 int noperons = luOperons.Count();
 
+
+                // add a row
+                SysData.DataRow lRow = lTable.Rows.Add();
+                lRow["BSU"] = lLst[r].BSU;
+                lRow["FC"] = lLst[r].FC;
+                lRow["P-Value"] = lLst[r].PVALUE;
+                lRow["Function"] = lLst[r].GeneFunction;
+                lRow["Description"] = lLst[r].GeneDescription;
+                lRow["gene"] = geneName;
+
                 // if any operon is found
                 if (operon.Length > 0)
                 {
@@ -517,18 +543,16 @@ namespace GINtool
                     }
 
                     int nrgenes = lgenes.Count;
-
-                    // add a row
-                    SysData.DataRow lRow = lTable.Rows.Add();
-                    lRow["BSU"] = lLst[r].BSU;
-                    lRow["FC"] = lLst[r].FC;
-                    lRow["P-Value"] = lLst[r].PVALUE;
-
-                    lRow["gene"] = geneName;
+                   
                     lRow["operon"] = operon;
                     lRow["nroperons"] = noperons;
                     lRow["nrgenes"] = nrgenes;
                     lRow["operon_genes"] = opgenes;
+
+
+
+                    if (nrgenes > maxColumnsUsed)
+                        maxColumnsUsed = nrgenes;
 
                     // copy the FCs
 
@@ -538,16 +562,13 @@ namespace GINtool
                             lRow[string.Format("gene_{0}", i + 1)] = lFCs[i];
                     }
                 }
-                else // there's no linked operon found for this entry
-                {
+                               
+            }
 
-                    SysData.DataRow lRow = lTable.Rows.Add();
-                    lRow["BSU"] = lLst[r].BSU;
-                    lRow["FC"] = lLst[r].FC;
-                    lRow["P-Value"] = lLst[r].PVALUE;
-
-                }
-
+            for (int _g = gMaxGenesPerOperon; _g > maxColumnsUsed; _g--)
+            {
+                string colFmt = String.Format("gene_{0}", _g);
+                lTable.Columns.Remove(colFmt);
             }
             return lTable;
         }
@@ -810,85 +831,57 @@ namespace GINtool
         }
 
 
-        private void CreateBestDataTable(List<BsuLinkedItems> aOutput, SysData.DataTable aMappingTable)
+        private void CreateBestDataTable(List<BsuLinkedItems> bsuRegulons, bool outputDetails = false)
         {
-            //SysData.DataTable _fc_BSU = CreateRegulonUsageTable(aOutput);
+            
+            (SysData.DataTable lMappingTable, SysData.DataTable clrTbl) = PrepareResultTable(bsuRegulons);
 
-            //string[] catcols = new string[] { "cat1", "cat2", "cat3", "cat4", "cat5" };
-            //string[] regColumn = new string[] { Properties.Settings.Default.referenceRegulon };
+
+            if (lMappingTable is null)
+                return;
+                
 
             List<cat_elements> cat_Elements = new List<cat_elements>();
-
-           // HashSet<cat_elements> cat_Elements1 = new HashSet<cat_elements>();
-            string lastColumn = aMappingTable.Columns[aMappingTable.Columns.Count - 1].ColumnName;
+           
+            string lastColumn = lMappingTable.Columns[lMappingTable.Columns.Count - 1].ColumnName;
             lastColumn = lastColumn.Replace("col_", "");
-            int maxreg = ClassExtensions.ParseInt(lastColumn, 0);
-            int firstColumn = 5;
-
-            if (UseCategoryData())
-            {                                
-                string pattern = @"(\d)+";
-                Regex rg = new Regex(pattern);
-
-                for (int row = 0; row < aMappingTable.Rows.Count; row++)
-                {
-                    for (int i = firstColumn; i < (firstColumn + maxreg); i++)
-                    {
-                        cat_elements cat_Elements2 = new cat_elements();
-                        string element = aMappingTable.Rows[row][i].ToString();
-                        List<int> _ids= new List<int>();
-                        if (element != "")
-                        {
-                            MatchCollection mc = rg.Matches(element);
-                            for (int _i = 0; _i < mc.Count; _i++)
-                                _ids.Add(Int32.Parse(mc[_i].Value));
-                            
-                            string formatted_ids = String.Join(".",_ids.ToArray());
-
-                            string catName = element.Split(new string[] { "("+formatted_ids+")" },StringSplitOptions.None)[0];
-
-                            cat_Elements2.catName = catName;
-                            cat_Elements2.elTag = formatted_ids;
-                            cat_Elements2.elements = new string[] { formatted_ids };
-                            cat_Elements.Add(cat_Elements2);
-                        }
-
-                    }
-                }
-                
-            }
-            else
+            //int maxreg = ClassExtensions.ParseInt(lastColumn, 0);
+                        
+            for (int row = 0; row < lMappingTable.Rows.Count; row++)                
             {
-                for (int row = 0; row < aMappingTable.Rows.Count; row++)
-                {
-                    for (int i = firstColumn; i < (firstColumn + maxreg); i++)
-                    {
-                        cat_elements cat_Elements2 = new cat_elements();
-                        string element = aMappingTable.Rows[row][i].ToString();                        
-                        if (element != "")
-                        {                            
-                            string catName = element;
 
-                            cat_Elements2.catName = catName;
-                            cat_Elements2.elTag = "";
-                            cat_Elements2.elements = new string[] { "" };
-                            cat_Elements.Add(cat_Elements2);
-                        }
-                    }
+                DataRow dataRow = lMappingTable.Rows[row];
+                int nrcol = Int32.Parse(dataRow["count_col"].ToString());
+                string _bsu = dataRow["bsu"].ToString();
+
+                for (int col = 0; col < nrcol; col++)
+                {
+                    string colFmt = String.Format("col_{0}", col + 1);
+                    string _catName = dataRow[colFmt].ToString();
+
+                    string _catID = "";
+
+                    if (gSettings.useCat)
+                    {
+                        colFmt = String.Format("cat_id_{0}", col + 1);
+                        _catID = dataRow[colFmt].ToString();
+                    }                        
+
+                    cat_elements cat_Elements2 = new cat_elements();
+
+                    cat_Elements2.catName = _catName;
+                    cat_Elements2.elTag = _catID;
+                    cat_Elements2.elements = new string[] { _catID };
+                    cat_Elements.Add(cat_Elements2);
                 }                
             }
-
-
-            //if (UseCategoryData())
-            //    cat_Elements = ItemSelection.SelectAllElements(gCategoriesWB, true);
-            //else            
-
-            
+                
+          
             cat_Elements = GetUniqueElements(cat_Elements);
 
-            SysData.DataView dataView = Properties.Settings.Default.useCat ? gCategoryTable.AsDataView() : gRegulonTable.AsDataView();
+            SysData.DataView dataView = gSettings.useCat ? gCategoryTable.AsDataView() : gRegulonTable.AsDataView();
             element_fc catPlotData;
-            if (Properties.Settings.Default.useCat)                            
+            if (gSettings.useCat)                            
                 catPlotData = CatElements2ElementsFC(dataView, cat_Elements);            
             else
                 catPlotData = Regulons2ElementsFC(dataView, cat_Elements);
@@ -897,8 +890,14 @@ namespace GINtool
             if (catPlotData.All != null)
             {
                 (List<element_rank> plotData, List<summaryInfo> _all, List<summaryInfo> _pos, List<summaryInfo> _neg, List<summaryInfo> _best) = CreateRankingPlotData(catPlotData);
-                CreateRankingDataSheet(catPlotData, _all, _pos, _neg, _best);
-            }
+
+                int suffix = CreateMappingSheet(lMappingTable, _best);
+
+                if (outputDetails)
+                    CreateRankingDataSheet(catPlotData, _all, _pos, _neg, _best,suffix,detailSheet:true);
+
+                
+            }           
 
         }
 

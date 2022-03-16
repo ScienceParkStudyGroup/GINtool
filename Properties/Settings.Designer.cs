@@ -475,5 +475,65 @@ namespace GINtool.Properties {
                 this["use_foldchange"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string regulonInfoSheet {
+            get {
+                return ((string)(this["regulonInfoSheet"]));
+            }
+            set {
+                this["regulonInfoSheet"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string regulonInfoFIleName {
+            get {
+                return ((string)(this["regulonInfoFIleName"]));
+            }
+            set {
+                this["regulonInfoFIleName"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string regInfoIdColumn {
+            get {
+                return ((string)(this["regInfoIdColumn"]));
+            }
+            set {
+                this["regInfoIdColumn"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string regInfoSizeColumn {
+            get {
+                return ((string)(this["regInfoSizeColumn"]));
+            }
+            set {
+                this["regInfoSizeColumn"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string regInfoFunctionColumn {
+            get {
+                return ((string)(this["regInfoFunctionColumn"]));
+            }
+            set {
+                this["regInfoFunctionColumn"] = value;
+            }
+        }
     }
 }

@@ -56,6 +56,11 @@ namespace GINtool
             SysData.DataColumn pValCol = new SysData.DataColumn("pval", Type.GetType("System.Double"));
             myTable.Columns.Add(pValCol);
 
+            SysData.DataColumn funcCol = new SysData.DataColumn("function", Type.GetType("System.String"));
+            myTable.Columns.Add(funcCol);
+            SysData.DataColumn descCol = new SysData.DataColumn("description", Type.GetType("System.String"));
+            myTable.Columns.Add(descCol);
+            
             // add count column
             SysData.DataColumn countCol = new SysData.DataColumn("count_col", Type.GetType("System.Int16"));
             myTable.Columns.Add(countCol);
@@ -65,11 +70,18 @@ namespace GINtool
             {
                 SysData.DataColumn newCol = new SysData.DataColumn(string.Format("col_{0}", c + 1));
                 myTable.Columns.Add(newCol);
+
+                if (gSettings.useCat) // add category id columns 
+                {
+                    SysData.DataColumn catIDCol = new SysData.DataColumn(string.Format("cat_id_{0}", c + 1));
+                    myTable.Columns.Add(catIDCol);
+                }
+
                 SysData.DataColumn clrCol = new SysData.DataColumn(string.Format("col_{0}", c + 1), Type.GetType("System.Int16"));
                 clrTable.Columns.Add(clrCol);
             }
 
-            // fill data
+            // fill data from here
             for (int r = 0; r < lResults.Count; r++)
             {
                 SysData.DataRow newRow = myTable.Rows.Add();
@@ -78,6 +90,8 @@ namespace GINtool
                 newRow["gene"] = lResults[r].GeneName;
                 newRow["fc"] = lResults[r].FC;
                 newRow["pval"] = lResults[r].PVALUE;
+                newRow["function"] = lResults[r].GeneFunction;
+                newRow["description"] = lResults[r].GeneDescription;
 
                 newRow["count_col"] = UseCategoryData() ? lResults[r].Categories.Count:lResults[r].REGULON_TOT;
                 SysData.DataRow clrRow = clrTable.Rows.Add();
@@ -85,7 +99,10 @@ namespace GINtool
                 if (UseCategoryData())
                 {
                     for (int c = 0; c < lResults[r].Categories.Count; c++)
+                    {
                         newRow[string.Format("col_{0}", c + 1)] = lResults[r].Categories[c].Name;
+                        newRow[string.Format("cat_id_{0}", c + 1)] = lResults[r].Categories[c].catID;
+                    }
 
                     //for (int c = 0; c < lResults[r].REGULON_UP.Count; c++)
                     //    clrRow[lResults[r].REGULON_UP[c]] = 1;
@@ -162,6 +179,8 @@ namespace GINtool
 
             int maxNrGenes = Int32.Parse(table.Compute("max([nrgenes])", string.Empty).ToString());
 
+            int infoColumns = 10;
+            
             gApplication.ScreenUpdating = false;
             gApplication.DisplayAlerts = false;
             gApplication.EnableEvents = false;
@@ -170,8 +189,9 @@ namespace GINtool
             lNewSheet.Cells[1, col++] = "BSU";
             lNewSheet.Cells[1, col++] = "FC";
             lNewSheet.Cells[1, col++] = "P-Value";
-
             lNewSheet.Cells[1, col++] = "Gene";
+            lNewSheet.Cells[1, col++] = "Gene Function";
+            lNewSheet.Cells[1, col++] = "Gene Description";
             lNewSheet.Cells[1, col++] = "Operon Name";
             lNewSheet.Cells[1, col++] = "Nr operons";
             lNewSheet.Cells[1, col++] = "Nr genes";
@@ -183,11 +203,11 @@ namespace GINtool
                 lNewSheet.Cells[1, c + col] = colHeader;
             }
 
-            FastDtToExcel(table, lNewSheet, 2, 1, table.Rows.Count + 1, maxNrGenes + 4);
+            FastDtToExcel(table, lNewSheet, 2, 1, table.Rows.Count + 1, maxNrGenes + infoColumns);
 
 
             Excel.Range top = lNewSheet.Cells[1, 1];
-            Excel.Range bottom = lNewSheet.Cells[table.Rows.Count + 1, maxNrGenes + 4];
+            Excel.Range bottom = lNewSheet.Cells[table.Rows.Count + 1, maxNrGenes + infoColumns];
             Excel.Range all = (Excel.Range)lNewSheet.get_Range(top, bottom);
 
             all.Columns.AutoFit();
@@ -294,11 +314,17 @@ namespace GINtool
         /// <param name="negSort"></param>
         /// <returns></returns>
 
-        private (Excel.Worksheet, List<summaryInfo>) CreateRankingDataSheet(element_fc theElements, List<summaryInfo> all, List<summaryInfo> posSort, List<summaryInfo> negSort, List<summaryInfo> bestSort)
+        private (Excel.Worksheet, List<summaryInfo>) CreateRankingDataSheet(element_fc theElements, List<summaryInfo> all, List<summaryInfo> posSort, List<summaryInfo> negSort, List<summaryInfo> bestSort, int suffix, bool detailSheet=false)
         {
-            string catRegLabel = Properties.Settings.Default.useCat ? "CatRankTab_" : "RegRankTab_";
+            string catRegLabel = Properties.Settings.Default.useCat ? "CatRankTable_" : "RegRankTable_";            
+            if (detailSheet)
+                catRegLabel = "Mapping_Details_";
             Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
-            RenameWorksheet(lNewSheet, catRegLabel);
+
+            catRegLabel = String.Format("{0}_{1}", catRegLabel, suffix);
+            lNewSheet.Name = catRegLabel;
+
+            //RenameWorksheet(lNewSheet, catRegLabel);
 
             DataTable lTable = ElementsToTable(all);
 
@@ -437,51 +463,89 @@ namespace GINtool
         /// Create the worksheet that contains the basic mapping gene - regulon table
         /// </summary>
         /// <param name="bsuRegulons"></param>
-        private SysData.DataTable CreateMappingSheet(List<BsuLinkedItems> bsuRegulons)
+        private int CreateMappingSheet(SysData.DataTable aTable, List<summaryInfo> bestInfo)
         {
-            (SysData.DataTable lTable, SysData.DataTable clrTbl) = PrepareResultTable(bsuRegulons);
 
-            if(lTable == null)
-                return null;
+            DataTable workTable = aTable.Copy();
+
+            if (gSettings.useCat) // remove category id columns in case of regulon output
+            {
+                object _mc = workTable.Compute("Max(count_col)", "");
+                int maxCount = Int32.Parse(_mc.ToString());
+                for (int c = 0; c < maxCount; c++)
+                {
+                    string _colFmt = String.Format("cat_id_{0}", c + 1);
+                    workTable.Columns.Remove(_colFmt);
+                }
+
+            }
+
+            if (bestInfo != null)
+            {
+
+                for (int r = 0; r < workTable.Rows.Count; r++)
+                {
+                    DataRow dataRow = workTable.Rows[r];
+                    int countCol = Int32.Parse(dataRow["count_col"].ToString());
+                    for (int c = 0; c < countCol; c++)
+                    {
+                        string colFmt = String.Format("col_{0}", c + 1);
+                        string _val = dataRow[colFmt].ToString();
+
+                        summaryInfo lItem = bestInfo.Find(item => item.catName == _val);
+                        _val = String.Format("{0}({1:0.00},{2:0.00})", _val, lItem.fc_average, lItem.p_average);
+
+                        dataRow.BeginEdit();
+                        dataRow[colFmt] = _val;
+                        dataRow.EndEdit();
+
+
+                    }
+                }
+            }
 
             AddTask(TASKS.UPDATE_MAPPED_TABLE);
 
-            int nrRows = lTable.Rows.Count;
+            int nrRows = workTable.Rows.Count;
             int startR = 2;
             int offsetColumn = 1;
 
             Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
-            RenameWorksheet(lNewSheet, "Mapped_");
+            int suffix = FindSheetNames(new string[] { "Mapped", "Mapped_Details" });
+            lNewSheet.Name = String.Format("Mapped_{0}", suffix);
 
             lNewSheet.Cells[1, 1] = "BSU";
             lNewSheet.Cells[1, 2] = "GENE";
             lNewSheet.Cells[1, 3] = "FC";
             lNewSheet.Cells[1, 4] = "PVALUE";
-            lNewSheet.Cells[1, 5] = UseCategoryData() ? "TOT CATEGORIES" : "TOT REGULONS";
+            lNewSheet.Cells[1, 5] = "FUNCTION";
+            lNewSheet.Cells[1, 6] = "DESCRIPTION";
+            lNewSheet.Cells[1, 7] = UseCategoryData() ? "TOT CATEGORIES" : "TOT REGULONS";
 
-            string lastColumn = lTable.Columns[lTable.Columns.Count - 1].ColumnName;
+            string lastColumn = workTable.Columns[workTable.Columns.Count - 1].ColumnName;
             lastColumn = lastColumn.Replace("col_", "");
             int maxreg = ClassExtensions.ParseInt(lastColumn, 0);
 
             for (int i = 0; i < maxreg; i++)
-                lNewSheet.Cells[1, i + 6] = string.Format(UseCategoryData() ? "Category_{0}":"Regulon_{0}", i + 1);
+                lNewSheet.Cells[1, i + 8] = string.Format(UseCategoryData() ? "Category_{0}":"Regulon_{0}", i + 1);
 
             // copy data to excel sheet
 
-            FastDtToExcel(lTable, lNewSheet, startR, offsetColumn, startR + nrRows - 1, offsetColumn + lTable.Columns.Count - 1);
+            FastDtToExcel(workTable, lNewSheet, startR, offsetColumn, startR + nrRows - 1, offsetColumn + workTable.Columns.Count - 1);
 
             Excel.Range top = lNewSheet.Cells[1, 1];
-            Excel.Range bottom = lNewSheet.Cells[lTable.Rows.Count + 1, lTable.Columns.Count];
+            Excel.Range bottom = lNewSheet.Cells[workTable.Rows.Count + 1, workTable.Columns.Count];
             Excel.Range all = (Excel.Range)lNewSheet.get_Range(top, bottom);
 
             all.Columns.AutoFit();
 
             // color cells according to table 
-            ColorCells(clrTbl, lNewSheet, startR, offsetColumn + 5, startR + nrRows - 1, offsetColumn + lTable.Columns.Count - 1);
+            //ColorCells(clrTbl, lNewSheet, startR, offsetColumn + 5, startR + nrRows - 1, offsetColumn + lTable.Columns.Count - 1);
 
             RemoveTask(TASKS.UPDATE_MAPPED_TABLE);
 
-            return lTable;
+            return suffix;
+            
         }
 
 

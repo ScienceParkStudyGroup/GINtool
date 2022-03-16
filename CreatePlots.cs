@@ -109,7 +109,7 @@ namespace GINtool
 
             RemoveTask(TASKS.CATEGORY_CHART);
 
-        }        
+        }
 
         /// <summary>
         /// The routine that outputs the two bubble charts and worksheets to visualize the importance of the category/regulon
@@ -143,19 +143,28 @@ namespace GINtool
 
             (List<element_rank> plotData, List<summaryInfo> _all, List<summaryInfo> _pos, List<summaryInfo> _neg, List<summaryInfo> _best) = CreateRankingPlotData(catPlotData);
 
-            int chartNr = Properties.Settings.Default.useCat ? NextWorksheet("CatRankPlot_") : NextWorksheet("RegRankPlot_");
-            string chartName = (Properties.Settings.Default.useCat ? "CatRankPlot_" : "RegRankPlot_") + chartNr.ToString();
-            string chartNameBest = chartName.Replace("Plot_", "PlotBest_");
+            int suffix = 0;
+            
+            if (gSettings.useCat)
+                suffix = FindSheetNames(new string[] { "CatRankPlot_", "Plot_", "PlotBest_", "CatRankTable_" });
+            else
+                suffix = FindSheetNames(new string[] { "RegRankPlot_", "Plot_", "PlotBest_", "RegRankTable_" });
 
-            CreateRankingDataSheet(catPlotData, _all, _pos, _neg, _best);
+
+            //int chartNr = Properties.Settings.Default.useCat ? NextWorksheet("CatRankPlot_") : NextWorksheet("RegRankPlot_");
+            string chartName = (Properties.Settings.Default.useCat ? "CatRankPlot_" : "RegRankPlot_") + suffix.ToString();
+            string chartNameBest = chartName.Replace("Plot_", "PlotBest_");
+            
+            
+            CreateRankingDataSheet(catPlotData, _all, _pos, _neg, _best,suffix);
 
             PlotRoutines.CreateRankingPlot2(plotData, chartName);
 
             if (!(_best is null))
             {
                 List<element_rank> _bestRankData = BubblePlotData(_best);
-                PlotRoutines.CreateRankingPlot2(_bestRankData, chartNameBest + "_1", bestPlot: true);
-                PlotRoutines.CreateRankingPlot2(_bestRankData, chartNameBest + "_2", bestPlot: true, bestNew: true);
+                PlotRoutines.CreateRankingPlot2(_bestRankData, chartNameBest + "_v1", bestPlot: true);
+                PlotRoutines.CreateRankingPlot2(_bestRankData, chartNameBest + "_v2", bestPlot: true, bestNew: true);
             }
 
 

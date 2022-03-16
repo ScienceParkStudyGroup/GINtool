@@ -383,8 +383,8 @@ namespace GINtool
             {
                 string[] lItems = lRow.ItemArray[0].ToString().Split('-');
 
-                if (maxGenesPerOperon < lItems.Length)
-                    maxGenesPerOperon = lItems.Length;
+                if (gMaxGenesPerOperon < lItems.Length)
+                    gMaxGenesPerOperon = lItems.Length;
 
                 for (int i = 0; i < lItems.Length; i++)
                 {
@@ -419,6 +419,29 @@ namespace GINtool
 
         /// <summary>
         /// Load the main genes information data from a csv file
+        /// </summary>
+        /// <returns></returns>
+        private bool LoadRegulonInfoData()
+        {
+
+            if (gSettings.regulonInfoFIleName.Length == 0 || gSettings.regulonInfoSheet.Length == 0)
+            {
+                btnRegInfoFileName.Label = "No file selected";
+                return false;
+            }
+
+            AddTask(TASKS.LOAD_REGULON_DATA);
+            gRegulonInfoWB = ExcelUtils.ReadExcelToDatable(gApplication, gSettings.regulonInfoSheet,gSettings.regulonInfoFIleName, 1, 1);
+            gRegulonInfoWB.PrimaryKey = new DataColumn[] { gRegulonInfoWB.Columns[gSettings.regInfoIdColumn] };
+
+
+            RemoveTask(TASKS.LOAD_REGULON_DATA);
+            return gRegulonInfoWB != null;
+
+        }
+
+        /// <summary>
+        /// Load the main gene linkage information data from a csv file
         /// </summary>
         /// <returns></returns>
         private bool LoadGenesData()
@@ -457,17 +480,17 @@ namespace GINtool
             AddTask(TASKS.LOAD_REGULON_DATA);
 
             gRegulonWB = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.referenceSheetName, Properties.Settings.Default.referenceFile, 1, 1);
-            if (gRegulonWB != null)
-            {
-                gRegulonColNames = new string[gRegulonWB.Columns.Count];
-                int i = 0;
-                foreach (SysData.DataColumn col in gRegulonWB.Columns)
-                {
-                    gRegulonColNames[i++] = col.ColumnName;
-                }
-                // generate database frequency table
-                // CreateTableStatistics();
-            }
+            //if (gRegulonWB != null)
+            //{
+            //    gRegulonColNames = new string[gRegulonWB.Columns.Count];
+            //    int i = 0;
+            //    foreach (SysData.DataColumn col in gRegulonWB.Columns)
+            //    {
+            //        gRegulonColNames[i++] = col.ColumnName;
+            //    }
+            //    // generate database frequency table
+            //    // CreateTableStatistics();
+            //}
 
             RemoveTask(TASKS.LOAD_REGULON_DATA);
             return gRegulonWB != null;
@@ -475,15 +498,44 @@ namespace GINtool
 
         private bool LoadRegulonDataColumns()
         {
-            if (Properties.Settings.Default.referenceFile.Length == 0 || Properties.Settings.Default.referenceSheetName.Length == 0)
+            if (gSettings.referenceFile.Length == 0 || gSettings.referenceSheetName.Length == 0)
             {
                 btnRegulonFileName.Label = "No file selected";
                 return false;
             }            
 
-            gRegulonColNames = ExcelUtils.ReadExcelToDatableHeader(gApplication, Properties.Settings.Default.referenceSheetName, Properties.Settings.Default.referenceFile, 1, 1);
+            gRegulonColNames = ExcelUtils.ReadExcelToDatableHeader(gApplication, gSettings.referenceSheetName, gSettings.referenceFile, 1, 1);
             
             return gRegulonColNames.Length > 0;
+        }
+
+
+
+        private bool LoadOperonDataColumns()
+        {
+            if (gSettings.operonFile.Length == 0 || gSettings.operonSheet.Length == 0)
+            {
+                btnOperonFile.Label = "No file selected";
+                return false;
+            }
+
+            gOperonColNames = ExcelUtils.ReadExcelToDatableHeader(gApplication, gSettings.operonSheet, gSettings.operonFile, 1, 1);
+
+            return gOperonColNames.Length > 0;
+        }
+
+
+        private bool LoadRegulonInfoDataColumns()
+        {
+            if (gSettings.regulonInfoFIleName.Length == 0 || gSettings.regulonInfoSheet.Length == 0)
+            {
+                btnOperonFile.Label = "No file selected";
+                return false;
+            }
+
+            gRegulonInfoColNames = ExcelUtils.ReadExcelToDatableHeader(gApplication, gSettings.regulonInfoSheet, gSettings.regulonInfoFIleName, 1, 1);
+
+            return gRegulonInfoColNames.Length > 0;
         }
 
 
@@ -532,6 +584,26 @@ namespace GINtool
             excel.DisplayAlerts = true;
         }
 
+        /// <summary>
+        /// Specify the regulon info data
+        /// </summary>
+        private void SpecifyRegulonInfoSheet()
+        {
+            Microsoft.Office.Interop.Excel.Application excel = (Microsoft.Office.Interop.Excel.Application)Globals.ThisAddIn.Application;
+            excel.DisplayAlerts = false;
+            excel.EnableEvents = false;
+
+            Excel.Workbook excelworkBook = excel.Workbooks.Open(gSettings.regulonInfoFIleName);
+            // Set workbook to first worksheet
+            Excel.Worksheet ws = (Excel.Worksheet)excelworkBook.Sheets[1];
+            Properties.Settings.Default.regulonInfoSheet = ws.Name;
+
+            excelworkBook.Close();
+
+            excel.EnableEvents = true;
+            excel.DisplayAlerts = true;
+        }
+
 
         /// <summary>
         /// Specify the operon data
@@ -542,10 +614,10 @@ namespace GINtool
             excel.DisplayAlerts = false;
             excel.EnableEvents = false;
 
-            Excel.Workbook excelworkBook = excel.Workbooks.Open(Properties.Settings.Default.operonFile);
+            Excel.Workbook excelworkBook = excel.Workbooks.Open(gSettings.operonFile);
             // Set workbook to first worksheet
             Excel.Worksheet ws = (Excel.Worksheet)excelworkBook.Sheets[1];
-            Properties.Settings.Default.operonSheet = ws.Name;
+            gSettings.operonSheet = ws.Name;
 
             excelworkBook.Close();
 
@@ -556,7 +628,7 @@ namespace GINtool
         /// <summary>
         /// Specify the operon data
         /// </summary>
-        private void SpecifyCatFile()
+        private void SpecifyCategorySheet()
         {
             Microsoft.Office.Interop.Excel.Application excel = (Microsoft.Office.Interop.Excel.Application)Globals.ThisAddIn.Application;
             excel.DisplayAlerts = false;

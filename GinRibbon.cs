@@ -26,7 +26,8 @@ namespace GINtool
         /// <value>The last used folder for an input file.</value>        
         string gLastFolder = "";
         bool gOperonOutput = false;
-        bool gCatOutput = false;
+        //bool gCatOutput = false;
+        bool gRegulonInfo = false;
 
         /// <value>The flag that registers which data to update.</value>        
         byte gNeedsUpdate = (byte)UPDATE_FLAGS.ALL;
@@ -34,7 +35,7 @@ namespace GINtool
         /// <value>The list in which the tasks are registered.</value>
         readonly List<TASKS> gTasks = new List<TASKS>();
 
-        int maxGenesPerOperon = 1;
+        int gMaxGenesPerOperon = 1;
         /// <value>The main table that contains all gene info</value>
         SysData.DataTable gGenesWB = null;
         /// <value>The main table containing the regulon data.</value>
@@ -45,12 +46,20 @@ namespace GINtool
         SysData.DataTable gRefOperonsWB = null;
         /// <value>The main table containing the category data</value>
         SysData.DataTable gCategoriesWB = null;
+        /// <value>The main table containing the regulon info data</value>
+        SysData.DataTable gRegulonInfoWB = null;
+
         /// <value>gGeneColNames contains the column names of the genes information file</value>
         string[] gGenesColNames = null;
         /// <value>gRegulonColNames contains the column names of the regulon file</value>
         string[] gRegulonColNames = null;
         /// <value>gCategoryColNames contains the column names of the categories file</value>
         string[] gCategoryColNames = null;
+        /// <value>gOperonColNames contains the columns names of the operon file</value>
+        string[] gOperonColNames = null;
+        /// <value>gRegulonInfoColNames contains the columns names of the regulon info file</value>
+        string[] gRegulonInfoColNames = null;
+
 
 
         //readonly string gCategoryGeneColumn = "locus_tag"; // the fixed column name that refers to the genes inthe category csv file
@@ -90,7 +99,7 @@ namespace GINtool
         bool gCategoryFileSelected = false;
         bool gGenesFileSelected = false;
 
-
+        Properties.Settings gSettings = null;
 
         private bool UseCategoryData()
         {
@@ -230,6 +239,12 @@ namespace GINtool
             ddCatName.Enabled = enable;
             ddCatBSU.Enabled = enable;
 
+            // regulon info items
+
+            ddRegInfoFunction.Enabled = enable;
+            ddRegInfoId.Enabled = enable;
+            ddRegInfoSize.Enabled = enable;
+
 
 
             btPlot.Enabled = enable;
@@ -335,6 +350,22 @@ namespace GINtool
                 Properties.Settings.Default.useCat = false;
             }
 
+            btnRegInfoFileName.Label = gSettings.regulonInfoFIleName;
+            try
+            {
+                System.IO.FileInfo fInfo = new System.IO.FileInfo(btnRegInfoFileName.Label);
+                gLastFolder = fInfo.DirectoryName;
+                if (LoadRegulonInfoDataColumns())
+                    Fill_RegulonInfoDropDownBoxes();
+            }
+            catch (Exception ex)
+            {
+                gApplication.StatusBar.Text = ex.Message;
+
+            }
+
+
+
 
             //btnOperonFile.Label = Properties.Settings.Default.operonFile;
             //btnCatFile.Label = Properties.Settings.Default.categoryFile;
@@ -384,9 +415,9 @@ namespace GINtool
 
         private void GinRibbon_Load(object sender, RibbonUIEventArgs e)
         {
-            LoadPersistentSettings();
-
+            gSettings = Properties.Settings.Default;
             InitFields();
+            LoadPersistentSettings();
 
             PlotRoutines.theApp = gApplication;
 
@@ -582,9 +613,9 @@ namespace GINtool
 
                         //string genID = row[Properties.Settings.Default.catBSUColum].ToString();
                         string genID = row["locus_tag"].ToString();
-                        string catID = " (" + row["catid_short"].ToString() + ")";
+                        string catID = row["catid_short"].ToString();
 
-                        CategoryItem _lCat = new CategoryItem(catName + catID, genID);
+                        CategoryItem _lCat = new CategoryItem(catName, catID, genID);
                         _it.Categories.Add(_lCat);
 
                     }
@@ -807,6 +838,34 @@ namespace GINtool
             while (currentSheets.Contains(string.Format("{0}{1}", chartName, s)) || currentSheets.Contains(string.Format("{0}{1}", sheetName, s)))
                 s += 1;
 
+            return s;
+        }
+
+        /// <summary>
+        /// Determine fist possible suffix for a set of worksheets.
+        /// </summary>
+        /// <param name="aSheet"></param>
+        /// <param name="wsBase"></param>
+        /// <returns></returns>
+        private int FindSheetNames(string[] wsBase)
+        {
+            // create a sheetname starting with wsBase
+            List<string> currentSheets = ListSheets();
+            int s = 1;
+                           
+            
+            while (true)
+            {
+                List<bool> aList = new List<bool>();
+
+                for (int i = 0; i < wsBase.Length; i++)                
+                    aList.Add(currentSheets.Contains(string.Format("{0}_{1}", wsBase[i], s)));
+                
+                if (!aList.Contains(true))
+                    break;
+                s++;
+            }
+                         
             return s;
         }
 
@@ -1147,6 +1206,52 @@ namespace GINtool
 
         }
 
+
+
+        private void Fill_RegulonInfoDropDownBoxes()
+        {
+            gApplication.EnableEvents = false;
+
+            ddRegInfoFunction.Items.Clear();
+            ddRegInfoId.Items.Clear();
+            ddRegInfoSize.Items.Clear();
+
+            foreach (string s in gRegulonInfoColNames)
+            {
+                RibbonDropDownItem ddItem1 = Factory.CreateRibbonDropDownItem();
+                ddItem1.Label = s;
+                ddRegInfoFunction.Items.Add(ddItem1);
+
+                ddItem1 = Factory.CreateRibbonDropDownItem();
+                ddItem1.Label = s;
+                ddRegInfoId.Items.Add(ddItem1);
+
+                ddItem1 = Factory.CreateRibbonDropDownItem();
+                ddItem1.Label = s;
+                ddRegInfoSize.Items.Add(ddItem1);
+            }
+
+            RibbonDropDownItem ddItem = GetItemByValue(ddRegInfoFunction, gSettings.regInfoFunctionColumn);
+            if (ddItem != null)
+                ddRegInfoFunction.SelectedItem = ddItem;
+
+            ddItem = GetItemByValue(ddRegInfoId, gSettings.regInfoIdColumn);
+            if (ddItem != null)
+                ddRegInfoId.SelectedItem = ddItem;
+
+            ddItem = GetItemByValue(ddRegInfoSize, gSettings.regInfoSizeColumn);
+            if (ddItem != null)
+                ddRegInfoSize.SelectedItem = ddItem;
+
+            ddRegInfoFunction.Enabled = true;
+            ddRegInfoId.Enabled = true;
+            ddRegInfoSize.Enabled = true;
+
+            gApplication.EnableEvents = true;
+
+
+        }
+
         /// <summary>
         /// Reset main variables to initial values
         /// </summary>
@@ -1157,10 +1262,22 @@ namespace GINtool
             gOldRangeBSU = "";
             gOldRangeFC = "";
             gOldRangeP = "";
+            
+            //gRegulonWB = null;
+            gRegulonTable = null;
+            //gCategoriesWB = null;
+            gCategoryTable = null;
+
+            //gRefOperonsWB = null;
+            gRefStats = null;
+
             EnableOutputOptions(false);
+
             btApply.Enabled = false;
             btPlot.Enabled = false;
 
+            btLoad.Enabled = true;
+            btnSelect.Enabled = false;
         }
 
 
@@ -1292,7 +1409,7 @@ namespace GINtool
             ValidateTextBoxData(ebLow);
         }
 
-        
+
         /// <summary>
         /// The main routine after the load button has been selected
         /// </summary>
@@ -1303,7 +1420,7 @@ namespace GINtool
             gApplication.EnableEvents = false;
             if (LoadGenesData() & (LoadRegulonData() | LoadCategoryData()))
             {
-
+                gRegulonInfo = LoadRegulonInfoData();
                 gOperonOutput = LoadOperonData();
                 //gCatOutput = LoadCategoryDataNewFormat();
                 //gCatOutput = LoadCategoryData();
@@ -1335,13 +1452,13 @@ namespace GINtool
                     //Fill_CategoryDropDownBoxes();
                     // load comboboxes for the category file (if necessary)
                 }
-
-                btnSelect.Enabled = true;
+                
                 toggleButton1.Enabled = true;
                 LoadFCDefaults();
                 ResetTables();
 
                 btLoad.Enabled = false;
+                btnSelect.Enabled = true;
             }
             gApplication.EnableEvents = true;
         }
@@ -1479,7 +1596,7 @@ namespace GINtool
 
         private void Button_Apply_Click(object sender, RibbonControlEventArgs e)
         {
-
+            
 
             if (!(Properties.Settings.Default.tblMap || Properties.Settings.Default.tblSummary || Properties.Settings.Default.tblCombine || Properties.Settings.Default.tblOperon))
             {
@@ -1497,13 +1614,13 @@ namespace GINtool
 
             if (gRegulonFileSelected && (gRegulonTable is null || NeedsUpdate(UPDATE_FLAGS.TRegulon)))
             {
-                
+
                 gRegulonTable = CreateRegulonUsageTable(GetDataSelection());
                 UnSetFlags(UPDATE_FLAGS.TRegulon);
-            } 
+            }
             if (gCategoryFileSelected && (gCategoryTable is null || NeedsUpdate(UPDATE_FLAGS.TCategory)))
             {
-                
+
                 gCategoryTable = CreateCategoryUsageTable(GetDataSelection());
                 UnSetFlags(UPDATE_FLAGS.TCategory);
             }
@@ -1516,17 +1633,17 @@ namespace GINtool
 
 
             //if (Properties.Settings.Default.tblMap)
-            SysData.DataTable lMapping = CreateMappingSheet(GetDataSelection());
-            CreateBestDataTable(GetDataSelection(), lMapping);
+            //SysData.DataTable lMapping = CreateMappingSheet(GetDataSelection());
+            CreateBestDataTable(GetDataSelection(), gSettings.tblMap);// creates a worksheet for now... disable that later
 
 
             //if (Properties.Settings.Default.tblCombine) // can combine table/sheet because it's a quick routine
-            //{                
-            //    (SysData.DataTable lCombined, SysData.DataTable lClrTable) = CreateCombinedTable(gCatOutput ? gCategoryTable : gRegulonTable, gList);             
-            //    CreateCombinedSheet(lCombined, lClrTable);
-            //    UnSetFlags(UPDATE_FLAGS.TCombined);
+            {
+                //(SysData.DataTable lCombined, SysData.DataTable lClrTable) = CreateCombinedTable(gSettings.useCat ? gCategoryTable : gRegulonTable, GetDataSelection(), bestTable);
+                //CreateCombinedSheet(lCombined, lClrTable);
+                //    UnSetFlags(UPDATE_FLAGS.TCombined);
 
-            //}
+            }
 
 
             if (Properties.Settings.Default.tblOperon && gOperonOutput) // can combine table/sheet because it's a quick routine
@@ -1616,7 +1733,7 @@ namespace GINtool
                 string categories = string.Join(",", ce.elements.ToArray());
                 categories = string.Join(",", categories.Split(',').Select(x => $"'{x}'"));
                 dataViewCat.RowFilter = String.Format("catid_short in ({0})", categories);
-                
+
                 HashSet<string> genes = new HashSet<string>();
                 foreach (DataRow _row in dataViewCat.ToTable().Rows)
                 {
@@ -1629,16 +1746,20 @@ namespace GINtool
                 // GENE_ID moet ergens gedefinieerd worden
                 dataView.RowFilter = String.Format("Gene_ID in ({0})", genesFormat);
                 if (dataView.Count > 0) // set this to true to output all results.. also the zeros
-                { 
+                {
                     SysData.DataTable _dt = dataView.ToTable(true, "Gene", "FC", "Pvalue");
 
                     summaryInfo __All = new summaryInfo();
                     summaryInfo __Pos = new summaryInfo();
                     summaryInfo __Neg = new summaryInfo();
 
-                    __All.catName = string.Format("{0} ({1})", ce.catName, _dt.Rows.Count);
-                    __Pos.catName = string.Format("{0} ({1})", ce.catName, _dt.Rows.Count);
-                    __Neg.catName = string.Format("{0} ({1})", ce.catName, _dt.Rows.Count);
+                    __All.catName = ce.catName;
+                    __Pos.catName = ce.catName;
+                    __Neg.catName = ce.catName;
+
+                    __All.catNameFormat = string.Format("{0} ({1})", ce.catName, _dt.Rows.Count);
+                    __Pos.catNameFormat = string.Format("{0} ({1})", ce.catName, _dt.Rows.Count);
+                    __Neg.catNameFormat = string.Format("{0} ({1})", ce.catName, _dt.Rows.Count);                    
 
 
                     List<double> _fcsA = new List<double>();
@@ -1763,7 +1884,7 @@ namespace GINtool
 
             // sort the values according to average FC and order in the preferred direction
             //if (Properties.Settings.Default.useSort)
-            
+
             {
                 double[] __values = element_Fcs.All.Select(x => x.fc_average).ToArray();
                 var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
@@ -1800,7 +1921,7 @@ namespace GINtool
 
                 SysData.DataTable _dataTable = dataView.ToTable();
 
-                if (true) //(_dataTable.Rows.Count > 0)
+                if (_dataTable.Rows.Count > 0) // set this to true to select all rows, also the empty ones
                 {
 
                     // find genes for the regulon/category
@@ -1809,9 +1930,18 @@ namespace GINtool
                     summaryInfo __Act = new summaryInfo();
                     summaryInfo __Rep = new summaryInfo();
 
-                    __All.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
-                    __Act.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
-                    __Rep.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+
+                    __All.catName = el.catName;
+                    __Act.catName = el.catName;
+                    __Rep.catName = el.catName;
+
+                    __All.catNameFormat = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+                    __Act.catNameFormat = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+                    __Rep.catNameFormat = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+
+                    //__All.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+                    //__Act.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
+                    //__Rep.catName = string.Format("{0} ({1})", el.catName, _dataTable.Rows.Count);
 
                     //total
                     List<double> _fcsT = new List<double>();
@@ -1898,7 +2028,7 @@ namespace GINtool
                     _All.Add(__All);
                     _Act.Add(__Act);
                     _Rep.Add(__Rep);
-                    
+
                 }
             }
 
@@ -1906,7 +2036,7 @@ namespace GINtool
             element_Fcs.Activated = _Act;
             element_Fcs.Repressed = _Rep;
 
-            
+
 
             if (element_Fcs.All is null)
                 return element_Fcs;
@@ -2128,6 +2258,7 @@ namespace GINtool
             SysData.DataColumn avgColumn = new SysData.DataColumn("Average", Type.GetType("System.Double"));
             SysData.DataColumn madColumn = new SysData.DataColumn("Mad", Type.GetType("System.Double"));
             SysData.DataColumn avgPColumn = new SysData.DataColumn("P_Average", Type.GetType("System.Double"));
+           
 
             lTable.Columns.Add(regColumn);
             if (bestMode)
@@ -2143,6 +2274,13 @@ namespace GINtool
 
             lTable.Columns.Add(avgPColumn);
 
+            if (bestMode && gRegulonInfo && !gSettings.useCat)
+            {
+                SysData.DataColumn regInfoColumn = new SysData.DataColumn("Function", Type.GetType("System.String"));
+                lTable.Columns.Add(regInfoColumn);
+
+            }
+
             for (int r = 0; r < elements.Count; r++)
             {
                 SysData.DataRow lRow = lTable.Rows.Add();
@@ -2151,13 +2289,22 @@ namespace GINtool
                 int hit = names[0].ToUpper().IndexOf("REGULON");
                 string newname = hit == -1 ? names[0] : names[0].Substring(0, hit);
 
+                if (bestMode && gRegulonInfo && !gSettings.useCat)
+                {
+                    DataView dataView = gRegulonInfoWB.DefaultView;
+                    dataView.RowFilter =String.Format("[{0}] = '{1}'",gSettings.regInfoIdColumn,name);
+                    if (dataView.Count > 0)                    
+                        lRow["Function"] = dataView[0][gSettings.regInfoFunctionColumn];
+                     
+                }
+
                 lRow["Name"] = newname;
                 if (bestMode)
                 {
-                    lRow["Direction"] = elements[r].fc_average > 0 ? "activation" : "repression";                    
+                    lRow["Direction"] = elements[r].fc_average > 0 ? "activation" : "repression";
                     lRow["Percentage"] = elements[r].best_gene_percentage;
                 }
-                
+
                 lRow["Count"] = elements[r].p_values == null ? 0 : elements[r].p_values.Count();
 
                 if (!(elements[r].fc_average is Double.NaN))
@@ -2166,7 +2313,7 @@ namespace GINtool
                     lRow["Mad"] = elements[r].fc_mad.ToString();
                 if (!(elements[r].p_average is Double.NaN))
                     lRow["P_Average"] = elements[r].p_average;
-                
+
             }
 
             return lTable;
@@ -2234,6 +2381,16 @@ namespace GINtool
 
                     System.IO.FileInfo fInfo = new System.IO.FileInfo(Properties.Settings.Default.operonFile);
                     gLastFolder = fInfo.DirectoryName;
+
+                    if (LoadOperonDataColumns())
+                    {
+                        //LoadOperonData();
+                        //    Fill_OperonDropDownBoxes();                        
+                        //    ShowMappingPanel(MAPPING_PANEL.OPERON_INFO, true);
+                        ResetTables();
+                    }
+
+
 
                 }
             }
@@ -2335,7 +2492,7 @@ namespace GINtool
                 {
                     Properties.Settings.Default.categoryFile = openFileDialog.FileName;
                     btnCatFile.Label = Properties.Settings.Default.categoryFile;
-                    SpecifyCatFile();
+                    SpecifyCategorySheet();
 
                     System.IO.FileInfo fInfo = new System.IO.FileInfo(Properties.Settings.Default.categoryFile);
                     gLastFolder = fInfo.DirectoryName;
@@ -2428,6 +2585,8 @@ namespace GINtool
             //grpUpDown.Visible = Properties.Settings.Default.regulonMappingVisible & show;
             grpColMapCategory.Visible = false;
             //Properties.Settings.Default.categoryMappingsVisible & show;
+            grpRegulonInfo.Visible = false;
+
 
             cbCategoryMapping.Checked = false;
             cbGenesFileMapping.Checked = false;
@@ -2448,8 +2607,9 @@ namespace GINtool
             grpGenesMapping.Visible = cbGenesFileMapping.Checked;
             grpMap.Visible = cbRegulonMapping.Checked;
             grpColMapCategory.Visible = cbCategoryMapping.Checked;
+            grpRegulonInfo.Visible = cbRegInfoColumnMapping.Checked;
 
-            bool _bShowOther = !(grpGenesMapping.Visible | grpMap.Visible | grpColMapCategory.Visible);
+            bool _bShowOther = !(grpGenesMapping.Visible | grpMap.Visible | grpColMapCategory.Visible | grpRegulonInfo.Visible);
 
             //grpFC.Visible = _bShowOther;
             grpCutOff.Visible = _bShowOther;
@@ -2599,7 +2759,7 @@ namespace GINtool
         /// <param name="e"></param>
         private void Button_ClearCatFile_Click(object sender, RibbonControlEventArgs e)
         {
-            gCatOutput = false;
+            //gCatOutput = false;
             cbUseCategories.Checked = false;
             cbUseCategories.Enabled = false;
             Properties.Settings.Default.useCat = false;
@@ -2626,10 +2786,10 @@ namespace GINtool
             foreach (BsuLinkedItems linkedItems in gList)
             {
                 double lowFCVal = Properties.Settings.Default.fcLOW;
-                double lowPVal = Properties.Settings.Default.pvalue_cutoff;                
+                double lowPVal = Properties.Settings.Default.pvalue_cutoff;
                 bool acceptPvalue = Properties.Settings.Default.use_pvalues ? linkedItems.PVALUE <= lowPVal : true;
-                bool acceptFC =  Properties.Settings.Default.use_foldchange ? Math.Abs(linkedItems.FC) >= lowFCVal : true;
-                if (acceptFC && acceptPvalue) 
+                bool acceptFC = Properties.Settings.Default.use_foldchange ? Math.Abs(linkedItems.FC) >= lowFCVal : true;
+                if (acceptFC && acceptPvalue)
                     bsuLinkedItems.Add(linkedItems);
 
             }
@@ -2643,10 +2803,10 @@ namespace GINtool
         /// <param name="e"></param>
 
         private void CheckBox_UsePValues_Click(object sender, RibbonControlEventArgs e)
-        {            
+        {
             Properties.Settings.Default.use_pvalues = cbUsePValues.Checked;
-            if(cbUsePValues.Checked)
-                cbNoFilter.Checked= false;
+            if (cbUsePValues.Checked)
+                cbNoFilter.Checked = false;
             SetFlags(UPDATE_FLAGS.P_dependent);
 
         }
@@ -2657,7 +2817,7 @@ namespace GINtool
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void CheckBox_UseFoldChanges_Click(object sender, RibbonControlEventArgs e)
-        {            
+        {
             Properties.Settings.Default.use_foldchange = cbUseFoldChanges.Checked;
             if (cbUseFoldChanges.Checked)
                 cbNoFilter.Checked = false;
@@ -2706,7 +2866,7 @@ namespace GINtool
                 gRangeP = sd.getP();
 
                 //(gOutput, gList) = ReadDataAndAugment();
-                 gList = ReadDataAndAugment();
+                gList = ReadDataAndAugment();
 
                 if (gList is null)
                     return;
@@ -2782,11 +2942,15 @@ namespace GINtool
         //{
         //    Properties.Settings.Default[prop] = val;
         //}
+        //private object GetProp(string prop)
+        //{
+        //    return Properties.Settings.Default[prop];
+        //}
 
         private void ShowMappingPanel(MAPPING_PANEL aPanel, bool bShow)
         {
             // set all other checkboxes to false;
-            RibbonCheckBox[] checkboxes = new RibbonCheckBox[] { cbGenesFileMapping, cbRegulonMapping, null, null, cbCategoryMapping };            
+            RibbonCheckBox[] checkboxes = new RibbonCheckBox[] { cbGenesFileMapping, cbRegulonMapping, cbRegInfoColumnMapping, null, cbCategoryMapping };            
             for (int i=0;i<checkboxes.Length;i++)
             {
                 if (checkboxes[i]!= null && i!= (int)aPanel)
@@ -2948,6 +3112,90 @@ namespace GINtool
 
         }
 
+        private void button1_Click(object sender, RibbonControlEventArgs e)
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.InitialDirectory = gLastFolder;
+                openFileDialog.Filter = "Excel files (*.xlsx)|*.xlsx|txt files (*.csv)|*.csv";
+                openFileDialog.FilterIndex = 2;
+                openFileDialog.RestoreDirectory = true;
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    gSettings.regulonInfoFIleName = openFileDialog.FileName;
+                    btnRegInfoFileName.Label = gSettings.regulonInfoFIleName;
+                    
+                    SpecifyRegulonInfoSheet();
+
+                    System.IO.FileInfo fInfo = new System.IO.FileInfo(Properties.Settings.Default.categoryFile);
+                    gLastFolder = fInfo.DirectoryName;
+
+                    btLoad.Enabled = gGenesFileSelected & (gRegulonFileSelected | gCategoryFileSelected);
+                    Properties.Settings.Default.useCat = true; // here for testing
+                    cbUseCategories.Checked = true;
+                    cbUseRegulons.Checked = false;
+
+                    if (LoadRegulonInfoDataColumns())
+                    {
+                        Fill_RegulonInfoDropDownBoxes();
+                        cbRegInfoColumnMapping.Checked = true;
+                        ShowMappingPanel(MAPPING_PANEL.REGULON_INFO, true);
+                    }
+
+                }
+            }
+        }
+
+        private void cbRegInfoColumnMapping_Click(object sender, RibbonControlEventArgs e)
+        {
+            ShowMappingPanel(MAPPING_PANEL.REGULON_INFO, cbRegInfoColumnMapping.Checked);
+        }
+
+        private void ddRegInfoId_SelectionChanged(object sender, RibbonControlEventArgs e)
+        {
+            gSettings.regInfoIdColumn = ddRegInfoId.SelectedItem.Label;
+            SetFlags(UPDATE_FLAGS.ALL);
+        }
+
+        private void ddRegInfoSize_SelectionChanged(object sender, RibbonControlEventArgs e)
+        {
+            gSettings.regInfoSizeColumn = ddRegInfoSize.SelectedItem.Label;
+            SetFlags(UPDATE_FLAGS.ALL);
+        }
+
+        private void ddRegInfoFunction_SelectionChanged(object sender, RibbonControlEventArgs e)
+        {
+            gSettings.regInfoFunctionColumn = ddRegInfoFunction.SelectedItem.Label;
+            SetFlags(UPDATE_FLAGS.ALL);
+        }
+
+        private void splitBtnGenesFile_Click(object sender, RibbonControlEventArgs e)
+        {
+            cbGenesFileMapping.Checked = !cbGenesFileMapping.Checked;
+            ShowMappingPanel(MAPPING_PANEL.GENE_INFO, cbGenesFileMapping.Checked);
+        }
+
+        private void splitButton1_Click(object sender, RibbonControlEventArgs e)
+        {
+            cbRegulonMapping.Checked = !cbRegulonMapping.Checked;
+            ShowMappingPanel(MAPPING_PANEL.REGULON_LINKAGE, cbRegulonMapping.Checked);
+
+        }
+
+        private void splitButton4_Click(object sender, RibbonControlEventArgs e)
+        {
+            cbCategoryMapping.Checked = !cbCategoryMapping.Checked;
+            ShowMappingPanel(MAPPING_PANEL.CATEGORY_LINKAGE, cbCategoryMapping.Checked);
+
+        }
+
+        private void splitButton3_Click(object sender, RibbonControlEventArgs e)
+        {
+            cbRegInfoColumnMapping.Checked = !cbRegInfoColumnMapping.Checked;
+            ShowMappingPanel(MAPPING_PANEL.REGULON_INFO, cbRegInfoColumnMapping.Checked);
+
+        }
     }
 
     /// <summary>

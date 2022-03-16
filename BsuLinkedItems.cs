@@ -7,7 +7,8 @@ namespace GINtool
     {
         public string Name;
         public string Id;
-        public CategoryItem(string aName, string aId) { Name = aName; Id = aId; }   
+        public string catID;
+        public CategoryItem(string aName, string aCatID, string aId) { Name = aName; catID = aCatID; Id = aId; }   
 
     };
 

@@ -726,6 +726,7 @@ namespace GINtool
     public struct summaryInfo
     {
         public string catName;      //catName contains regulon or category title
+        public string catNameFormat;        
         public double[] p_values;
         public double[] fc_values;
         public double p_average;
