@@ -15,132 +15,37 @@ namespace GINtool
 {
     public partial class GinRibbon
     {
-
-        /// <summary>
-        /// Import the category data from the csv file downloaded from http://subtiwiki.uni-goettingen.de/. 
-        /// This routine is specifically made for that specific data format.
-        /// </summary>
-        /// <returns></returns>
-        private bool LoadCategoryDataOld()
+        
+        private bool AssertColumnNames(string[] colNamesSelected, string[]  colNamesFound)
         {
-            if (Properties.Settings.Default.categoryFile.Length == 0 || Properties.Settings.Default.catSheet.Length == 0)
-            {
-                btnCatFile.Label = "No file selected";
-                return false;
-            }
-
-            AddTask(TASKS.LOAD_CATEGORY_DATA);
-
-            SysData.DataTable _tmp = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.catSheet, Properties.Settings.Default.categoryFile, 1, 1);
-            if (_tmp != null)
-            {
-                gCategoryColNames = new string[_tmp.Columns.Count];
-                int i = 0;
-                foreach (SysData.DataColumn col in _tmp.Columns)
-                {
-                    gCategoryColNames[i++] = col.ColumnName;
-                }
-            }
-
-
-
-            gCategoriesWB = new SysData.DataTable("Categories")
-            {
-                CaseSensitive = false
-            };
-
-
-
-            string IDcol = "category_id";// Properties.Settings.Default.catCatIDColumn;
-            string BSUcol = "locus_tag";// Properties.Settings.Default.catBSUColum;            
-            // long list of columns... make cleaner later..
-
-            gCategoriesWB.Columns.Add(IDcol, Type.GetType("System.String"));
-            gCategoriesWB.Columns.Add("catid_short", Type.GetType("System.String"));
-            gCategoriesWB.Columns.Add(BSUcol, Type.GetType("System.String"));
-            gCategoriesWB.Columns.Add("gene", Type.GetType("System.String"));
-            gCategoriesWB.Columns.Add("cat1", Type.GetType("System.String"));
-            gCategoriesWB.Columns.Add("cat2", Type.GetType("System.String"));
-            gCategoriesWB.Columns.Add("cat3", Type.GetType("System.String"));
-            gCategoriesWB.Columns.Add("cat4", Type.GetType("System.String"));
-            gCategoriesWB.Columns.Add("cat5", Type.GetType("System.String"));
-            gCategoriesWB.Columns.Add("cat1_int", Type.GetType("System.Int32"));
-            gCategoriesWB.Columns.Add("cat2_int", Type.GetType("System.Int32"));
-            gCategoriesWB.Columns.Add("cat3_int", Type.GetType("System.Int32"));
-            gCategoriesWB.Columns.Add("cat4_int", Type.GetType("System.Int32"));
-            gCategoriesWB.Columns.Add("cat5_int", Type.GetType("System.Int32"));
-            gCategoriesWB.Columns.Add("ucat1_int", Type.GetType("System.Int32"));
-            gCategoriesWB.Columns.Add("ucat2_int", Type.GetType("System.Int32"));
-            gCategoriesWB.Columns.Add("ucat3_int", Type.GetType("System.Int32"));
-            gCategoriesWB.Columns.Add("ucat4_int", Type.GetType("System.Int32"));
-            gCategoriesWB.Columns.Add("ucat5_int", Type.GetType("System.Int32"));
-
-
-            gCategoryColNames = new string[gCategoriesWB.Columns.Count];
-            if (gCategoriesWB != null)
-            {
-                gCategoryColNames = new string[gCategoriesWB.Columns.Count];
-                int i = 0;
-                foreach (SysData.DataColumn col in gCategoriesWB.Columns)
-                {
-                    gCategoryColNames[i++] = col.ColumnName;
-                }
-            }            
-
-
-            string[] lcols = new string[] { "cat1_int", "cat2_int", "cat3_int", "cat4_int", "cat5_int" };
-            string[] ulcols = new string[] { "ucat1_int", "ucat2_int", "ucat3_int", "ucat4_int", "ucat5_int" };
-
-            foreach (SysData.DataRow lRow in _tmp.Rows)
-            {
-                object[] lItems = lRow.ItemArray;
-                SysData.DataRow lNewRow = gCategoriesWB.Rows.Add();
-                for (int i = 0; i < lItems.Length; i++)
-                {
-                    lNewRow[IDcol] = lItems[0];
-                    string[] splits = lItems[0].ToString().Split(' ');
-                    lNewRow["catid_short"] = splits[splits.Count() - 1];
-                    lNewRow[BSUcol] = lItems[1];
-                    lNewRow["Gene"] = lItems[2];
-                    lNewRow["cat1"] = lItems[3];
-                    lNewRow["cat2"] = lItems[4];
-                    lNewRow["cat3"] = lItems[5];
-                    lNewRow["cat4"] = lItems[6];
-                    lNewRow["cat5"] = lItems[7];
-
-                    string[] llItems = lItems[0].ToString().Split(' ')[1].Split('.');
-
-
-
-                    for (int j = 0; j < llItems.Length; j++)
-                    {
-                        lNewRow[lcols[j]] = Int32.Parse(llItems[j]);
-                    }
-
-                    int offset = 0;
-                    for (int j = 0; j < llItems.Length; j++)
-                    {
-                        lNewRow[ulcols[j]] = offset + ((Int32)lNewRow[lcols[j]]) * Math.Pow(10, 5 - j);
-                        offset = (Int32)lNewRow[ulcols[j]];
-                    }
-
-                }
-            }
-            
-            //gCategoriesWB.PrimaryKey = new DataColumn[] { gCategoriesWB.Columns[BSUcol]};
-
-            RemoveTask(TASKS.LOAD_CATEGORY_DATA);
-
-            return gCategoriesWB.Rows.Count > 0;
+            for (int i = 0; i < colNamesSelected.Length; i++)
+                if (!colNamesFound.Contains(colNamesSelected[i]))
+                    return false;
+            return true;
         }
 
         private bool LoadCategoryData()
         {
+           
             if (Properties.Settings.Default.categoryFile.Length == 0 || Properties.Settings.Default.catSheet.Length == 0)
             {
                 btnCatFile.Label = "No file selected";
                 return false;
             }
+
+            string[] colSel = new string[] { gSettings.catCatIDColumn, gSettings.catBSUColum, gSettings.catCatDescriptionColumn };
+
+            if (colSel.Distinct().Count() < colSel.Length)
+            {
+                gApplication.StatusBar = "Duplicate column definitions found";
+                return false;
+            }
+
+            if (!AssertColumnNames(colSel, gCategoryColNames))
+            {
+                gApplication.StatusBar = "1 or more columns not found in data set";
+                return false;
+            }   
 
             AddTask(TASKS.LOAD_CATEGORY_DATA);
 
@@ -185,30 +90,6 @@ namespace GINtool
             gCategoriesWB.Columns.Add("ucat5_int", Type.GetType("System.Int32"));
 
 
-
-
-            //Properties.Settings.Default.catCatIDColumn; // de categorie code
-            //Properties.Settings.Default.catBSUColum; // de code voor het gen
-            //Properties.Settings.Default.catCatDescriptionColumn; // de beschrijving
-
-            //TreeNode treeNode = new TreeNode("Categories");
-            //for (int i = 0; i < _tmp.Rows.Count; i++)
-            //{
-            //    DataRow row = _tmp.Rows[i];
-            //    string sw_code = (string)row[Properties.Settings.Default.catCatIDColumn];
-            //    if (sw_code != null)
-            //    {
-            //        sw_code = sw_code.Replace("SW.", "");
-            //        int[] codes = sw_code.Split('.').Select(str => Int32.Parse(str.Trim())).ToArray();
-
-            //        TreeNode[] lInsNode = treeNode.Nodes.Find("sw_code", true);
-            //        if (lInsNode != null)
-            //        {
-            //            //lInsNode.Add()
-            //        }
-
-            //    }
-            //}
             string[] lcols = new string[] { "cat1_int", "cat2_int", "cat3_int", "cat4_int", "cat5_int" };
             string[] ulcols = new string[] { "ucat1_int", "ucat2_int", "ucat3_int", "ucat4_int", "ucat5_int" };
 
@@ -276,54 +157,7 @@ namespace GINtool
                     colName = String.Format("ucat{0}_int", l+1);
                     lNewRow[colName] = Math.Pow(10, 5-l) * codes[l];
                     offset = offset + (Int32)Math.Pow(10, 5 - l) * codes[l];
-
-
-                }
-                
-                
-                
-                
-                
-                
-                //object[] lItems = lRow.ItemArray;
-                //SysData.DataRow lNewRow = gCategoriesWB.Rows.Add();
-                //for (int i = 0; i < lItems.Length; i++)
-                //{
-
-                    
-
-
-
-                //    lNewRow["catid"] = lItems[0];
-                //    string[] splits = lItems[0].ToString().Split(' ');
-                //    //lNewRow["catid_short"] = splits[splits.Count() - 1];
-                //    lNewRow["category"] = lItems[1];
-                //    lNewRow["locus_tag"] = lItems[2];
-                //    //lNewRow["cat1"] = lItems[3];
-                //    //lNewRow["cat2"] = lItems[4];
-                //    //lNewRow["cat3"] = lItems[5];
-                //    //lNewRow["cat4"] = lItems[6];
-                //    //lNewRow["cat5"] = lItems[7];
-
-                //    string[] llItems = lItems[0].ToString().Split('.').Skip(1).ToArray();
-
-
-                //    // start at 1.. that contains SW
-                //    for (int j = 0; j < llItems.Length; j++)
-                //    {
-                //        lNewRow[lcols[j]] = Int32.Parse(llItems[j]);
-                //    }
-
-                //    lNewRow[String.Format("cat{0}", llItems.Length)] = lItems[1];
-
-                //    int offset = 0;
-                //    for (int j = 0; j < llItems.Length; j++)
-                //    {
-                //        lNewRow[ulcols[j]] = offset + ((Int32)lNewRow[lcols[j]]) * Math.Pow(10, 5 - j);
-                //        offset = (Int32)lNewRow[ulcols[j]];
-                //    }
-
-                //}
+                }                                
             }
 
             RemoveTask(TASKS.LOAD_CATEGORY_DATA);
@@ -357,13 +191,7 @@ namespace GINtool
         /// <returns></returns>
 
         private bool LoadOperonData()
-        {
-
-            if (Properties.Settings.Default.operonFile.Length == 0 || Properties.Settings.Default.operonSheet.Length == 0)
-            {
-                btnOperonFile.Label = "No file selected";
-                return false;
-            }
+        {          
 
             AddTask(TASKS.LOAD_OPERON_DATA);
 
@@ -423,10 +251,18 @@ namespace GINtool
         /// <returns></returns>
         private bool LoadRegulonInfoData()
         {
-
+            
             if (gSettings.regulonInfoFIleName.Length == 0 || gSettings.regulonInfoSheet.Length == 0)
             {
                 btnRegInfoFileName.Label = "No file selected";
+                return false;
+            }
+
+            string[] colSel = new string[] { gSettings.regInfoIdColumn, gSettings.regInfoSizeColumn, gSettings.regInfoFunctionColumn };
+
+            if (colSel.Distinct().Count() < colSel.Length)
+            {
+                gApplication.StatusBar = "Duplicate column definitions found";
                 return false;
             }
 
@@ -445,53 +281,68 @@ namespace GINtool
         /// </summary>
         /// <returns></returns>
         private bool LoadGenesData()
-        {
-
+        {         
             if (Properties.Settings.Default.genesFileName.Length == 0 || Properties.Settings.Default.genesSheetName.Length == 0)
             {
                 btnGenesFileSelected.Label = "No file selected";
                 return false;
             }
 
-            AddTask(TASKS.LOAD_GENES_DATA);
-            gGenesWB = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.genesSheetName, Properties.Settings.Default.genesFileName, 1, 1);
+            string[] colSel = new string[] { gSettings.genesBSUColumn, gSettings.genesDescriptionColumn, gSettings.genesFunctionColumn, gSettings.genesNameColumn };
+
+            if (colSel.Distinct().Count() < colSel.Length)
+            {
+                gApplication.StatusBar = "Duplicate column definitions found";
+                return false;
+            }
+
+            try
+            {
+                AddTask(TASKS.LOAD_GENES_DATA);
+                gGenesWB = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.genesSheetName, Properties.Settings.Default.genesFileName, 1, 1);
 
 
-            gGenesWB.PrimaryKey = new DataColumn[] { gGenesWB.Columns[Properties.Settings.Default.genesBSUColumn] };
+                gGenesWB.PrimaryKey = new DataColumn[] { gGenesWB.Columns[Properties.Settings.Default.genesBSUColumn] };
 
 
-            RemoveTask(TASKS.LOAD_GENES_DATA);
+                RemoveTask(TASKS.LOAD_GENES_DATA);
+            }
+            catch(Exception ex)
+            {
+                gApplication.StatusBar = ex.Message;
+            }
+            
             return gGenesWB != null;
 
         }
 
         /// <summary>
-        /// Load the main Regulon data as downloaded from http://subtiwiki.uni-goettingen.de/. 
+        /// Load the main Regulon linkage data as downloaded from http://subtiwiki.uni-goettingen.de/. 
         /// The whole add-in is written for data in that specific format!
         /// </summary>
         /// <returns></returns>
         private bool LoadRegulonData()
         {
+           
             if (Properties.Settings.Default.referenceFile.Length == 0 || Properties.Settings.Default.referenceSheetName.Length == 0)
             {
                 btnRegulonFileName.Label = "No file selected";
                 return false;
             }
+
+            string[] colSel = new string[] { gSettings.referenceBSU, gSettings.referenceDIR, gSettings.referenceGene, gSettings.referenceRegulon };
+
+            if (colSel.Distinct().Count() < colSel.Length)
+            {
+                gApplication.StatusBar = "Duplicate column definitions found";
+                return false;
+            }
+
+
             AddTask(TASKS.LOAD_REGULON_DATA);
 
             gRegulonWB = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.referenceSheetName, Properties.Settings.Default.referenceFile, 1, 1);
-            //if (gRegulonWB != null)
-            //{
-            //    gRegulonColNames = new string[gRegulonWB.Columns.Count];
-            //    int i = 0;
-            //    foreach (SysData.DataColumn col in gRegulonWB.Columns)
-            //    {
-            //        gRegulonColNames[i++] = col.ColumnName;
-            //    }
-            //    // generate database frequency table
-            //    // CreateTableStatistics();
-            //}
-
+         
             RemoveTask(TASKS.LOAD_REGULON_DATA);
             return gRegulonWB != null;
         }

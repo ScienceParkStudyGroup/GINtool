@@ -68,6 +68,10 @@
             this.ddRegulon = this.Factory.CreateRibbonDropDown();
             this.separator10 = this.Factory.CreateRibbonSeparator();
             this.ddDir = this.Factory.CreateRibbonDropDown();
+            this.grpRegulonInfo = this.Factory.CreateRibbonGroup();
+            this.ddRegInfoId = this.Factory.CreateRibbonDropDown();
+            this.ddRegInfoSize = this.Factory.CreateRibbonDropDown();
+            this.ddRegInfoFunction = this.Factory.CreateRibbonDropDown();
             this.grpColMapCategory = this.Factory.CreateRibbonGroup();
             this.ddCatID = this.Factory.CreateRibbonDropDown();
             this.ddCatName = this.Factory.CreateRibbonDropDown();
@@ -78,10 +82,6 @@
             this.grpDirection = this.Factory.CreateRibbonGroup();
             this.cbAscending = this.Factory.CreateRibbonCheckBox();
             this.cbDescending = this.Factory.CreateRibbonCheckBox();
-            this.grpRegulonInfo = this.Factory.CreateRibbonGroup();
-            this.ddRegInfoId = this.Factory.CreateRibbonDropDown();
-            this.ddRegInfoSize = this.Factory.CreateRibbonDropDown();
-            this.ddRegInfoFunction = this.Factory.CreateRibbonDropDown();
             this.btLoad = this.Factory.CreateRibbonButton();
             this.toggleButton1 = this.Factory.CreateRibbonToggleButton();
             this.tglTaskPane = this.Factory.CreateRibbonToggleButton();
@@ -126,10 +126,10 @@
             this.grpReference.SuspendLayout();
             this.grpGenesMapping.SuspendLayout();
             this.grpMap.SuspendLayout();
+            this.grpRegulonInfo.SuspendLayout();
             this.grpColMapCategory.SuspendLayout();
             this.grpCutOff.SuspendLayout();
             this.grpDirection.SuspendLayout();
-            this.grpRegulonInfo.SuspendLayout();
             this.SuspendLayout();
             // 
             // TabGINtool
@@ -406,6 +406,42 @@
             this.ddDir.ShowImage = true;
             this.ddDir.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.DropDown_RegulonDirection_SelectionChanged);
             // 
+            // grpRegulonInfo
+            // 
+            this.grpRegulonInfo.Items.Add(this.ddRegInfoId);
+            this.grpRegulonInfo.Items.Add(this.ddRegInfoSize);
+            this.grpRegulonInfo.Items.Add(this.ddRegInfoFunction);
+            this.grpRegulonInfo.Label = "regulon info column mapping";
+            this.grpRegulonInfo.Name = "grpRegulonInfo";
+            this.grpRegulonInfo.Visible = false;
+            // 
+            // ddRegInfoId
+            // 
+            this.ddRegInfoId.Enabled = false;
+            this.ddRegInfoId.Image = global::GINtool.Properties.Resources.target;
+            this.ddRegInfoId.Label = "identifier";
+            this.ddRegInfoId.Name = "ddRegInfoId";
+            this.ddRegInfoId.ShowImage = true;
+            this.ddRegInfoId.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ddRegInfoId_SelectionChanged);
+            // 
+            // ddRegInfoSize
+            // 
+            this.ddRegInfoSize.Enabled = false;
+            this.ddRegInfoSize.Image = global::GINtool.Properties.Resources.crop;
+            this.ddRegInfoSize.Label = "size";
+            this.ddRegInfoSize.Name = "ddRegInfoSize";
+            this.ddRegInfoSize.ShowImage = true;
+            this.ddRegInfoSize.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ddRegInfoSize_SelectionChanged);
+            // 
+            // ddRegInfoFunction
+            // 
+            this.ddRegInfoFunction.Enabled = false;
+            this.ddRegInfoFunction.Image = global::GINtool.Properties.Resources.keyboard;
+            this.ddRegInfoFunction.Label = "function";
+            this.ddRegInfoFunction.Name = "ddRegInfoFunction";
+            this.ddRegInfoFunction.ShowImage = true;
+            this.ddRegInfoFunction.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ddRegInfoFunction_SelectionChanged);
+            // 
             // grpColMapCategory
             // 
             this.grpColMapCategory.Items.Add(this.ddCatID);
@@ -428,7 +464,7 @@
             // 
             this.ddCatName.Enabled = false;
             this.ddCatName.Image = global::GINtool.Properties.Resources.keyboard;
-            this.ddCatName.Label = "category name";
+            this.ddCatName.Label = "description";
             this.ddCatName.Name = "ddCatName";
             this.ddCatName.ShowImage = true;
             this.ddCatName.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ddCatName_SelectionChanged);
@@ -487,42 +523,6 @@
             this.cbDescending.Name = "cbDescending";
             this.cbDescending.ScreenTip = "Set the sort direction for outputting tables and figures";
             this.cbDescending.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CheckBox_Descending_Click);
-            // 
-            // grpRegulonInfo
-            // 
-            this.grpRegulonInfo.Items.Add(this.ddRegInfoId);
-            this.grpRegulonInfo.Items.Add(this.ddRegInfoSize);
-            this.grpRegulonInfo.Items.Add(this.ddRegInfoFunction);
-            this.grpRegulonInfo.Label = "regulon info column mapping";
-            this.grpRegulonInfo.Name = "grpRegulonInfo";
-            this.grpRegulonInfo.Visible = false;
-            // 
-            // ddRegInfoId
-            // 
-            this.ddRegInfoId.Enabled = false;
-            this.ddRegInfoId.Image = global::GINtool.Properties.Resources.target;
-            this.ddRegInfoId.Label = "identifier";
-            this.ddRegInfoId.Name = "ddRegInfoId";
-            this.ddRegInfoId.ShowImage = true;
-            this.ddRegInfoId.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ddRegInfoId_SelectionChanged);
-            // 
-            // ddRegInfoSize
-            // 
-            this.ddRegInfoSize.Enabled = false;
-            this.ddRegInfoSize.Image = global::GINtool.Properties.Resources.crop;
-            this.ddRegInfoSize.Label = "size";
-            this.ddRegInfoSize.Name = "ddRegInfoSize";
-            this.ddRegInfoSize.ShowImage = true;
-            this.ddRegInfoSize.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ddRegInfoSize_SelectionChanged);
-            // 
-            // ddRegInfoFunction
-            // 
-            this.ddRegInfoFunction.Enabled = false;
-            this.ddRegInfoFunction.Image = global::GINtool.Properties.Resources.keyboard;
-            this.ddRegInfoFunction.Label = "function";
-            this.ddRegInfoFunction.Name = "ddRegInfoFunction";
-            this.ddRegInfoFunction.ShowImage = true;
-            this.ddRegInfoFunction.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ddRegInfoFunction_SelectionChanged);
             // 
             // btLoad
             // 
@@ -830,14 +830,14 @@
             this.grpGenesMapping.PerformLayout();
             this.grpMap.ResumeLayout(false);
             this.grpMap.PerformLayout();
+            this.grpRegulonInfo.ResumeLayout(false);
+            this.grpRegulonInfo.PerformLayout();
             this.grpColMapCategory.ResumeLayout(false);
             this.grpColMapCategory.PerformLayout();
             this.grpCutOff.ResumeLayout(false);
             this.grpCutOff.PerformLayout();
             this.grpDirection.ResumeLayout(false);
             this.grpDirection.PerformLayout();
-            this.grpRegulonInfo.ResumeLayout(false);
-            this.grpRegulonInfo.PerformLayout();
             this.ResumeLayout(false);
 
         }

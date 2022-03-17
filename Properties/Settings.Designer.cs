@@ -49,7 +49,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("locus_tag")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string referenceBSU {
             get {
                 return ((string)(this["referenceBSU"]));
@@ -61,7 +61,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("regulator")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string referenceRegulon {
             get {
                 return ((string)(this["referenceRegulon"]));
@@ -73,7 +73,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("mode")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string referenceDIR {
             get {
                 return ((string)(this["referenceDIR"]));
@@ -154,7 +154,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("gene")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string referenceGene {
             get {
                 return ((string)(this["referenceGene"]));
@@ -190,7 +190,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool use_pvalues {
             get {
                 return ((bool)(this["use_pvalues"]));
@@ -250,7 +250,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool regPlot {
             get {
                 return ((bool)(this["regPlot"]));
@@ -298,7 +298,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool catPlot {
             get {
                 return ((bool)(this["catPlot"]));
@@ -310,7 +310,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool distPlot {
             get {
                 return ((bool)(this["distPlot"]));
@@ -370,7 +370,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Sheet1")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string genesSheetName {
             get {
                 return ((string)(this["genesSheetName"]));
@@ -382,7 +382,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("locus_tag")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string genesBSUColumn {
             get {
                 return ((string)(this["genesBSUColumn"]));
@@ -394,7 +394,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("gene")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string genesNameColumn {
             get {
                 return ((string)(this["genesNameColumn"]));
@@ -406,7 +406,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("function")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string genesFunctionColumn {
             get {
                 return ((string)(this["genesFunctionColumn"]));
@@ -418,7 +418,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("description")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string genesDescriptionColumn {
             get {
                 return ((string)(this["genesDescriptionColumn"]));
@@ -430,7 +430,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("locus tag")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string catBSUColum {
             get {
                 return ((string)(this["catBSUColum"]));
@@ -442,7 +442,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("category id")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string catCatIDColumn {
             get {
                 return ((string)(this["catCatIDColumn"]));
@@ -454,7 +454,7 @@ namespace GINtool.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("description")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string catCatDescriptionColumn {
             get {
                 return ((string)(this["catCatDescriptionColumn"]));

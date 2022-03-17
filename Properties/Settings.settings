@@ -9,13 +9,13 @@
       <Value Profile="(Default)">Sheet1</Value>
     </Setting>
     <Setting Name="referenceBSU" Type="System.String" Scope="User">
-      <Value Profile="(Default)">locus_tag</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="referenceRegulon" Type="System.String" Scope="User">
-      <Value Profile="(Default)">regulator</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="referenceDIR" Type="System.String" Scope="User">
-      <Value Profile="(Default)">mode</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="directionMapUnassigned" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)" />
@@ -36,7 +36,7 @@
       <Value Profile="(Default)">4</Value>
     </Setting>
     <Setting Name="referenceGene" Type="System.String" Scope="User">
-      <Value Profile="(Default)">gene</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="operonFile" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
@@ -45,7 +45,7 @@
       <Value Profile="(Default)">0.05</Value>
     </Setting>
     <Setting Name="use_pvalues" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="operonSheet" Type="System.String" Scope="User">
       <Value Profile="(Default)">Sheet1</Value>
@@ -60,7 +60,7 @@
       <Value Profile="(Default)">Sheet1</Value>
     </Setting>
     <Setting Name="regPlot" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="tblMap" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
@@ -72,10 +72,10 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="catPlot" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="distPlot" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="useCat" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
@@ -90,28 +90,28 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="genesSheetName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Sheet1</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="genesBSUColumn" Type="System.String" Scope="User">
-      <Value Profile="(Default)">locus_tag</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="genesNameColumn" Type="System.String" Scope="User">
-      <Value Profile="(Default)">gene</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="genesFunctionColumn" Type="System.String" Scope="User">
-      <Value Profile="(Default)">function</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="genesDescriptionColumn" Type="System.String" Scope="User">
-      <Value Profile="(Default)">description</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="catBSUColum" Type="System.String" Scope="User">
-      <Value Profile="(Default)">locus tag</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="catCatIDColumn" Type="System.String" Scope="User">
-      <Value Profile="(Default)">category id</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="catCatDescriptionColumn" Type="System.String" Scope="User">
-      <Value Profile="(Default)">description</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="use_foldchange" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
