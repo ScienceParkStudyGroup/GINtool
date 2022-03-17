@@ -10,7 +10,7 @@ using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 using SysData = System.Data;
 
-//certificate CdF7RoqS9KXLvWtk6OZf
+//certificate CdF7RoqS9KXLvWtk6OZf chk
 
 
 namespace GINtool
