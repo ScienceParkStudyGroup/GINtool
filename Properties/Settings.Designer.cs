@@ -535,5 +535,29 @@ namespace GINtool.Properties {
                 this["regInfoFunctionColumn"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool useOperons {
+            get {
+                return ((bool)(this["useOperons"]));
+            }
+            set {
+                this["useOperons"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool useRegulons {
+            get {
+                return ((bool)(this["useRegulons"]));
+            }
+            set {
+                this["useRegulons"] = value;
+            }
+        }
     }
 }

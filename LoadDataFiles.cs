@@ -191,7 +191,14 @@ namespace GINtool
         /// <returns></returns>
 
         private bool LoadOperonData()
-        {          
+        {
+
+
+            if (Properties.Settings.Default.operonFile.Length == 0 || Properties.Settings.Default.operonSheet.Length == 0)
+            {
+                btnOperonFile.Label = "No file selected";
+                return false;
+            }
 
             AddTask(TASKS.LOAD_OPERON_DATA);
 

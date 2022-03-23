@@ -246,7 +246,7 @@ namespace GINtool
             cbMapping.Enabled = enable;
             cbSummary.Enabled = enable;
             cbCombined.Enabled = enable;
-            cbOperon.Enabled = enable;
+            cbUseOperons.Enabled = enable;
             cbUsePValues.Enabled = enable;
             cbUseFoldChanges.Enabled = enable;
             cbNoFilter.Enabled = enable;
@@ -333,14 +333,17 @@ namespace GINtool
                     gApplication.StatusBar.Text = ex.Message;
 
                 }
-            }
+            }            
 
-            if (Properties.Settings.Default.categoryFile.Length == 0 & Properties.Settings.Default.referenceFile.Length > 0)
-            {
-                cbUseCategories.Checked = false;
-                cbUseRegulons.Checked = true;
-                Properties.Settings.Default.useCat = false;
-            }
+            
+            //if(gSettings.operonFile.Length ==0 & gSettings.operonSheet.Length>0)
+
+            //if (Properties.Settings.Default.categoryFile.Length == 0 & Properties.Settings.Default.referenceFile.Length > 0)
+            //{
+            //    cbUseCategories.Checked = false;
+            //    cbUseRegulons.Checked = true;
+            //    Properties.Settings.Default.useCat = false;
+            //}
 
             btnRegInfoFileName.Label = gSettings.regulonInfoFIleName;
             if (btnRegInfoFileName.Label.Length > 0) // check this with merge from home 17/03/2022
@@ -371,13 +374,13 @@ namespace GINtool
             cbMapping.Checked = Properties.Settings.Default.tblMap;
             cbSummary.Checked = Properties.Settings.Default.tblSummary;
             cbCombined.Checked = Properties.Settings.Default.tblCombine;
-            cbOperon.Checked = Properties.Settings.Default.tblOperon;
+            cbUseOperons.Checked = Properties.Settings.Default.tblOperon;
 
             cbClustered.Checked = Properties.Settings.Default.catPlot;
             cbDistribution.Checked = Properties.Settings.Default.distPlot;
 
-            cbUseCategories.Checked = Properties.Settings.Default.useCat;
-            cbUseRegulons.Checked = !Properties.Settings.Default.useCat;
+            //cbUseCategories.Checked = Properties.Settings.Default.useCat;
+            //cbUseRegulons.Checked = !Properties.Settings.Default.useCat;
 
             cbUsePValues.Checked = Properties.Settings.Default.use_pvalues;
             cbUseFoldChanges.Checked = Properties.Settings.Default.use_foldchange;
@@ -388,6 +391,11 @@ namespace GINtool
             gAvailItems = PropertyItems("directionMapUnassigned");
             gUpItems = PropertyItems("directionMapUp");
             gDownItems = PropertyItems("directionMapDown");
+
+            cbUseRegulons.Checked = gSettings.useRegulons & (!gSettings.useOperons & !gSettings.useCat) & (gDownItems.Count > 0 | gUpItems.Count > 0);
+            cbUseCategories.Checked = gSettings.useCat & (!gSettings.useOperons & !gSettings.useRegulons);
+            cbUseOperons.Checked = gSettings.useOperons & (!gSettings.useRegulons & !gSettings.useCat);
+
 
         }
 
@@ -420,7 +428,7 @@ namespace GINtool
             gOperonFileSelected = System.IO.File.Exists(Properties.Settings.Default.operonFile);
             gRegulonInfoFileSelected = System.IO.File.Exists(Properties.Settings.Default.regulonInfoFIleName);
 
-            btLoad.Enabled = (System.IO.File.Exists(Properties.Settings.Default.referenceFile) | System.IO.File.Exists(Properties.Settings.Default.categoryFile)) & System.IO.File.Exists(Properties.Settings.Default.genesFileName);
+            btLoad.Enabled = System.IO.File.Exists(gSettings.referenceFile) | System.IO.File.Exists(gSettings.categoryFile) | System.IO.File.Exists(gSettings.genesFileName) | System.IO.File.Exists(gSettings.regulonInfoFIleName);
 
         }
 
@@ -445,7 +453,7 @@ namespace GINtool
             cbUseCategories.Enabled = enable && gCategoriesWB!=null; //gCategoryFileSelected &&
             cbUseRegulons.Enabled = enable && (gRegulonWB!=null && (gDownItems.Count>0 | gUpItems.Count>0)); //(gRegulonFileSelected 
 
-            cbOperon.Enabled = enable && gOperonFileSelected;
+            cbUseOperons.Enabled = enable && gOperonFileSelected;
 
             cbUsePValues.Enabled = enable;
             cbUseFoldChanges.Enabled = enable;
@@ -1253,14 +1261,14 @@ namespace GINtool
             gRegulonTable = null;
             gCategoryTable = null;
 
-            gRefStats = null;
+            //gRefStats = null;
 
             EnableOutputOptions(false);
 
             btApply.Enabled = false;
             btPlot.Enabled = false;
-
-            btLoad.Enabled = true;
+            
+            btLoad.Enabled = gGenesWB==null;
             btnSelect.Enabled = false;
         }
 
@@ -1289,6 +1297,7 @@ namespace GINtool
             SetFlags(UPDATE_FLAGS.ALL);
             LoadRegulonData();
             EnableSelectButton();
+            EnableFocusItems();
         }
 
         /// <summary>
@@ -1302,6 +1311,7 @@ namespace GINtool
             SetFlags(UPDATE_FLAGS.ALL);
             LoadRegulonData();
             EnableSelectButton();
+            EnableFocusItems();
         }
 
         /// <summary>
@@ -1325,6 +1335,9 @@ namespace GINtool
             if (gUpItems.Count > 0 | gDownItems.Count > 0)
                 gApplication.StatusBar = false;
 
+            EnableSelectButton();
+            EnableFocusItems();
+
             SetFlags(UPDATE_FLAGS.ALL);
 
         }
@@ -1337,7 +1350,7 @@ namespace GINtool
         private void DropDown_RegulonDirection_SelectionChanged(object sender, RibbonControlEventArgs e)
         {
             LoadRegulonData();
-            EnableSelectButton();
+            EnableSelectButton();            
             Properties.Settings.Default.referenceDIR = ddDir.SelectedItem.Label;
             gAvailItems.Clear();
             gUpItems.Clear();
@@ -1351,6 +1364,7 @@ namespace GINtool
                 gApplication.StatusBar = ex.Message;
             }
 
+            EnableFocusItems();
             SetFlags(UPDATE_FLAGS.ALL);
         }
 
@@ -1407,7 +1421,7 @@ namespace GINtool
                 _reload = MessageBox.Show("Really overwrite existing data?") == DialogResult.OK;
 
 
-            if (_reload && (LoadGenesData() & (LoadRegulonData() | LoadCategoryData())| LoadOperonData()))
+            if (_reload && (LoadGenesData() && (LoadRegulonData() | LoadCategoryData())| LoadOperonData()))
             {
                 gRegulonInfoFileSelected = LoadRegulonInfoData();
                 //gOperonFileSelected = LoadOperonData();
@@ -1488,13 +1502,13 @@ namespace GINtool
                 }
             }
 
-            if (Properties.Settings.Default.distPlot)
-            {
-                if (gList != null)
-                {
-                    DistributionPlot(GetDataSelection());
-                }
-            }
+            //if (Properties.Settings.Default.distPlot)
+            //{
+            //    if (gList != null)
+            //    {
+            //        DistributionPlot(GetDataSelection());
+            //    }
+            //}
         }
 
         /// <summary>
@@ -1507,7 +1521,7 @@ namespace GINtool
         {
 
 
-            if (!(Properties.Settings.Default.tblMap || Properties.Settings.Default.tblSummary || Properties.Settings.Default.tblCombine || Properties.Settings.Default.tblOperon))
+            if (!(gSettings.useOperons || gSettings.useCat || gSettings.useRegulons))
             {
                 MessageBox.Show("Please select at least one output table to generate");
                 return;
@@ -1534,14 +1548,14 @@ namespace GINtool
                 UnSetFlags(UPDATE_FLAGS.TCategory);
             }
 
-            CreateBestDataTable(GetDataSelection(), gSettings.tblMap);
+            CreateBestDataTable(GetDataSelection()); //, gSettings.tblMap);
 
-            if (Properties.Settings.Default.tblOperon && gRefOperonsWB!=null) // can combine table/sheet because it's a quick routine
-            {
-                SysData.DataTable tblOperon = CreateOperonTable(GetDataSelection());
-                CreateOperonSheet(tblOperon);
-                UnSetFlags(UPDATE_FLAGS.TOperon);
-            }
+            //if (Properties.Settings.Default.tblOperon && gRefOperonsWB!=null) // can combine table/sheet because it's a quick routine
+            //{
+            //    SysData.DataTable tblOperon = CreateOperonTable(GetDataSelection());
+            //    CreateOperonSheet(tblOperon);
+            //    UnSetFlags(UPDATE_FLAGS.TOperon);
+            //}
 
             gApplication.EnableEvents = true;
             gApplication.DisplayAlerts = true;
@@ -2226,9 +2240,12 @@ namespace GINtool
 
                     System.IO.FileInfo fInfo = new System.IO.FileInfo(Properties.Settings.Default.referenceFile);
                     gLastFolder = fInfo.DirectoryName;
+                    
+                    SelectFocusItem(FOCUS_ITEMS.REGULONS);
 
                     if (LoadRegulonDataColumns())
                     {
+                        ResetTables();
                         Fill_RegulonDropDownBoxes();
                         if (!LoadRegulonData())
                             ShowMappingPanel(MAPPING_PANEL.REGULON_LINKAGE, true);
@@ -2236,6 +2253,23 @@ namespace GINtool
                 }
             }
             EnableSelectButton();
+            EnableFocusItems();
+        }
+
+
+        private void SelectFocusItem(FOCUS_ITEMS item)
+        {
+
+            gSettings.useOperons = item == FOCUS_ITEMS.OPERONS;
+            cbUseOperons.Checked = item == FOCUS_ITEMS.OPERONS;
+
+            gSettings.useCat = item == FOCUS_ITEMS.CATEGORIES;
+            cbUseCategories.Checked = item == FOCUS_ITEMS.CATEGORIES;
+
+            gSettings.useRegulons = (item == FOCUS_ITEMS.REGULONS && (gUpItems.Count > 0 || gDownItems.Count > 0));
+            cbUseRegulons.Checked= (item == FOCUS_ITEMS.REGULONS && (gUpItems.Count > 0 || gDownItems.Count > 0));
+
+
         }
 
 
@@ -2255,12 +2289,15 @@ namespace GINtool
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
+                    ResetTables();
                     Properties.Settings.Default.operonFile = openFileDialog.FileName;
                     btnOperonFile.Label = Properties.Settings.Default.operonFile;
                     SpecifyOperonSheet();
 
                     System.IO.FileInfo fInfo = new System.IO.FileInfo(Properties.Settings.Default.operonFile);
                     gLastFolder = fInfo.DirectoryName;
+
+                    SelectFocusItem(FOCUS_ITEMS.OPERONS);
 
                     if (LoadOperonDataColumns())
                     {
@@ -2270,6 +2307,7 @@ namespace GINtool
                 }
             }
             EnableSelectButton();
+            EnableFocusItems();
         }
 
         /// <summary>
@@ -2283,6 +2321,7 @@ namespace GINtool
             SetFlags(UPDATE_FLAGS.ALL);
             LoadRegulonData();
             EnableSelectButton();
+            EnableFocusItems();
 
         }
 
@@ -2329,13 +2368,20 @@ namespace GINtool
         private bool CanAugmentWithCategoryData()
         {
             //? gCategoryFileSelected
-            return gCategoriesWB != null && cbUseCategories.Enabled;
+            return gCategoriesWB != null; //&& cbUseCategories.Enabled;
         }
 
         private bool CanAugmentWithRegulonData()
         {
             // ? gRegulonFileSelected
-            return gRegulonWB != null && cbUseRegulons.Enabled;
+            return gRegulonWB != null && (gUpItems.Count > 0 || gDownItems.Count > 0);
+        }
+
+
+        private bool CanAugmentWithOperonData()
+        {
+            // ? gRegulonFileSelected
+            return gRefOperonsWB != null;
         }
 
 
@@ -2351,9 +2397,13 @@ namespace GINtool
             btnOperonFile.Label = "No file selected";
 
             gOperonFileSelected = false;
-            cbOperon.Checked = false;
-            cbOperon.Enabled = false;
-            Properties.Settings.Default.tblOperon = false;
+            cbUseOperons.Checked = false;
+            cbUseOperons.Enabled = false;
+
+            gRefOperonsWB = null;
+
+            Properties.Settings.Default.useOperons = false;
+            EnableSelectButton();
         }
 
         /// <summary>
@@ -2390,13 +2440,17 @@ namespace GINtool
                     System.IO.FileInfo fInfo = new System.IO.FileInfo(Properties.Settings.Default.categoryFile);
                     gLastFolder = fInfo.DirectoryName;
 
-                    Properties.Settings.Default.useCat = true;
-                    cbUseCategories.Checked = true;
 
-                    cbUseRegulons.Checked = false;
-                    cbUseCategories.Enabled = false;
+                    SelectFocusItem(FOCUS_ITEMS.CATEGORIES);
+                    //Properties.Settings.Default.useCat = true;
+                    //cbUseCategories.Checked = true;
+
+                    //cbUseRegulons.Checked = false;
+                    //cbUseCategories.Enabled = false;
+                    
                     if (LoadCategoryDataColumns())
                     {
+                        ResetTables();
                         Fill_CategoryDropDownBoxes();
                         if (!LoadCategoryData())
                             ShowMappingPanel(MAPPING_PANEL.CATEGORY_LINKAGE, true);
@@ -2405,6 +2459,7 @@ namespace GINtool
                 }
             }
             EnableSelectButton();
+            EnableFocusItems();
         }
 
 
@@ -2429,7 +2484,17 @@ namespace GINtool
         private void CheckBox_UseCategories_Click(object sender, RibbonControlEventArgs e)
         {
             Properties.Settings.Default.useCat = cbUseCategories.Checked;
-            cbUseRegulons.Checked = !cbUseCategories.Checked;
+
+            if (cbUseCategories.Checked)
+            {
+                cbUseOperons.Checked = false;
+                cbUseRegulons.Checked = false;
+                gSettings.useOperons = false;
+                gSettings.useRegulons = false;
+            }
+          
+            //cbUseRegulons.Checked = !cbUseCategories.Checked;
+            //cbUseOperons.Checked = !cbUseCategories.Checked;
         }
 
         /// <summary>
@@ -2563,7 +2628,13 @@ namespace GINtool
         "Augmenting with gene data", "Augmenting with with regulon data", "Augmenting with category data", "Read sheet data", "Read sheet categorized data",
             "Update mapping table", "Update summary table", "Update combined table", "Update operon table", "Color cells", "Create category chart",
             "Create regulon chart" };
-
+        
+        private enum FOCUS_ITEMS : int
+        {
+            OPERONS = 0,
+            REGULONS = 1,
+            CATEGORIES=2
+        };
 
         public enum MAPPING_PANEL : int
         {
@@ -2650,7 +2721,16 @@ namespace GINtool
         /// <param name="e"></param>
         private void CheckBox_Operon_Click(object sender, RibbonControlEventArgs e)
         {
-            Properties.Settings.Default.tblOperon = cbOperon.Checked;
+            gSettings.useOperons = cbUseOperons.Checked;
+
+            if(cbUseOperons.Checked)
+            {
+                cbUseCategories.Checked = false;
+                cbUseRegulons.Checked = false;
+                gSettings.useCat = false;
+                gSettings.useRegulons = false;
+            }
+
         }
 
         /// <summary>
@@ -2664,11 +2744,22 @@ namespace GINtool
             cbUseCategories.Checked = false;
             cbUseCategories.Enabled = false;
             Properties.Settings.Default.useCat = false;
-            cbUseRegulons.Checked = true;
-            cbUseRegulons.Enabled = false;
+
+            gCategoriesWB = null;
+            gSettings.catBSUColum = "";
+            gSettings.catCatDescriptionColumn = "";
+            gSettings.catCatIDColumn = "";
 
             Properties.Settings.Default.categoryFile = "";
             btnCatFile.Label = "No file selected";
+
+
+
+            ShowMappingPanel(MAPPING_PANEL.CATEGORY_LINKAGE, false);
+            Fill_CategoryDropDownBoxes();
+
+
+            EnableSelectButton();
 
         }
 
@@ -2743,6 +2834,23 @@ namespace GINtool
 
         }
 
+        private void EnableFocusItems()
+        {
+            cbUseCategories.Enabled = gGenesWB!=null && CanAugmentWithCategoryData();
+            cbUseOperons.Enabled = gGenesWB!=null && CanAugmentWithOperonData() ;
+            cbUseRegulons.Enabled =gGenesWB !=null && CanAugmentWithRegulonData() ;
+
+            cbUseCategories.Checked = cbUseCategories.Enabled && CanAugmentWithCategoryData() ;
+            cbUseOperons.Checked = cbUseOperons.Enabled  && CanAugmentWithOperonData();
+            cbUseRegulons.Checked = cbUseRegulons.Enabled && CanAugmentWithCategoryData();
+
+            gSettings.useCat = cbUseCategories.Checked;
+            gSettings.useOperons = cbUseOperons.Checked;
+            gSettings.useRegulons = cbUseRegulons.Checked;
+
+
+        }
+
 
         /// <summary>
         /// What to do when data is selected
@@ -2771,15 +2879,24 @@ namespace GINtool
                 if (gList is null)
                     return;
 
-                btApply.Enabled = true;
-                btPlot.Enabled = true;
                 EnableOutputOptions(true);
+                EnableFunctionButtons();
 
                 UnSetFlags(UPDATE_FLAGS.TMapped);
 
             }
 
         }
+
+        private void EnableFunctionButtons()
+        {
+
+            bool b = gGenesWB != null && (CanAugmentWithRegulonData() || CanAugmentWithCategoryData() || CanAugmentWithOperonData());
+            btApply.Enabled = b;
+            b = gGenesWB != null && (CanAugmentWithRegulonData() || CanAugmentWithCategoryData());
+            btPlot.Enabled = b;
+        }
+
 
         /// <summary>
         /// Register preference for sorting in descending mode (instead of ascending)
@@ -2808,11 +2925,19 @@ namespace GINtool
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
+        
         private void CheckBox_UseRegulons_Click(object sender, RibbonControlEventArgs e)
-        {
-            Properties.Settings.Default.useCat = !cbUseRegulons.Checked;
-            cbUseCategories.Checked = !cbUseRegulons.Checked;
-        }
+        {            
+            Properties.Settings.Default.useRegulons = cbUseRegulons.Checked;
+            if (cbUseRegulons.Checked)
+            {
+                cbUseCategories.Checked = false;
+                cbUseOperons.Checked = false;
+                gSettings.useOperons = false;
+                gSettings.useCat = false;
+            }
+            
+        }        
 
         private void btnResetRegulonFile_Click(object sender, RibbonControlEventArgs e)
         {
@@ -2822,8 +2947,24 @@ namespace GINtool
 
             gRegulonFileSelected = false;
 
+            gSettings.referenceGene = "";
+            gSettings.referenceBSU = "";
+            gSettings.referenceDIR = "";
+            gSettings.referenceRegulon = "";
+            gUpItems.Clear();
+            gDownItems.Clear();
+            gAvailItems.Clear();
+
             cbUseRegulons.Checked = false;
             cbUseRegulons.Enabled = false;
+            gRegulonWB = null;
+
+            ShowMappingPanel(MAPPING_PANEL.REGULON_LINKAGE, false);
+            Fill_RegulonDropDownBoxes();
+           
+
+            EnableSelectButton();
+
         }
 
 
@@ -2883,6 +3024,7 @@ namespace GINtool
 
                     if (LoadGenesDataColumns())
                     {
+                        ResetTables();
                         Fill_GenesDropDownBoxes();
                         cbGenesFileMapping.Checked = true;
 
@@ -2973,6 +3115,7 @@ namespace GINtool
 
                     if (LoadRegulonInfoDataColumns())
                     {
+                        ResetTables();
                         Fill_RegulonInfoDropDownBoxes();
                         if (!LoadRegulonInfoData())
                             ShowMappingPanel(MAPPING_PANEL.REGULON_INFO, true);
@@ -3037,7 +3180,44 @@ namespace GINtool
 
         private void btnClearGenInfo_Click(object sender, RibbonControlEventArgs e)
         {
-            //gSettings.
+            gGenesWB = null;
+            gSettings.genesFileName = "";
+            gSettings.genesSheetName = "";
+
+            gSettings.genesBSUColumn = "";
+            gSettings.genesDescriptionColumn = "";
+            gSettings.genesFunctionColumn = "";
+            gSettings.genesNameColumn = "";
+
+            btnGenesFileSelected.Label = "No file selected";
+            
+            gList = null;
+            gOldRangeBSU = "";
+            gOldRangeFC = "";
+            gOldRangeP = "";
+
+            ShowMappingPanel(MAPPING_PANEL.GENE_INFO, false);
+            Fill_GenesDropDownBoxes();
+
+            EnableSelectButton();
+        }
+
+        private void btnClearRegulonInfo_Click(object sender, RibbonControlEventArgs e)
+        {
+            gSettings.regInfoIdColumn = "";
+            gSettings.regInfoSizeColumn = "";
+            gSettings.regInfoFunctionColumn = "";
+            gSettings.regulonInfoFIleName = "";
+            gSettings.regulonInfoSheet = "";
+            gRegulonInfoWB = null;
+            btnRegInfoFileName.Label = "No file selected";
+
+
+
+            ShowMappingPanel(MAPPING_PANEL.REGULON_INFO, false);
+            Fill_RegulonInfoDropDownBoxes();
+
+
         }
     }
 

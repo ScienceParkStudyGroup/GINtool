@@ -125,38 +125,38 @@ namespace GINtool
 
         }
 
-        /// <summary>
-        /// Create a basic count / average usage table per regulon based on the regulon data from subtwiki
-        /// Because regulator_BSU is not known for all regulators whe use the regulator name
-        /// </summary>
-        private void CreateTableStatistics()
-        {
-            List<string> lString = new List<string> { Properties.Settings.Default.referenceRegulon };
-            SysData.DataTable lUnique = GetDistinctRecords(gRegulonWB, lString.ToArray());
+        ///// <summary>
+        ///// Create a basic count / average usage table per regulon based on the regulon data from subtwiki
+        ///// Because regulator_BSU is not known for all regulators whe use the regulator name
+        ///// </summary>
+        //private void CreateTableStatistics()
+        //{
+        //    List<string> lString = new List<string> { Properties.Settings.Default.referenceRegulon };
+        //    SysData.DataTable lUnique = GetDistinctRecords(gRegulonWB, lString.ToArray());
 
-            // initialize the global datatable
+        //    // initialize the global datatable
 
-            gRefStats = new SysData.DataTable("tblstat");
+        //    gRefStats = new SysData.DataTable("tblstat");
 
-            int totNrRows = gRegulonWB.Rows.Count;
+        //    int totNrRows = gRegulonWB.Rows.Count;
 
-            SysData.DataColumn regColumn = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
-            SysData.DataColumn countColumn = new SysData.DataColumn("Count", Type.GetType("System.Int16"));
-            SysData.DataColumn avgColumn = new SysData.DataColumn("Average", Type.GetType("System.Double"));
-            gRefStats.Columns.Add(regColumn);
-            gRefStats.Columns.Add(countColumn);
-            gRefStats.Columns.Add(avgColumn);
+        //    SysData.DataColumn regColumn = new SysData.DataColumn("Regulon", Type.GetType("System.String"));
+        //    SysData.DataColumn countColumn = new SysData.DataColumn("Count", Type.GetType("System.Int16"));
+        //    SysData.DataColumn avgColumn = new SysData.DataColumn("Average", Type.GetType("System.Double"));
+        //    gRefStats.Columns.Add(regColumn);
+        //    gRefStats.Columns.Add(countColumn);
+        //    gRefStats.Columns.Add(avgColumn);
 
-            foreach (SysData.DataRow lRow in lUnique.Rows)
-            {
-                string lVal = lRow[Properties.Settings.Default.referenceRegulon].ToString();
-                int cnt = gRegulonWB.Select(string.Format("{0}='{1}'", Properties.Settings.Default.referenceRegulon, lVal)).Length;
-                SysData.DataRow nRow = gRefStats.Rows.Add();
-                nRow["Regulon"] = lVal;
-                nRow["Count"] = cnt;
-                nRow["Average"] = ((double)cnt) / totNrRows;
-            }
-        }
+        //    foreach (SysData.DataRow lRow in lUnique.Rows)
+        //    {
+        //        string lVal = lRow[Properties.Settings.Default.referenceRegulon].ToString();
+        //        int cnt = gRegulonWB.Select(string.Format("{0}='{1}'", Properties.Settings.Default.referenceRegulon, lVal)).Length;
+        //        SysData.DataRow nRow = gRefStats.Rows.Add();
+        //        nRow["Regulon"] = lVal;
+        //        nRow["Count"] = cnt;
+        //        nRow["Average"] = ((double)cnt) / totNrRows;
+        //    }
+        //}
 
         private SysData.DataTable MappedCategoryTable()
         {
@@ -578,6 +578,50 @@ namespace GINtool
         /// </summary>
         /// <param name="aList"></param>
         /// <returns></returns>
+        private SysData.DataTable CreateGeneUsageTable(List<BsuLinkedItems> aList)
+        {
+
+            SysData.DataTable lTable = new SysData.DataTable("GeneResultsTable");
+            SysData.DataColumn geneColumn = new SysData.DataColumn("Gene", Type.GetType("System.String"));
+            SysData.DataColumn geneIDcolumn = new SysData.DataColumn("Gene_ID", Type.GetType("System.String"));
+
+            /* Need to check if we do need all of them */
+            SysData.DataColumn pvalColumn = new SysData.DataColumn("Pvalue", Type.GetType("System.Double"));
+            SysData.DataColumn fcColumn = new SysData.DataColumn("FC", Type.GetType("System.Double"));
+            SysData.DataColumn functionColumn = new SysData.DataColumn("GeneFunction", Type.GetType("System.String"));
+            SysData.DataColumn decsColumn = new SysData.DataColumn("GeneDescription", Type.GetType("System.String"));
+
+
+
+            //lTable.Columns.Add(regColumn);
+            lTable.Columns.Add(geneIDcolumn);
+            lTable.Columns.Add(geneColumn);
+            lTable.Columns.Add(fcColumn);
+            lTable.Columns.Add(pvalColumn);
+            //lTable.Columns.Add(dirColumn);
+            lTable.Columns.Add(functionColumn);
+            lTable.Columns.Add(decsColumn);
+
+            foreach (BsuLinkedItems _it in aList)
+            {
+                SysData.DataRow lRow = lTable.Rows.Add();
+                lRow["Gene"] = _it.GeneName;
+                lRow["Gene_ID"] = _it.BSU;
+                lRow["FC"] = _it.FC;
+                lRow["GeneFunction"] = _it.GeneFunction;
+                lRow["GeneDescription"] = _it.GeneDescription;
+                lRow["Pvalue"] = _it.PVALUE;                
+            }
+
+            return lTable;
+        }
+
+
+        /// <summary>
+        /// Create the linkage table between regulon and genes
+        /// </summary>
+        /// <param name="aList"></param>
+        /// <returns></returns>
         private SysData.DataTable CreateRegulonUsageTable(List<BsuLinkedItems> aList)
         {
 
@@ -831,23 +875,23 @@ namespace GINtool
         }
 
 
-        private void CreateBestDataTable(List<BsuLinkedItems> bsuRegulons, bool outputDetails = false)
+        private void CreateBestDataTable(List<BsuLinkedItems> bsuRegulons)
         {
-            
+
             (SysData.DataTable lMappingTable, SysData.DataTable clrTbl) = PrepareResultTable(bsuRegulons);
 
 
             if (lMappingTable is null)
                 return;
-                
+
 
             List<cat_elements> cat_Elements = new List<cat_elements>();
-           
+
             string lastColumn = lMappingTable.Columns[lMappingTable.Columns.Count - 1].ColumnName;
             lastColumn = lastColumn.Replace("col_", "");
             //int maxreg = ClassExtensions.ParseInt(lastColumn, 0);
-                        
-            for (int row = 0; row < lMappingTable.Rows.Count; row++)                
+
+            for (int row = 0; row < lMappingTable.Rows.Count; row++)
             {
 
                 DataRow dataRow = lMappingTable.Rows[row];
@@ -865,7 +909,7 @@ namespace GINtool
                     {
                         colFmt = String.Format("cat_id_{0}", col + 1);
                         _catID = dataRow[colFmt].ToString();
-                    }                        
+                    }
 
                     cat_elements cat_Elements2 = new cat_elements();
 
@@ -873,32 +917,36 @@ namespace GINtool
                     cat_Elements2.elTag = _catID;
                     cat_Elements2.elements = new string[] { _catID };
                     cat_Elements.Add(cat_Elements2);
-                }                
+                }
             }
-                
-          
-            cat_Elements = GetUniqueElements(cat_Elements);
 
-            SysData.DataView dataView = gSettings.useCat ? gCategoryTable.AsDataView() : gRegulonTable.AsDataView();
-            element_fc catPlotData;
-            if (gSettings.useCat)                            
-                catPlotData = CatElements2ElementsFC(dataView, cat_Elements);            
-            else
-                catPlotData = Regulons2ElementsFC(dataView, cat_Elements);
 
-         
-            if (catPlotData.All != null)
+            if (gSettings.useOperons)
             {
-                (List<element_rank> plotData, List<summaryInfo> _all, List<summaryInfo> _pos, List<summaryInfo> _neg, List<summaryInfo> _best) = CreateRankingPlotData(catPlotData);
+                SysData.DataTable tblOperon = CreateOperonTable(bsuRegulons);
+                CreateOperonSheet(tblOperon);
+            }
+            else
+            {
+                cat_Elements = GetUniqueElements(cat_Elements);
 
-                int suffix = CreateMappingSheet(lMappingTable, _best);
+                SysData.DataView dataView = gSettings.useCat ? gCategoryTable.AsDataView() : gRegulonTable.AsDataView();
+                element_fc catPlotData;
+                if (gSettings.useCat)
+                    catPlotData = CatElements2ElementsFC(dataView, cat_Elements);
+                else
+                    catPlotData = Regulons2ElementsFC(dataView, cat_Elements);
 
-                if (outputDetails)
-                    CreateRankingDataSheet(catPlotData, _all, _pos, _neg, _best,suffix,detailSheet:true);
 
-                
-            }           
+                if (catPlotData.All != null)
+                {
+                    (List<element_rank> plotData, List<summaryInfo> _all, List<summaryInfo> _pos, List<summaryInfo> _neg, List<summaryInfo> _best) = CreateRankingPlotData(catPlotData);
 
+                    int suffix = CreateMappingSheet(lMappingTable, _best);
+                    //if (outputDetails)
+                    CreateRankingDataSheet(catPlotData, _all, _pos, _neg, _best, suffix, detailSheet: true);
+                }
+            }
         }
 
         /// <summary>

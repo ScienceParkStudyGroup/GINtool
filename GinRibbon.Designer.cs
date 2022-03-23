@@ -42,6 +42,7 @@
             this.cbUsePValues = this.Factory.CreateRibbonCheckBox();
             this.cbUseFoldChanges = this.Factory.CreateRibbonCheckBox();
             this.grpFocus = this.Factory.CreateRibbonGroup();
+            this.cbUseOperons = this.Factory.CreateRibbonCheckBox();
             this.cbUseCategories = this.Factory.CreateRibbonCheckBox();
             this.cbUseRegulons = this.Factory.CreateRibbonCheckBox();
             this.grpTable = this.Factory.CreateRibbonGroup();
@@ -49,12 +50,12 @@
             this.cbSummary = this.Factory.CreateRibbonCheckBox();
             this.dbTblRanking = this.Factory.CreateRibbonCheckBox();
             this.cbCombined = this.Factory.CreateRibbonCheckBox();
-            this.cbOperon = this.Factory.CreateRibbonCheckBox();
             this.grpPlot = this.Factory.CreateRibbonGroup();
             this.cbDistribution = this.Factory.CreateRibbonCheckBox();
             this.cbClustered = this.Factory.CreateRibbonCheckBox();
             this.chkRegulon = this.Factory.CreateRibbonCheckBox();
             this.grpReference = this.Factory.CreateRibbonGroup();
+            this.separator5 = this.Factory.CreateRibbonSeparator();
             this.separator9 = this.Factory.CreateRibbonSeparator();
             this.grpGenesMapping = this.Factory.CreateRibbonGroup();
             this.ddGnsName = this.Factory.CreateRibbonDropDown();
@@ -82,7 +83,6 @@
             this.grpDirection = this.Factory.CreateRibbonGroup();
             this.cbAscending = this.Factory.CreateRibbonCheckBox();
             this.cbDescending = this.Factory.CreateRibbonCheckBox();
-            this.separator5 = this.Factory.CreateRibbonSeparator();
             this.btLoad = this.Factory.CreateRibbonButton();
             this.toggleButton1 = this.Factory.CreateRibbonToggleButton();
             this.tglTaskPane = this.Factory.CreateRibbonToggleButton();
@@ -197,10 +197,17 @@
             // 
             // grpFocus
             // 
+            this.grpFocus.Items.Add(this.cbUseOperons);
             this.grpFocus.Items.Add(this.cbUseCategories);
             this.grpFocus.Items.Add(this.cbUseRegulons);
             this.grpFocus.Label = "focus";
             this.grpFocus.Name = "grpFocus";
+            // 
+            // cbUseOperons
+            // 
+            this.cbUseOperons.Label = "use operons";
+            this.cbUseOperons.Name = "cbUseOperons";
+            this.cbUseOperons.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CheckBox_Operon_Click);
             // 
             // cbUseCategories
             // 
@@ -220,7 +227,6 @@
             this.grpTable.Items.Add(this.cbSummary);
             this.grpTable.Items.Add(this.dbTblRanking);
             this.grpTable.Items.Add(this.cbCombined);
-            this.grpTable.Items.Add(this.cbOperon);
             this.grpTable.Items.Add(this.btApply);
             this.grpTable.Label = "tables";
             this.grpTable.Name = "grpTable";
@@ -230,6 +236,7 @@
             this.cbMapping.Checked = true;
             this.cbMapping.Label = "details";
             this.cbMapping.Name = "cbMapping";
+            this.cbMapping.Visible = false;
             this.cbMapping.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CheckBox_Mapping_Click);
             // 
             // cbSummary
@@ -256,12 +263,6 @@
             this.cbCombined.Visible = false;
             this.cbCombined.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CheckBox_Combined_Click);
             // 
-            // cbOperon
-            // 
-            this.cbOperon.Label = "operon";
-            this.cbOperon.Name = "cbOperon";
-            this.cbOperon.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CheckBox_Operon_Click);
-            // 
             // grpPlot
             // 
             this.grpPlot.Items.Add(this.cbDistribution);
@@ -275,6 +276,7 @@
             // 
             this.cbDistribution.Label = "distribution";
             this.cbDistribution.Name = "cbDistribution";
+            this.cbDistribution.Visible = false;
             this.cbDistribution.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CheckBox_Distribution_Click);
             // 
             // cbClustered
@@ -301,6 +303,10 @@
             this.grpReference.Label = "reference files";
             this.grpReference.Name = "grpReference";
             this.grpReference.Visible = false;
+            // 
+            // separator5
+            // 
+            this.separator5.Name = "separator5";
             // 
             // separator9
             // 
@@ -423,7 +429,7 @@
             // 
             this.ddRegInfoId.Enabled = false;
             this.ddRegInfoId.Image = global::GINtool.Properties.Resources.target;
-            this.ddRegInfoId.Label = "identifier";
+            this.ddRegInfoId.Label = "regulon name";
             this.ddRegInfoId.Name = "ddRegInfoId";
             this.ddRegInfoId.ShowImage = true;
             this.ddRegInfoId.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ddRegInfoId_SelectionChanged);
@@ -528,16 +534,12 @@
             this.cbDescending.ScreenTip = "Set the sort direction for outputting tables and figures";
             this.cbDescending.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.CheckBox_Descending_Click);
             // 
-            // separator5
-            // 
-            this.separator5.Name = "separator5";
-            // 
             // btLoad
             // 
             this.btLoad.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
             this.btLoad.Enabled = false;
             this.btLoad.Image = global::GINtool.Properties.Resources.stack;
-            this.btLoad.Label = "load reference data";
+            this.btLoad.Label = "initialize data";
             this.btLoad.Name = "btLoad";
             this.btLoad.ScreenTip = "load reference data into memory";
             this.btLoad.ShowImage = true;
@@ -645,7 +647,7 @@
             this.splitButton2.Items.Add(this.btnResetOperonFile);
             this.splitButton2.Items.Add(this.separator4);
             this.splitButton2.Items.Add(this.btnOperonFile);
-            this.splitButton2.Label = "operon linkage";
+            this.splitButton2.Label = "operons";
             this.splitButton2.Name = "splitButton2";
             this.splitButton2.ScreenTip = "select the reference file that contains the operon-gene mapping";
             // 
@@ -686,7 +688,7 @@
             this.splitButton1.Items.Add(this.btnResetRegulonLinkageFile);
             this.splitButton1.Items.Add(this.separator3);
             this.splitButton1.Items.Add(this.btnRegulonFileName);
-            this.splitButton1.Label = "regulon linkage";
+            this.splitButton1.Label = "regulons";
             this.splitButton1.Name = "splitButton1";
             this.splitButton1.ScreenTip = "select the csv file that contains the regulon mapping info (subtwiki)";
             this.splitButton1.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.splitButton1_Click);
@@ -735,7 +737,7 @@
             this.splitButton4.Items.Add(this.btnClearCatFile);
             this.splitButton4.Items.Add(this.separator1);
             this.splitButton4.Items.Add(this.btnCatFile);
-            this.splitButton4.Label = "category linkage";
+            this.splitButton4.Label = "categories";
             this.splitButton4.Name = "splitButton4";
             this.splitButton4.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.splitButton4_Click);
             // 
@@ -805,6 +807,7 @@
             this.btnClearRegulonInfo.Label = "clear";
             this.btnClearRegulonInfo.Name = "btnClearRegulonInfo";
             this.btnClearRegulonInfo.ShowImage = true;
+            this.btnClearRegulonInfo.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnClearRegulonInfo_Click);
             // 
             // separator2
             // 
@@ -821,7 +824,7 @@
             // 
             this.btRegDirMap.Enabled = false;
             this.btRegDirMap.Image = global::GINtool.Properties.Resources.settings;
-            this.btRegDirMap.Label = "regulon direction mapping";
+            this.btRegDirMap.Label = "regulon direction";
             this.btRegDirMap.Name = "btRegDirMap";
             this.btRegDirMap.ScreenTip = "define the text mappings for the direction of the regulons";
             this.btRegDirMap.ShowImage = true;
@@ -906,7 +909,7 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbMapping;
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbCombined;
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbSummary;
-        internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbOperon;
+        internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbUseOperons;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btnSelect;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup grpTable;
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbUsePValues;

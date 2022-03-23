@@ -174,8 +174,10 @@ namespace GINtool
         private void CreateOperonSheet(SysData.DataTable table)
         {
             Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
-            RenameWorksheet(lNewSheet, "Operon_");
 
+            int suffix = FindSheetNames(new string[] { "Mapped" });
+            lNewSheet.Name = string.Format("Mapped_{0}", suffix);
+                      
 
             int maxNrGenes = Int32.Parse(table.Compute("max([nrgenes])", string.Empty).ToString());
 

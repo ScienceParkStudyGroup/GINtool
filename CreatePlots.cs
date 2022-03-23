@@ -23,7 +23,11 @@ namespace GINtool
             gApplication.EnableEvents = false;
             gApplication.DisplayAlerts = false;
 
-            SysData.DataTable _fc_BSU_ = CreateRegulonUsageTable(aOutput);
+            //SysData.DataTable _fc_BSU_ = CreateRegulonUsageTable(aOutput);
+            SysData.DataTable _fc_BSU_ = CreateGeneUsageTable(aOutput);
+
+
+
             SysData.DataTable _fc_BSU = GetDistinctRecords(_fc_BSU_, new string[] { "Gene", "FC" });
 
             (List<double> sFC, List<int> sIdx) = SortedFoldChanges(_fc_BSU);
