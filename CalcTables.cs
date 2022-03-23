@@ -204,9 +204,9 @@ namespace GINtool
             {
                 List<BsuLinkedItems> lResults = AugmentWithGeneInfo(theInputCells);
                 
-                if (gCategoryFileSelected)
+                if (CanAugmentWithCategoryData())
                     lResults = AugmentWithCategoryData(lResults);                    
-                if (gRegulonFileSelected)    
+                if (CanAugmentWithRegulonData())    
                     lResults = AugmentWithRegulonData(lResults);                    
                                 
                 RemoveTask(TASKS.READ_SHEET_DATA);

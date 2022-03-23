@@ -406,8 +406,8 @@ namespace GINtool
             gSettings = Properties.Settings.Default;
             InitFields();
 
-            // run this line to mimic first time installation
-            gSettings.Reset();
+            // run this line to mimic first time installation 23-03
+            // gSettings.Reset();
 
             LoadPersistentSettings();
             EnableOutputOptions(false);
@@ -442,8 +442,8 @@ namespace GINtool
             cbDistribution.Enabled = enable;
             chkRegulon.Enabled = enable;
 
-            cbUseCategories.Enabled = enable && gCategoryFileSelected;
-            cbUseRegulons.Enabled = enable && gRegulonFileSelected;
+            cbUseCategories.Enabled = enable && gCategoriesWB!=null; //gCategoryFileSelected &&
+            cbUseRegulons.Enabled = enable && (gRegulonWB!=null && (gDownItems.Count>0 | gUpItems.Count>0)); //(gRegulonFileSelected 
 
             cbOperon.Enabled = enable && gOperonFileSelected;
 
@@ -1403,14 +1403,14 @@ namespace GINtool
             gApplication.EnableEvents = false;
 
             bool _reload = true;
-            if (gGenesWB != null && (gCategoriesWB != null || gRegulonInfoWB != null))
+            if (gGenesWB != null && (gCategoriesWB != null || gRegulonInfoWB != null || gRefOperonsWB!=null))
                 _reload = MessageBox.Show("Really overwrite existing data?") == DialogResult.OK;
 
 
-            if (_reload && (LoadGenesData() & (LoadRegulonData() | LoadCategoryData())))
+            if (_reload && (LoadGenesData() & (LoadRegulonData() | LoadCategoryData())| LoadOperonData()))
             {
                 gRegulonInfoFileSelected = LoadRegulonInfoData();
-                gOperonFileSelected = LoadOperonData();
+                //gOperonFileSelected = LoadOperonData();
 
                 if (gRegulonFileSelected)
                 {
@@ -1536,7 +1536,7 @@ namespace GINtool
 
             CreateBestDataTable(GetDataSelection(), gSettings.tblMap);
 
-            if (Properties.Settings.Default.tblOperon && gOperonFileSelected) // can combine table/sheet because it's a quick routine
+            if (Properties.Settings.Default.tblOperon && gRefOperonsWB!=null) // can combine table/sheet because it's a quick routine
             {
                 SysData.DataTable tblOperon = CreateOperonTable(GetDataSelection());
                 CreateOperonSheet(tblOperon);
@@ -2269,6 +2269,7 @@ namespace GINtool
                     }
                 }
             }
+            EnableSelectButton();
         }
 
         /// <summary>
@@ -2323,6 +2324,20 @@ namespace GINtool
         {
             tglTaskPane.Checked = visible;
         }
+
+
+        private bool CanAugmentWithCategoryData()
+        {
+            //? gCategoryFileSelected
+            return gCategoriesWB != null && cbUseCategories.Enabled;
+        }
+
+        private bool CanAugmentWithRegulonData()
+        {
+            // ? gRegulonFileSelected
+            return gRegulonWB != null && cbUseRegulons.Enabled;
+        }
+
 
         /// <summary>
         /// Reset the the operon file
@@ -2395,12 +2410,12 @@ namespace GINtool
 
         private void EnableSelectButton()
         {
-            btnSelect.Enabled = gGenesWB != null && (gCategoriesWB != null | gRegulonWB != null);
+            btnSelect.Enabled = gGenesWB != null && (gCategoriesWB != null | gRegulonWB != null | gRefOperonsWB!=null);
             if (gList != null)
             {
                 if (gCategoriesWB != null)
                     cbUseCategories.Enabled = true;
-                if (gRegulonWB != null)
+                if (gRegulonWB != null && (gUpItems.Count>0 || gDownItems.Count>0))
                     cbUseRegulons.Enabled = true;
             }
 
@@ -3018,6 +3033,11 @@ namespace GINtool
             cbRegInfoColumnMapping.Checked = !cbRegInfoColumnMapping.Checked;
             ShowMappingPanel(MAPPING_PANEL.REGULON_INFO, cbRegInfoColumnMapping.Checked);
 
+        }
+
+        private void btnClearGenInfo_Click(object sender, RibbonControlEventArgs e)
+        {
+            //gSettings.
         }
     }
 
