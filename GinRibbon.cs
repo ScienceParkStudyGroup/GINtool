@@ -351,19 +351,21 @@ namespace GINtool
             }
 
             btnRegInfoFileName.Label = gSettings.regulonInfoFIleName;
-            try
+            if (btnRegInfoFileName.Label.Length > 0)
             {
-                System.IO.FileInfo fInfo = new System.IO.FileInfo(btnRegInfoFileName.Label);
-                gLastFolder = fInfo.DirectoryName;
-                if (LoadRegulonInfoDataColumns())
-                    Fill_RegulonInfoDropDownBoxes();
-            }
-            catch (Exception ex)
-            {
-                gApplication.StatusBar.Text = ex.Message;
+                try
+                {
+                    System.IO.FileInfo fInfo = new System.IO.FileInfo(btnRegInfoFileName.Label);
+                    gLastFolder = fInfo.DirectoryName;
+                    if (LoadRegulonInfoDataColumns())
+                        Fill_RegulonInfoDropDownBoxes();
+                }
+                catch (Exception ex)
+                {
+                    gApplication.StatusBar.Text = ex.Message;
 
+                }
             }
-
 
 
 
@@ -418,6 +420,11 @@ namespace GINtool
             gSettings = Properties.Settings.Default;
             InitFields();
             LoadPersistentSettings();
+            gSettings.Reset();
+             
+            StoreValue("directionMapUp", gUpItems);
+            StoreValue("directionMapDown", gDownItems);
+
 
             PlotRoutines.theApp = gApplication;
 
@@ -1350,7 +1357,15 @@ namespace GINtool
             gAvailItems.Clear();
             gUpItems.Clear();
             gDownItems.Clear();
-            LoadDirectionOptions();
+            try
+            {
+                LoadDirectionOptions();
+            }
+            catch (Exception ex)
+            {
+                gApplication.StatusBar = ex.Message;
+            }
+
             SetFlags(UPDATE_FLAGS.ALL);
         }
 
@@ -2349,7 +2364,7 @@ namespace GINtool
                     if (LoadRegulonDataColumns())
                     {
                         Fill_RegulonDropDownBoxes();
-                        //cbRegulonMapping.Checked = true;
+                        cbRegulonMapping.Checked = true;
                         ShowMappingPanel(MAPPING_PANEL.REGULON_LINKAGE, true);
                     }
 
