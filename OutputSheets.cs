@@ -316,9 +316,9 @@ namespace GINtool
 
         private (Excel.Worksheet, List<summaryInfo>) CreateRankingDataSheet(element_fc theElements, List<summaryInfo> all, List<summaryInfo> posSort, List<summaryInfo> negSort, List<summaryInfo> bestSort, int suffix, bool detailSheet=false)
         {
-            string catRegLabel = Properties.Settings.Default.useCat ? "CatRankTable_" : "RegRankTable_";            
+            string catRegLabel = Properties.Settings.Default.useCat ? "CatRankTable" : "RegRankTable";            
             if (detailSheet)
-                catRegLabel = "Mapping_Details_";
+                catRegLabel = "Mapping_Details";
             Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
 
             catRegLabel = String.Format("{0}_{1}", catRegLabel, suffix);

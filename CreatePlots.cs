@@ -146,9 +146,9 @@ namespace GINtool
             int suffix = 0;
             
             if (gSettings.useCat)
-                suffix = FindSheetNames(new string[] { "CatRankPlot_", "Plot_", "PlotBest_", "CatRankTable_" });
+                suffix = FindSheetNames(new string[] { "CatRankPlot", "Plot", "PlotBest", "CatRankTable" });
             else
-                suffix = FindSheetNames(new string[] { "RegRankPlot_", "Plot_", "PlotBest_", "RegRankTable_" });
+                suffix = FindSheetNames(new string[] { "RegRankPlot", "Plot", "PlotBest", "RegRankTable" });
 
 
             //int chartNr = Properties.Settings.Default.useCat ? NextWorksheet("CatRankPlot_") : NextWorksheet("RegRankPlot_");
