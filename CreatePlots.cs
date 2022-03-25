@@ -150,16 +150,17 @@ namespace GINtool
             int suffix = 0;
             
             if (gSettings.useCat)
-                suffix = FindSheetNames(new string[] { "CatRankPlot", "Plot", "PlotBest", "CatRankTable" });
+                suffix = FindSheetNames(new string[] { "CatRankPlot", "Plot", "CatRankPlotBest_v1","CatRankPlotBest_v2", "CatRankTable" });
             else
-                suffix = FindSheetNames(new string[] { "RegRankPlot", "Plot", "PlotBest", "RegRankTable" });
+                suffix = FindSheetNames(new string[] { "RegRankPlot", "Plot", "RegRankPlotBest_v1","RegRankPlotBest_v2", "RegRankTable" });
 
 
             //int chartNr = Properties.Settings.Default.useCat ? NextWorksheet("CatRankPlot_") : NextWorksheet("RegRankPlot_");
             string chartName = (Properties.Settings.Default.useCat ? "CatRankPlot_" : "RegRankPlot_") + suffix.ToString();
-            string chartNameBest = chartName.Replace("Plot_", "PlotBest_");
-            
-            
+            string chartNameBestv1 = chartName.Replace("Plot_", "PlotBest_v1_");
+            string chartNameBestv2 = chartName.Replace("Plot_", "PlotBest_v2_");
+
+
             CreateRankingDataSheet(catPlotData, _all, _pos, _neg, _best,suffix);
 
             PlotRoutines.CreateRankingPlot2(plotData, chartName);
@@ -167,8 +168,8 @@ namespace GINtool
             if (!(_best is null))
             {
                 List<element_rank> _bestRankData = BubblePlotData(_best);
-                PlotRoutines.CreateRankingPlot2(_bestRankData, chartNameBest + "_v1", bestPlot: true);
-                PlotRoutines.CreateRankingPlot2(_bestRankData, chartNameBest + "_v2", bestPlot: true, bestNew: true);
+                PlotRoutines.CreateRankingPlot2(_bestRankData, chartNameBestv1, bestPlot: true);
+                PlotRoutines.CreateRankingPlot2(_bestRankData, chartNameBestv2, bestPlot: true, bestNew: true);
             }
 
 

@@ -27,6 +27,9 @@ namespace GINtool
 
         public static double fisherz(double r)
         {
+            // this should not happen but sometimes if an error was made the p value is maximized to 1 by default.
+            if (r > 1)
+                r = 0.99999;
             // this is an approximation of course but otherwise inf and nan issues
             if (Math.Abs(r - 1) < Double.Epsilon)
                 r = 0.99999; // 1 - Double.Epsilon; 
