@@ -37,8 +37,6 @@ namespace GINtool
         SysData.DataTable gGenesWB = null;
         /// <value>The main table containing the regulon data.</value>
         SysData.DataTable gRegulonWB = null; // RegulonData .. rename later
-        /// <value>The main table containing simple statistics per gene</value>
-        SysData.DataTable gRefStats = null;
         /// <value>The main table containing the operon data</value>
         SysData.DataTable gRefOperonsWB = null;
         /// <value>The main table containing the category data</value>
@@ -47,15 +45,15 @@ namespace GINtool
         SysData.DataTable gRegulonInfoWB = null;
 
         /// <value>gGeneColNames contains the column names of the genes information file</value>
-        string[] gGenesColNames = null;
+        private string[] gGenesColNames = new string[] { };
         /// <value>gRegulonColNames contains the column names of the regulon file</value>
-        string[] gRegulonColNames = null;
+        private string[] gRegulonColNames = new string[] { };
         /// <value>gCategoryColNames contains the column names of the categories file</value>
-        string[] gCategoryColNames = null;
+        private string[] gCategoryColNames = new string[] { };
         /// <value>gOperonColNames contains the columns names of the operon file</value>
-        string[] gOperonColNames = null;
+        private string[] gOperonColNames = new string[] { };
         /// <value>gRegulonInfoColNames contains the columns names of the regulon info file</value>
-        string[] gRegulonInfoColNames = null;
+        private string[] gRegulonInfoColNames = new string[] { };
 
 
 
@@ -85,7 +83,9 @@ namespace GINtool
         Excel.Range gRangeP;
 
         List<BsuLinkedItems> gList = null;
+        /// <value>Contains the usage info of the regulons</value>
         SysData.DataTable gRegulonTable = null;
+        /// <value>Contains the usage info of the categories</value>
         SysData.DataTable gCategoryTable = null;
         SysData.DataTable gBestTable = null;
 
@@ -1228,7 +1228,7 @@ namespace GINtool
             ddRegInfoFunction.Items.Clear();
             ddRegInfoId.Items.Clear();
             ddRegInfoSize.Items.Clear();
-
+            
             foreach (string s in gRegulonInfoColNames)
             {
                 RibbonDropDownItem ddItem1 = Factory.CreateRibbonDropDownItem();
@@ -1670,6 +1670,8 @@ namespace GINtool
                 string genesFormat = string.Join(",", genes.ToArray());
                 genesFormat = string.Join(",", genesFormat.Split(',').Select(x => $"'{x}'"));
                 // GENE_ID moet ergens gedefinieerd worden
+                
+                
                 dataView.RowFilter = String.Format("Gene_ID in ({0})", genesFormat);
                 
 
@@ -3249,11 +3251,9 @@ namespace GINtool
             gRegulonInfoWB = null;
             btnRegInfoFileName.Label = "No file selected";
 
-
-
             ShowMappingPanel(MAPPING_PANEL.REGULON_INFO, false);
-            Fill_RegulonInfoDropDownBoxes();
-
+            if(gRegulonInfoColNames.Length>0)                
+                    Fill_RegulonInfoDropDownBoxes();
 
         }
     }

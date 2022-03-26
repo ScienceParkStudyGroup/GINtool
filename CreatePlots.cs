@@ -73,12 +73,15 @@ namespace GINtool
             cat_Elements = GetUniqueElements(cat_Elements);
 
             // HashSet ensures unique list
-            HashSet<string> lRegulons = new HashSet<string>();
+//            HashSet<string> lRegulons = new HashSet<string>();
 
-            foreach (SysData.DataRow row in gRegulonTable.Rows)
-                lRegulons.Add(row.ItemArray[0].ToString());
+  //          if gSettings.useCat? 
 
-            SysData.DataView dataView = gRegulonTable.AsDataView();
+
+            //foreach (SysData.DataRow row in gRegulonTable.Rows)
+            //    lRegulons.Add(row.ItemArray[0].ToString());
+
+            SysData.DataView dataView = gSettings.useCat ? gCategoryTable.AsDataView() : gRegulonTable.AsDataView();
             element_fc catPlotData;
             //if (Properties.Settings.Default.useCat)
             //{
