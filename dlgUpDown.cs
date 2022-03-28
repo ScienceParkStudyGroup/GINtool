@@ -1,12 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace GINtool
@@ -24,7 +18,7 @@ namespace GINtool
         }
 
 
-        public dlgUpDown(List<string> pAvail, List<string> pUp, List<string> pDown):this()
+        public dlgUpDown(List<string> pAvail, List<string> pUp, List<string> pDown) : this()
         {
             pAvailItems = pAvail;
             pUpItems = pUp;
@@ -92,7 +86,13 @@ namespace GINtool
 
         private void btFromDown_Click(object sender, EventArgs e)
         {
-            CopyFromTo(lbDown,lbAvail);
+            CopyFromTo(lbDown, lbAvail);
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Dispose();
+            Close();
         }
     }
 }

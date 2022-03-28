@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Excel = Microsoft.Office.Interop.Excel;
 using System.Data;
 using System.Windows.Forms;
+using Excel = Microsoft.Office.Interop.Excel;
 
 namespace GINtool
 {
@@ -30,7 +27,7 @@ namespace GINtool
             if (theApp != null)
                 theApp.EnableEvents = false;
             else
-                return null;            
+                return null;
 
             DataTable dataTable = new DataTable();
             Excel.Application excel;
@@ -75,7 +72,7 @@ namespace GINtool
                 //now close the workbook and make the function return the data table        
                 excel.ScreenUpdating = true;
                 excelworkBook.Activate();
-                if(excel.ActiveWindow!=null)
+                if (excel.ActiveWindow != null)
                     excel.ActiveWindow.Visible = true;
                 excelworkBook.Close();
                 theApp.EnableEvents = true;
@@ -92,8 +89,8 @@ namespace GINtool
                 return null;
             }
             finally
-            {                                
-                theApp.EnableEvents = true;                
+            {
+                theApp.EnableEvents = true;
             }
         }
 
@@ -134,7 +131,7 @@ namespace GINtool
                 //now close the workbook and make the function return the data table        
                 excel.ScreenUpdating = true;
                 excelworkBook.Activate();
-                if(excel.ActiveWindow!=null)
+                if (excel.ActiveWindow != null)
                     excel.ActiveWindow.Visible = true;
                 excelworkBook.Close();
                 theApp.EnableEvents = true;

@@ -1,11 +1,6 @@
-﻿
-using Microsoft.Office.Tools.Ribbon;
-using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
+﻿using System;
 using System.Data;
 using System.Linq;
-using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 using SysData = System.Data;
 
@@ -15,8 +10,8 @@ namespace GINtool
 {
     public partial class GinRibbon
     {
-        
-        private bool AssertColumnNames(string[] colNamesSelected, string[]  colNamesFound)
+
+        private bool AssertColumnNames(string[] colNamesSelected, string[] colNamesFound)
         {
             for (int i = 0; i < colNamesSelected.Length; i++)
                 if (!colNamesFound.Contains(colNamesSelected[i]))
@@ -26,7 +21,7 @@ namespace GINtool
 
         private bool LoadCategoryData()
         {
-           
+
             if (Properties.Settings.Default.categoryFile.Length == 0 || Properties.Settings.Default.catSheet.Length == 0)
             {
                 btnCatFile.Label = "No file selected";
@@ -45,12 +40,12 @@ namespace GINtool
             {
                 gApplication.StatusBar = "1 or more columns not found in data set";
                 return false;
-            }   
+            }
 
             AddTask(TASKS.LOAD_CATEGORY_DATA);
 
             SysData.DataTable _tmp = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.catSheet, Properties.Settings.Default.categoryFile, 1, 1);
-            
+
             DataView __tmp = _tmp.DefaultView;
             __tmp.Sort = "[category id] asc";
             _tmp = __tmp.ToTable();
@@ -60,12 +55,12 @@ namespace GINtool
                 CaseSensitive = false
             };
 
-           
+
             DataTable _uCat = GetDistinctRecords(__tmp.ToTable(), new string[] { Properties.Settings.Default.catCatIDColumn, Properties.Settings.Default.catCatDescriptionColumn });
             DataView __uCat = _uCat.DefaultView;
             __uCat.Sort = String.Format("[{0}] asc", Properties.Settings.Default.catCatIDColumn);
             _uCat = __uCat.ToTable();
-           
+
 
             // long list of columns... make cleaner later..
 
@@ -111,7 +106,7 @@ namespace GINtool
                     continue;
                 }
 
-                
+
 
                 int[] codes = sw_short.Split('.').Select(str => Int32.Parse(str.Trim())).ToArray();
                 int lvl = codes.Length;
@@ -131,12 +126,12 @@ namespace GINtool
                     catDesc = String.Format("category_{0}", codes[0]);
 
                 lNewRow["cat1"] = catDesc;
-                lNewRow["cat1_int"] = codes[0];               
+                lNewRow["cat1_int"] = codes[0];
                 lNewRow["ucat1_int"] = Math.Pow(10, 5) * codes[0];
                 int offset = (Int32)Math.Pow(10, 5) * codes[0];
 
 
-                for (int l=1;l<lvl;l++)
+                for (int l = 1; l < lvl; l++)
                 {
                     catCode = String.Format("{0}.{1}", catCode, codes[l]);
                     _filter = String.Format("[{0}] = '{1}'", Properties.Settings.Default.catCatIDColumn, catCode);
@@ -146,18 +141,18 @@ namespace GINtool
                         catDesc = (string)_desc.Rows[0][1];
                     else
                     {
-                        string _fmt = String.Join(".", codes.Take(l+1).Select(iv => iv.ToString()).ToArray());
+                        string _fmt = String.Join(".", codes.Take(l + 1).Select(iv => iv.ToString()).ToArray());
                         catDesc = String.Format("category_{0}", _fmt);
                     }
 
-                    string colName = String.Format("cat{0}", l+1);
+                    string colName = String.Format("cat{0}", l + 1);
                     lNewRow[colName] = catDesc;
-                    colName = String.Format("cat{0}_int", l+1);
+                    colName = String.Format("cat{0}_int", l + 1);
                     lNewRow[colName] = codes[l];
-                    colName = String.Format("ucat{0}_int", l+1);
-                    lNewRow[colName] = Math.Pow(10, 5-l) * codes[l];
+                    colName = String.Format("ucat{0}_int", l + 1);
+                    lNewRow[colName] = Math.Pow(10, 5 - l) * codes[l];
                     offset = offset + (Int32)Math.Pow(10, 5 - l) * codes[l];
-                }                                
+                }
             }
 
             RemoveTask(TASKS.LOAD_CATEGORY_DATA);
@@ -177,7 +172,7 @@ namespace GINtool
             {
                 btnCatFile.Label = "No file selected";
                 return false;
-            }            
+            }
 
             gCategoryColNames = ExcelUtils.ReadExcelToDatableHeader(gApplication, Properties.Settings.Default.catSheet, Properties.Settings.Default.categoryFile, 1, 1);
 
@@ -247,8 +242,8 @@ namespace GINtool
 
             gGenesColNames = ExcelUtils.ReadExcelToDatableHeader(gApplication, Properties.Settings.Default.genesSheetName, Properties.Settings.Default.genesFileName, 1, 1);
 
-            
-            return gGenesColNames.Length>0;
+
+            return gGenesColNames.Length > 0;
 
         }
 
@@ -258,7 +253,7 @@ namespace GINtool
         /// <returns></returns>
         private bool LoadRegulonInfoData()
         {
-            
+
             if (gSettings.regulonInfoFIleName.Length == 0 || gSettings.regulonInfoSheet.Length == 0)
             {
                 btnRegInfoFileName.Label = "No file selected";
@@ -274,7 +269,7 @@ namespace GINtool
             }
 
             AddTask(TASKS.LOAD_REGULON_DATA);
-            gRegulonInfoWB = ExcelUtils.ReadExcelToDatable(gApplication, gSettings.regulonInfoSheet,gSettings.regulonInfoFIleName, 1, 1);
+            gRegulonInfoWB = ExcelUtils.ReadExcelToDatable(gApplication, gSettings.regulonInfoSheet, gSettings.regulonInfoFIleName, 1, 1);
             gRegulonInfoWB.PrimaryKey = new DataColumn[] { gRegulonInfoWB.Columns[gSettings.regInfoIdColumn] };
 
 
@@ -288,7 +283,7 @@ namespace GINtool
         /// </summary>
         /// <returns></returns>
         private bool LoadGenesData()
-        {         
+        {
             if (Properties.Settings.Default.genesFileName.Length == 0 || Properties.Settings.Default.genesSheetName.Length == 0)
             {
                 btnGenesFileSelected.Label = "No file selected";
@@ -314,11 +309,11 @@ namespace GINtool
 
                 RemoveTask(TASKS.LOAD_GENES_DATA);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 gApplication.StatusBar = ex.Message;
             }
-            
+
             return gGenesWB != null;
 
         }
@@ -330,7 +325,7 @@ namespace GINtool
         /// <returns></returns>
         private bool LoadRegulonData()
         {
-           
+
             if (Properties.Settings.Default.referenceFile.Length == 0 || Properties.Settings.Default.referenceSheetName.Length == 0)
             {
                 btnRegulonFileName.Label = "No file selected";
@@ -349,7 +344,7 @@ namespace GINtool
             AddTask(TASKS.LOAD_REGULON_DATA);
 
             gRegulonWB = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.referenceSheetName, Properties.Settings.Default.referenceFile, 1, 1);
-         
+
             RemoveTask(TASKS.LOAD_REGULON_DATA);
             return gRegulonWB != null;
         }
@@ -360,10 +355,10 @@ namespace GINtool
             {
                 btnRegulonFileName.Label = "No file selected";
                 return false;
-            }            
+            }
 
             gRegulonColNames = ExcelUtils.ReadExcelToDatableHeader(gApplication, gSettings.referenceSheetName, gSettings.referenceFile, 1, 1);
-            
+
             return gRegulonColNames.Length > 0;
         }
 

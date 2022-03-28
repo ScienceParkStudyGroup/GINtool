@@ -1,11 +1,6 @@
-﻿
-using Microsoft.Office.Tools.Ribbon;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Data;
-using System.Linq;
-using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 using SysData = System.Data;
 
@@ -25,7 +20,7 @@ namespace GINtool
             if (lResults.Count == 0)
                 return (null, null);
 
-            int maxcol = UseCategoryData() ? lResults[0].Categories.Count: lResults[0].Regulons.Count;
+            int maxcol = UseCategoryData() ? lResults[0].Categories.Count : lResults[0].Regulons.Count;
 
 
             if (UseCategoryData())
@@ -37,7 +32,7 @@ namespace GINtool
             }
 
             else
-            { 
+            {
                 // count max number of columns neccesary
                 for (int r = 1; r < lResults.Count; r++)
                     if (maxcol < lResults[r].Regulons.Count)
@@ -60,7 +55,7 @@ namespace GINtool
             myTable.Columns.Add(funcCol);
             SysData.DataColumn descCol = new SysData.DataColumn("description", Type.GetType("System.String"));
             myTable.Columns.Add(descCol);
-            
+
             // add count column
             SysData.DataColumn countCol = new SysData.DataColumn("count_col", Type.GetType("System.Int16"));
             myTable.Columns.Add(countCol);
@@ -93,7 +88,7 @@ namespace GINtool
                 newRow["function"] = lResults[r].GeneFunction;
                 newRow["description"] = lResults[r].GeneDescription;
 
-                newRow["count_col"] = UseCategoryData() ? lResults[r].Categories.Count:lResults[r].REGULON_TOT;
+                newRow["count_col"] = UseCategoryData() ? lResults[r].Categories.Count : lResults[r].REGULON_TOT;
                 SysData.DataRow clrRow = clrTable.Rows.Add();
 
                 if (UseCategoryData())
@@ -177,12 +172,12 @@ namespace GINtool
 
             int suffix = FindSheetNames(new string[] { "Mapped" });
             lNewSheet.Name = string.Format("Mapped_{0}", suffix);
-                      
+
 
             int maxNrGenes = Int32.Parse(table.Compute("max([nrgenes])", string.Empty).ToString());
 
             int infoColumns = 10;
-            
+
             gApplication.ScreenUpdating = false;
             gApplication.DisplayAlerts = false;
             gApplication.EnableEvents = false;
@@ -316,9 +311,9 @@ namespace GINtool
         /// <param name="negSort"></param>
         /// <returns></returns>
 
-        private (Excel.Worksheet, List<summaryInfo>) CreateRankingDataSheet(element_fc theElements, List<summaryInfo> all, List<summaryInfo> posSort, List<summaryInfo> negSort, List<summaryInfo> bestSort, int suffix, bool detailSheet=false)
+        private (Excel.Worksheet, List<summaryInfo>) CreateRankingDataSheet(element_fc theElements, List<summaryInfo> all, List<summaryInfo> posSort, List<summaryInfo> negSort, List<summaryInfo> bestSort, int suffix, bool detailSheet = false)
         {
-            string catRegLabel = Properties.Settings.Default.useCat ? "CatRankTable" : "RegRankTable";            
+            string catRegLabel = Properties.Settings.Default.useCat ? "CatRankTable" : "RegRankTable";
             if (detailSheet)
                 catRegLabel = "Mapping_Details";
             Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
@@ -359,7 +354,7 @@ namespace GINtool
 
             // starting from row 2
             FastDtToExcel(lView.ToTable(), lNewSheet, hdrRow + 1, 1, lTable.Rows.Count + hdrRow, lTable.Columns.Count);
-            
+
             top = lNewSheet.Cells[1, 1];
             bottom = lNewSheet.Cells[lTable.Rows.Count + hdrRow, 5];
             rall = (Excel.Range)lNewSheet.get_Range(top, bottom);
@@ -415,8 +410,8 @@ namespace GINtool
             lView = lTable.DefaultView;
 
             FastDtToExcel(lView.ToTable(), lNewSheet, hdrRow + 1, 13, lTable.Rows.Count + hdrRow, lTable.Columns.Count + 12);
-            
-                
+
+
             top = lNewSheet.Cells[1, 13];
             bottom = lNewSheet.Cells[lTable.Rows.Count + hdrRow, 17];
             rall = (Excel.Range)lNewSheet.get_Range(top, bottom);
@@ -441,7 +436,7 @@ namespace GINtool
 
             // Combine positive and negative mode results to obtain a 'best' result
 
-            lTable = ElementsToTable(bestSort,bestMode:true);
+            lTable = ElementsToTable(bestSort, bestMode: true);
 
             //List<summaryInfo> _best;
             //    (lTable, _best) = BestElementScore(theElements);
@@ -495,7 +490,7 @@ namespace GINtool
                         string _val = dataRow[colFmt].ToString();
 
                         summaryInfo lItem = bestInfo.Find(item => item.catName == _val);
-                        _val = String.Format("{0}({1:0.00},{2:0.00})", _val, lItem.fc_average, lItem.p_average);
+                        _val = String.Format("{0}(FC:{1:0.00},{2:0}%)", _val, lItem.fc_average, lItem.best_gene_percentage);
 
                         dataRow.BeginEdit();
                         dataRow[colFmt] = _val;
@@ -529,7 +524,7 @@ namespace GINtool
             int maxreg = ClassExtensions.ParseInt(lastColumn, 0);
 
             for (int i = 0; i < maxreg; i++)
-                lNewSheet.Cells[1, i + 8] = string.Format(UseCategoryData() ? "Category_{0}":"Regulon_{0}", i + 1);
+                lNewSheet.Cells[1, i + 8] = string.Format(UseCategoryData() ? "Category_{0}" : "Regulon_{0}", i + 1);
 
             // copy data to excel sheet
 
@@ -547,7 +542,7 @@ namespace GINtool
             RemoveTask(TASKS.UPDATE_MAPPED_TABLE);
 
             return suffix;
-            
+
         }
 
 

@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Runtime.InteropServices;
 using System.Drawing.Imaging;
+using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace GINtool
 {
     internal static class ClassExtensions
     {
-       
-        public static int ParseInt(string str, int defaultVal= 0)
+
+        public static int ParseInt(string str, int defaultVal = 0)
         {
-            int _val;  bool _res = int.TryParse(str,out _val);
+            int _val; bool _res = int.TryParse(str, out _val);
             if (_res)
                 return _val;
             else
@@ -38,7 +36,7 @@ namespace GINtool
 
         public static double fzBack(double avgZ_h)
         {
-            return (Math.Exp(avgZ_h) - Math.Exp(-avgZ_h)) / (Math.Exp(avgZ_h) + Math.Exp(-avgZ_h));            
+            return (Math.Exp(avgZ_h) - Math.Exp(-avgZ_h)) / (Math.Exp(avgZ_h) + Math.Exp(-avgZ_h));
         }
 
 
@@ -204,21 +202,21 @@ namespace GINtool
 
         public static cat_elements GetCatElement(this List<cat_elements> el, string catName)
         {
-            if (el!=null && el.Count > 0 )
+            if (el != null && el.Count > 0)
             {
                 if (el != null)
                 {
                     IEnumerable<cat_elements> output = el.Where(x => x.catName == catName);
-                    if(output.Count()>0)
+                    if (output.Count() > 0)
                     {
-                        return output.First();                        
+                        return output.First();
                     }
-                    
+
                 }
             }
             return new cat_elements();
         }
-        
+
         //public static int FindAssocForRegulon(this BsuLinkedItems bsu, string regulon)
         //{
         //    int _pos = bsu.Regulons.IndexOf(regulon);
@@ -232,7 +230,7 @@ namespace GINtool
         //    }
         //    return 0;
         //}
-        
+
         public static BsuLinkedItems GetByGeneName(this List<BsuLinkedItems> lst, string geneName)
         {
             if (lst != null && lst.Count > 0)
@@ -246,10 +244,10 @@ namespace GINtool
 
             return new BsuLinkedItems();
         }
-        
+
         public static double AbsAverage(this List<double> lst)
         {
-            if(lst.Count>0)
+            if (lst.Count > 0)
             {
                 return lst.Select(x => Math.Abs(x)).ToArray().Average();
             }

@@ -29,15 +29,16 @@
         private void InitializeComponent()
         {
             this.gpAvail = new System.Windows.Forms.GroupBox();
+            this.lbAvail = new System.Windows.Forms.ListBox();
             this.gpUP = new System.Windows.Forms.GroupBox();
+            this.lbUp = new System.Windows.Forms.ListBox();
             this.gbDown = new System.Windows.Forms.GroupBox();
+            this.lbDown = new System.Windows.Forms.ListBox();
             this.btToUP = new System.Windows.Forms.Button();
             this.btFromUp = new System.Windows.Forms.Button();
             this.btToDown = new System.Windows.Forms.Button();
             this.btFromDown = new System.Windows.Forms.Button();
-            this.lbAvail = new System.Windows.Forms.ListBox();
-            this.lbUp = new System.Windows.Forms.ListBox();
-            this.lbDown = new System.Windows.Forms.ListBox();
+            this.button1 = new System.Windows.Forms.Button();
             this.gpAvail.SuspendLayout();
             this.gpUP.SuspendLayout();
             this.gbDown.SuspendLayout();
@@ -53,6 +54,15 @@
             this.gpAvail.TabStop = false;
             this.gpAvail.Text = "undefined";
             // 
+            // lbAvail
+            // 
+            this.lbAvail.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lbAvail.FormattingEnabled = true;
+            this.lbAvail.Location = new System.Drawing.Point(3, 16);
+            this.lbAvail.Name = "lbAvail";
+            this.lbAvail.Size = new System.Drawing.Size(194, 330);
+            this.lbAvail.TabIndex = 0;
+            // 
             // gpUP
             // 
             this.gpUP.Controls.Add(this.lbUp);
@@ -63,6 +73,15 @@
             this.gpUP.TabStop = false;
             this.gpUP.Text = "up-regulated";
             // 
+            // lbUp
+            // 
+            this.lbUp.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lbUp.FormattingEnabled = true;
+            this.lbUp.Location = new System.Drawing.Point(3, 16);
+            this.lbUp.Name = "lbUp";
+            this.lbUp.Size = new System.Drawing.Size(194, 143);
+            this.lbUp.TabIndex = 0;
+            // 
             // gbDown
             // 
             this.gbDown.Controls.Add(this.lbDown);
@@ -72,6 +91,15 @@
             this.gbDown.TabIndex = 3;
             this.gbDown.TabStop = false;
             this.gbDown.Text = "down-regulated";
+            // 
+            // lbDown
+            // 
+            this.lbDown.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lbDown.FormattingEnabled = true;
+            this.lbDown.Location = new System.Drawing.Point(3, 16);
+            this.lbDown.Name = "lbDown";
+            this.lbDown.Size = new System.Drawing.Size(194, 143);
+            this.lbDown.TabIndex = 0;
             // 
             // btToUP
             // 
@@ -113,38 +141,22 @@
             this.btFromDown.UseVisualStyleBackColor = true;
             this.btFromDown.Click += new System.EventHandler(this.btFromDown_Click);
             // 
-            // lbAvail
+            // button1
             // 
-            this.lbAvail.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lbAvail.FormattingEnabled = true;
-            this.lbAvail.Location = new System.Drawing.Point(3, 16);
-            this.lbAvail.Name = "lbAvail";
-            this.lbAvail.Size = new System.Drawing.Size(194, 330);
-            this.lbAvail.TabIndex = 0;
-            // 
-            // lbUp
-            // 
-            this.lbUp.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lbUp.FormattingEnabled = true;
-            this.lbUp.Location = new System.Drawing.Point(3, 16);
-            this.lbUp.Name = "lbUp";
-            this.lbUp.Size = new System.Drawing.Size(194, 143);
-            this.lbUp.TabIndex = 0;
-            // 
-            // lbDown
-            // 
-            this.lbDown.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lbDown.FormattingEnabled = true;
-            this.lbDown.Location = new System.Drawing.Point(3, 16);
-            this.lbDown.Name = "lbDown";
-            this.lbDown.Size = new System.Drawing.Size(194, 143);
-            this.lbDown.TabIndex = 0;
+            this.button1.Location = new System.Drawing.Point(449, 378);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 8;
+            this.button1.Text = "Close";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // dlgUpDown
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(539, 377);
+            this.ClientSize = new System.Drawing.Size(537, 426);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.btFromDown);
             this.Controls.Add(this.btToDown);
             this.Controls.Add(this.btFromUp);
@@ -174,5 +186,6 @@
         private System.Windows.Forms.ListBox lbAvail;
         private System.Windows.Forms.ListBox lbUp;
         private System.Windows.Forms.ListBox lbDown;
+        private System.Windows.Forms.Button button1;
     }
 }

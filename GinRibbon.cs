@@ -333,9 +333,9 @@ namespace GINtool
                     gApplication.StatusBar.Text = ex.Message;
 
                 }
-            }            
+            }
 
-            
+
             //if(gSettings.operonFile.Length ==0 & gSettings.operonSheet.Length>0)
 
             //if (Properties.Settings.Default.categoryFile.Length == 0 & Properties.Settings.Default.referenceFile.Length > 0)
@@ -454,7 +454,7 @@ namespace GINtool
                 gSettings.useRegulons = false;
             }
         }
-    
+
 
         /// <summary>
         /// Enable/disable possible output buttons (i.e. table or charts).
@@ -473,9 +473,9 @@ namespace GINtool
             cbDistribution.Enabled = enable;
             chkRegulon.Enabled = enable;
 
-            cbUseCategories.Enabled = enable && gCategoriesWB!=null; //gCategoryFileSelected &&
-            cbUseRegulons.Enabled = enable && (gRegulonWB!=null && (gDownItems.Count>0 | gUpItems.Count>0)); //(gRegulonFileSelected 
-            cbUseOperons.Enabled = enable && gRefOperonsWB!=null;
+            cbUseCategories.Enabled = enable && gCategoriesWB != null; //gCategoryFileSelected &&
+            cbUseRegulons.Enabled = enable && (gRegulonWB != null && (gDownItems.Count > 0 | gUpItems.Count > 0)); //(gRegulonFileSelected 
+            cbUseOperons.Enabled = enable && gRefOperonsWB != null;
 
             cbUsePValues.Enabled = enable;
             cbUseFoldChanges.Enabled = enable;
@@ -1228,7 +1228,7 @@ namespace GINtool
             ddRegInfoFunction.Items.Clear();
             ddRegInfoId.Items.Clear();
             ddRegInfoSize.Items.Clear();
-            
+
             foreach (string s in gRegulonInfoColNames)
             {
                 RibbonDropDownItem ddItem1 = Factory.CreateRibbonDropDownItem();
@@ -1289,8 +1289,8 @@ namespace GINtool
 
             btApply.Enabled = false;
             btPlot.Enabled = false;
-            
-            btLoad.Enabled = gGenesWB==null;
+
+            btLoad.Enabled = gGenesWB == null;
             btnSelect.Enabled = false;
         }
 
@@ -1336,14 +1336,8 @@ namespace GINtool
             EnableFocusItems();
         }
 
-        /// <summary>
-        /// The definitions for up/down regulations have been changed. All data needs to be updated.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Button_RegulonDirectionMap_Click(object sender, RibbonControlEventArgs e)
+        private void ShowUpDownMappingDialog()
         {
-
             if (gAvailItems.Count == 0 && gUpItems.Count == 0 && gDownItems.Count == 0)
                 LoadDirectionOptions();
 
@@ -1365,6 +1359,17 @@ namespace GINtool
         }
 
         /// <summary>
+        /// The definitions for up/down regulations have been changed. All data needs to be updated.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Button_RegulonDirectionMap_Click(object sender, RibbonControlEventArgs e)
+        {
+            ShowUpDownMappingDialog();
+           
+        }
+
+        /// <summary>
         /// The column mapping identifier has changed. All data needs to be updated.
         /// </summary>
         /// <param name="sender"></param>
@@ -1372,7 +1377,7 @@ namespace GINtool
         private void DropDown_RegulonDirection_SelectionChanged(object sender, RibbonControlEventArgs e)
         {
             LoadRegulonData();
-            EnableSelectButton();            
+            EnableSelectButton();
             Properties.Settings.Default.referenceDIR = ddDir.SelectedItem.Label;
             gAvailItems.Clear();
             gUpItems.Clear();
@@ -1380,12 +1385,13 @@ namespace GINtool
             try
             {
                 LoadDirectionOptions();
+                ShowUpDownMappingDialog();
             }
             catch (Exception ex)
             {
                 gApplication.StatusBar = ex.Message;
             }
-
+                        
             EnableFocusItems();
             SetFlags(UPDATE_FLAGS.ALL);
         }
@@ -1393,7 +1399,7 @@ namespace GINtool
         /// <summary>
         /// Routine to check if changes made to textbox are ok, if not reset to previous value.
         /// </summary>
-        /// <param name="bx"></param>
+        /// <param name="bx">the box that was editeds</param>
 
         private void ValidateTextBoxData(RibbonEditBox bx)
         {
@@ -1439,11 +1445,11 @@ namespace GINtool
             gApplication.EnableEvents = false;
 
             bool _reload = true;
-            if (gGenesWB != null && (gCategoriesWB != null || gRegulonInfoWB != null || gRefOperonsWB!=null))
+            if (gGenesWB != null && (gCategoriesWB != null || gRegulonInfoWB != null || gRefOperonsWB != null))
                 _reload = MessageBox.Show("Really overwrite existing data?") == DialogResult.OK;
 
 
-            if (_reload && (LoadGenesData() && (LoadRegulonData() | LoadCategoryData())| LoadOperonData()))
+            if (_reload && (LoadGenesData() && (LoadRegulonData() | LoadCategoryData()) | LoadOperonData()))
             {
                 gRegulonInfoFileSelected = LoadRegulonInfoData();
                 //gOperonFileSelected = LoadOperonData();
@@ -1670,10 +1676,10 @@ namespace GINtool
                 string genesFormat = string.Join(",", genes.ToArray());
                 genesFormat = string.Join(",", genesFormat.Split(',').Select(x => $"'{x}'"));
                 // GENE_ID moet ergens gedefinieerd worden
-                
-                
+
+
                 dataView.RowFilter = String.Format("Gene_ID in ({0})", genesFormat);
-                
+
 
                 if (dataView.Count > 0) // set this to true to output all results.. also the zeros
                 {
@@ -2213,7 +2219,7 @@ namespace GINtool
                 int hit = names[0].ToUpper().IndexOf("REGULON");
                 string newname = hit == -1 ? names[0] : names[0].Substring(0, hit);
 
-                if (bestMode && (gRegulonInfoFileSelected && gRegulonInfoWB!=null) && !gSettings.useCat)
+                if (bestMode && (gRegulonInfoFileSelected && gRegulonInfoWB != null) && !gSettings.useCat)
                 {
                     DataView dataView = gRegulonInfoWB.DefaultView;
                     dataView.RowFilter = String.Format("[{0}] = '{1}'", gSettings.regInfoIdColumn, name);
@@ -2266,7 +2272,7 @@ namespace GINtool
 
                     System.IO.FileInfo fInfo = new System.IO.FileInfo(Properties.Settings.Default.referenceFile);
                     gLastFolder = fInfo.DirectoryName;
-                    
+
                     SelectFocusItem(FOCUS_ITEMS.REGULONS);
 
                     if (LoadRegulonDataColumns())
@@ -2293,7 +2299,7 @@ namespace GINtool
             cbUseCategories.Checked = item == FOCUS_ITEMS.CATEGORIES;
 
             gSettings.useRegulons = (item == FOCUS_ITEMS.REGULONS && (gUpItems.Count > 0 || gDownItems.Count > 0));
-            cbUseRegulons.Checked= (item == FOCUS_ITEMS.REGULONS && (gUpItems.Count > 0 || gDownItems.Count > 0));
+            cbUseRegulons.Checked = (item == FOCUS_ITEMS.REGULONS && (gUpItems.Count > 0 || gDownItems.Count > 0));
 
 
         }
@@ -2473,7 +2479,7 @@ namespace GINtool
 
                     //cbUseRegulons.Checked = false;
                     //cbUseCategories.Enabled = false;
-                    
+
                     if (LoadCategoryDataColumns())
                     {
                         ResetTables();
@@ -2491,12 +2497,12 @@ namespace GINtool
 
         private void EnableSelectButton()
         {
-            btnSelect.Enabled = gGenesWB != null && (gCategoriesWB != null | gRegulonWB != null | gRefOperonsWB!=null);
+            btnSelect.Enabled = gGenesWB != null && (gCategoriesWB != null | gRegulonWB != null | gRefOperonsWB != null);
             if (gList != null)
             {
                 if (gCategoriesWB != null)
                     cbUseCategories.Enabled = true;
-                if (gRegulonWB != null && (gUpItems.Count>0 || gDownItems.Count>0))
+                if (gRegulonWB != null && (gUpItems.Count > 0 || gDownItems.Count > 0))
                     cbUseRegulons.Enabled = true;
             }
 
@@ -2655,12 +2661,12 @@ namespace GINtool
         "Augmenting with gene data", "Augmenting with with regulon data", "Augmenting with category data", "Read sheet data", "Read sheet categorized data",
             "Update mapping table", "Update summary table", "Update combined table", "Update operon table", "Color cells", "Create category chart",
             "Create regulon chart" };
-        
+
         private enum FOCUS_ITEMS : int
         {
             OPERONS = 0,
             REGULONS = 1,
-            CATEGORIES=2
+            CATEGORIES = 2
         };
 
         public enum MAPPING_PANEL : int
@@ -2750,7 +2756,7 @@ namespace GINtool
         {
             gSettings.useOperons = cbUseOperons.Checked;
 
-            if(cbUseOperons.Checked)
+            if (cbUseOperons.Checked)
             {
                 cbUseCategories.Checked = false;
                 cbUseRegulons.Checked = false;
@@ -2827,7 +2833,7 @@ namespace GINtool
             if (cbUsePValues.Checked)
                 cbNoFilter.Checked = false;
             else if (!cbUseFoldChanges.Checked)
-                cbNoFilter.Checked = true;   
+                cbNoFilter.Checked = true;
             SetFlags(UPDATE_FLAGS.P_dependent);
 
         }
@@ -2841,7 +2847,7 @@ namespace GINtool
         {
             Properties.Settings.Default.use_foldchange = cbUseFoldChanges.Checked;
             if (cbUseFoldChanges.Checked)
-                cbNoFilter.Checked = false;            
+                cbNoFilter.Checked = false;
             else if (!cbUsePValues.Checked)
                 cbNoFilter.Checked = true;
 
@@ -2867,9 +2873,9 @@ namespace GINtool
 
         private void EnableFocusItems()
         {
-            cbUseCategories.Enabled = gGenesWB!=null && CanAugmentWithCategoryData();
-            cbUseOperons.Enabled = gGenesWB!=null && CanAugmentWithOperonData() ;
-            cbUseRegulons.Enabled =gGenesWB !=null && CanAugmentWithRegulonData() ;
+            cbUseCategories.Enabled = gGenesWB != null && CanAugmentWithCategoryData();
+            cbUseOperons.Enabled = gGenesWB != null && CanAugmentWithOperonData();
+            cbUseRegulons.Enabled = gGenesWB != null && CanAugmentWithRegulonData();
 
             //cbUseCategories.Checked = cbUseCategories.Enabled && CanAugmentWithCategoryData() ;
             //cbUseOperons.Checked = cbUseOperons.Enabled  && CanAugmentWithOperonData();
@@ -2964,9 +2970,9 @@ namespace GINtool
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        
+
         private void CheckBox_UseRegulons_Click(object sender, RibbonControlEventArgs e)
-        {            
+        {
             Properties.Settings.Default.useRegulons = cbUseRegulons.Checked;
             if (cbUseRegulons.Checked)
             {
@@ -2976,7 +2982,7 @@ namespace GINtool
                 gSettings.useCat = false;
             }
             EnableFunctionButtons();
-        }        
+        }
 
         private void btnResetRegulonFile_Click(object sender, RibbonControlEventArgs e)
         {
@@ -3000,7 +3006,7 @@ namespace GINtool
 
             ShowMappingPanel(MAPPING_PANEL.REGULON_LINKAGE, false);
             Fill_RegulonDropDownBoxes();
-           
+
 
             EnableSelectButton();
 
@@ -3229,7 +3235,7 @@ namespace GINtool
             gSettings.genesNameColumn = "";
 
             btnGenesFileSelected.Label = "No file selected";
-            
+
             gList = null;
             gOldRangeBSU = "";
             gOldRangeFC = "";
@@ -3252,8 +3258,8 @@ namespace GINtool
             btnRegInfoFileName.Label = "No file selected";
 
             ShowMappingPanel(MAPPING_PANEL.REGULON_INFO, false);
-            if(gRegulonInfoColNames.Length>0)                
-                    Fill_RegulonInfoDropDownBoxes();
+            if (gRegulonInfoColNames.Length > 0)
+                Fill_RegulonInfoDropDownBoxes();
 
         }
     }

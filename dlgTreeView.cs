@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using SysData = System.Data;
-using Excel = Microsoft.Office.Interop.Excel;
 
 namespace GINtool
 {
@@ -34,10 +29,10 @@ namespace GINtool
         {
             return splitNP;
         }
-        public dlgTreeView(bool categoryView = false, bool spreadingOptions = true, bool rankingOptions=true)
+        public dlgTreeView(bool categoryView = false, bool spreadingOptions = true, bool rankingOptions = true)
         {
             InitializeComponent();
-            udCat.SelectedItem = udCat.Items[3];            
+            udCat.SelectedItem = udCat.Items[3];
             cbTopFC.Checked = false;
             cbTopP.Checked = false;
             udTopFC.Enabled = false;
@@ -269,7 +264,7 @@ namespace GINtool
         // select button pressed
         private void button1_Click(object sender, EventArgs e)
         {
-            if(treeView1.SelectedNode is null)
+            if (treeView1.SelectedNode is null)
                 return;
 
             if (treeView1.SelectedNode.Parent == null)
@@ -304,7 +299,7 @@ namespace GINtool
         private void button2_Click(object sender, EventArgs e)
         {
             TreeNode treeNode = treeView2.SelectedNode;
-            if (treeNode==null  || treeNode.Parent != null)
+            if (treeNode == null || treeNode.Parent != null)
             {
                 MessageBox.Show("Only main-nodes are allowed");
                 return;
@@ -427,18 +422,18 @@ namespace GINtool
                     //do something else
                 }
             }
-            else if (gSelection.Count()==0)
+            else if (gSelection.Count() == 0)
             {
                 MessageBox.Show("You have not selected any item. No plot can be generated. Please update your selection or press cancel to return.", "Warning");
             }
             else // generate plot
             {
-                
+
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
 
-            
+
         }
 
         private void button4_Click(object sender, EventArgs e)
@@ -502,25 +497,25 @@ namespace GINtool
             List<TreeNode> tmp_Selection2 = new List<TreeNode>();
 
             // start of with the default top level
-            
+
             foreach (TreeNode node in treeView1.TopNode.Nodes)
                 tmp_Selection1.Add(node);
             selection = tmp_Selection1;
-            
-            
+
+
             // alternating tmp_selection1/tmp_selection2 for increasing levels.. to prevent nested loops
 
-            if (level>0)
+            if (level > 0)
             {
                 foreach (TreeNode subnode in tmp_Selection1)
                 {
-                    foreach(TreeNode subsubnode in subnode.Nodes)
+                    foreach (TreeNode subsubnode in subnode.Nodes)
                         tmp_Selection2.Add(subsubnode);
                 }
                 selection = tmp_Selection2;
             }
 
-            if (level >1)
+            if (level > 1)
             {
                 tmp_Selection1 = new List<TreeNode>();
                 foreach (TreeNode subnode in tmp_Selection2)
@@ -531,7 +526,7 @@ namespace GINtool
                 selection = tmp_Selection1;
 
             }
-            if(level>2)
+            if (level > 2)
             {
                 tmp_Selection2 = new List<TreeNode>();
                 foreach (TreeNode subnode in tmp_Selection1)
@@ -540,13 +535,13 @@ namespace GINtool
                         tmp_Selection2.Add(subsubnode);
                 }
                 selection = tmp_Selection2;
-            }          
+            }
 
             return selection;
 
         }
 
-        public void SelectAllNodes(bool useCat=false)
+        public void SelectAllNodes(bool useCat = false)
         {
             List<TreeNode> selection = new List<TreeNode>();
 
@@ -590,7 +585,7 @@ namespace GINtool
         {
             List<TreeNode> selection = new List<TreeNode>();
 
-            int maxCategories = udCat.Items.Count-1;
+            int maxCategories = udCat.Items.Count - 1;
 
             if (!cbCat.Checked)
 
@@ -602,7 +597,7 @@ namespace GINtool
             {
                 // coding level is reverse of order
                 selection = SelectCategoryLevel(maxCategories - udCat.SelectedIndex);
-            }            
+            }
 
             foreach (TreeNode node in selection)
             {
@@ -675,7 +670,7 @@ namespace GINtool
             udTopFC.Enabled = cbTopFC.Checked;
             EnableSingleSelectionButtons(!cbTopFC.Checked);
             if (cbTopFC.Checked)
-            {                
+            {
                 udTOPP.Enabled = false;
                 cbTopP.Checked = false;
             }
@@ -686,7 +681,7 @@ namespace GINtool
             udTOPP.Enabled = cbTopP.Checked;
             EnableSingleSelectionButtons(!cbTopP.Checked);
             if (cbTopP.Checked)
-            {                
+            {
                 udTopFC.Enabled = false;
                 cbTopFC.Checked = false;
             }
@@ -701,7 +696,7 @@ namespace GINtool
 
     public struct cat_elements
     {
-        public cat_elements(bool empty=true)
+        public cat_elements(bool empty = true)
         {
             catName = "";
             elTag = "";
@@ -726,7 +721,7 @@ namespace GINtool
     public struct summaryInfo
     {
         public string catName;      //catName contains regulon or category title
-        public string catNameFormat;        
+        public string catNameFormat;
         public double[] p_values;
         public double[] fc_values;
         public double p_average;
@@ -736,24 +731,24 @@ namespace GINtool
         public string[] genes;
         public double best_gene_percentage;
     }
-    
+
 
     public struct element_fc
     {
         //public string catName;
 
         public List<summaryInfo> All, Activated, Repressed; // Com;
-                        
+
         //public double[] fcP;
         //public double[] fcN;
         //public double[] fcT;
-        
-        
+
+
         //public double[] pvaluesP;
         //public double[] pvaluesN;
         //public double[] pvaluesT;
 
-        
+
         //public double averagep_P;                
         //public double averagep_N;
         //public double averagep_T;
@@ -785,7 +780,7 @@ namespace GINtool
     {
 
         public string catName;
-        
+
         public double[] average_fc;
         public double[] mad_fc;
         //public double[] average_p;

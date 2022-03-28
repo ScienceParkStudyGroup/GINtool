@@ -1,14 +1,10 @@
-﻿
-using Microsoft.Office.Tools.Ribbon;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Data;
 using System.Linq;
 using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 using SysData = System.Data;
-using System.Text.RegularExpressions;
 
 
 namespace GINtool
@@ -200,15 +196,15 @@ namespace GINtool
             int nrRows = gRangeP.Rows.Count;
 
             // generate the results for outputting the data and summary
-            try            
+            try
             {
                 List<BsuLinkedItems> lResults = AugmentWithGeneInfo(theInputCells);
-                
+
                 if (CanAugmentWithCategoryData())
-                    lResults = AugmentWithCategoryData(lResults);                    
-                if (CanAugmentWithRegulonData())    
-                    lResults = AugmentWithRegulonData(lResults);                    
-                                
+                    lResults = AugmentWithCategoryData(lResults);
+                if (CanAugmentWithRegulonData())
+                    lResults = AugmentWithRegulonData(lResults);
+
                 RemoveTask(TASKS.READ_SHEET_DATA);
                 return lResults;
             }
@@ -543,7 +539,7 @@ namespace GINtool
                     }
 
                     int nrgenes = lgenes.Count;
-                   
+
                     lRow["operon"] = operon;
                     lRow["nroperons"] = noperons;
                     lRow["nrgenes"] = nrgenes;
@@ -562,7 +558,7 @@ namespace GINtool
                             lRow[string.Format("gene_{0}", i + 1)] = lFCs[i];
                     }
                 }
-                               
+
             }
 
             for (int _g = gMaxGenesPerOperon; _g > maxColumnsUsed; _g--)
@@ -610,7 +606,7 @@ namespace GINtool
                 lRow["FC"] = _it.FC;
                 lRow["GeneFunction"] = _it.GeneFunction;
                 lRow["GeneDescription"] = _it.GeneDescription;
-                lRow["Pvalue"] = _it.PVALUE;                
+                lRow["Pvalue"] = _it.PVALUE;
             }
 
             return lTable;
@@ -654,7 +650,7 @@ namespace GINtool
                 foreach (RegulonItem __it in _regulons)
                 {
                     SysData.DataRow lRow = lTable.Rows.Add();
-                    lRow["Regulon"] = __it.Name;                    
+                    lRow["Regulon"] = __it.Name;
                     lRow["DIR"] = __it.Direction == "UP" ? 1 : 0;
                     lRow["Gene_ID"] = _it.BSU;
                     lRow["Gene"] = _it.GeneName;
@@ -663,10 +659,10 @@ namespace GINtool
                     lRow["GeneDescription"] = _it.GeneDescription;
                     lRow["Pvalue"] = _it.PVALUE;
                 }
-                
+
             }
 
-                            
+
             return lTable;
         }
 

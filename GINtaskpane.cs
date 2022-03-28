@@ -1,17 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.IO;
-using GINtool.Properties;
-using System.Reflection;
+using System.Drawing;
 using System.Drawing.Imaging;
-using HtmlAgilityPack;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Windows.Forms;
 
 namespace GINtool
 {
@@ -23,11 +17,11 @@ namespace GINtool
 
         public GINtaskpane()
         {
-            InitializeComponent();         
+            InitializeComponent();
 
-            HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument(); 
+            HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
 
-            string html = ReadResource("GINtool.Resources.user_manual.htm"); 
+            string html = ReadResource("GINtool.Resources.user_manual.htm");
             doc.LoadHtml(html);
 
             // parse document for images and return the src value
@@ -36,25 +30,25 @@ namespace GINtool
                                 .Where(s => !String.IsNullOrEmpty(s));
 
             // for each src entry found, read it from resources and display it as inline base64 encoded text
-            foreach(string _s in urls)
+            foreach (string _s in urls)
             {
                 var assembly = Assembly.GetExecutingAssembly();
-                string _orig = string.Format("GINtool.Resources.{0}",_s);
+                string _orig = string.Format("GINtool.Resources.{0}", _s);
 
                 Bitmap image = new Bitmap(assembly.GetManifestResourceStream(_orig));
                 string img = Base64Encoded(image);
 
                 string _nwe = string.Format("src='data:image/jpeg;base64, {0}'", img);
-                string rep = string.Format("src=\"{0}\"",_s);
-                
-                html = html.Replace(rep,_nwe);
+                string rep = string.Format("src=\"{0}\"", _s);
+
+                html = html.Replace(rep, _nwe);
             }
 
             // show text in webbrowser component
-            webBrowser1.DocumentText = html; 
+            webBrowser1.DocumentText = html;
         }
-        
-     
+
+
 
         public string ReadResource(string resourceName)
         {
@@ -71,7 +65,7 @@ namespace GINtool
                     }
             }
             return "";
-                       
+
         }
 
 

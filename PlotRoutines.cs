@@ -1,19 +1,9 @@
-﻿using System;
+﻿using Microsoft.Office.Core;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using System.Windows.Forms.DataVisualization.Charting;
-using Excel = Microsoft.Office.Interop.Excel;
-
-using System.IO;
-using SysData = System.Data;
 using System.Data;
-using GINtool.Properties;
-using Microsoft.Office.Core;
-using System.Globalization;
-using System.Threading;
+using System.Linq;
+using Excel = Microsoft.Office.Interop.Excel;
 
 namespace GINtool
 {
@@ -94,12 +84,12 @@ namespace GINtool
         {
             if (theApp == null)
                 return null;
-            
+
 
             string sheetName = chartName.Replace("Plot_", "Tab_");
             aSheet.Name = sheetName;
-           
-            
+
+
             Excel.ChartObjects xlCharts = (Excel.ChartObjects)aSheet.ChartObjects(Type.Missing);
             Excel.ChartObject myChart = (Excel.ChartObject)xlCharts.Add(10, 80, 500, 500);
             Excel.Chart chartPage = myChart.Chart;
@@ -107,17 +97,17 @@ namespace GINtool
             chartPage.ChartType = Excel.XlChartType.xlXYScatter;
 
             var series = (Excel.SeriesCollection)chartPage.SeriesCollection();
-            
+
             int offset = 3;
             List<int> __offset = new List<int>() { offset };
-            
+
             int[] _offset = element_Ranks.Select(w => offset += w.nr_genes.Length).ToArray();
             __offset.AddRange(_offset);
-            int[] offsets = __offset.GetRange(0,element_Ranks.Count).ToArray();
+            int[] offsets = __offset.GetRange(0, element_Ranks.Count).ToArray();
 
 
 
-            for (int i = element_Ranks.Count-1; i >= 0; i--)
+            for (int i = element_Ranks.Count - 1; i >= 0; i--)
             {
                 element_rank eRank = element_Ranks[i];
                 var xy1 = series.NewSeries();
@@ -133,7 +123,7 @@ namespace GINtool
 
                     xy1.HasDataLabels = true;
                     dynamic dataLabels = xy1.DataLabels();
-                    dataLabels.Format.TextFrame2.TextRange.InsertChartField(MsoChartFieldType.msoChartFieldRange, string.Format("={0}!$A${1}:$A${2}", sheetName, offsets[i], nrGenes + offsets[i]-1));
+                    dataLabels.Format.TextFrame2.TextRange.InsertChartField(MsoChartFieldType.msoChartFieldRange, string.Format("={0}!$A${1}:$A${2}", sheetName, offsets[i], nrGenes + offsets[i] - 1));
 
                     dataLabels.ShowRange = true;
                     dataLabels.ShowValue = false;
@@ -141,10 +131,10 @@ namespace GINtool
                     offset += nrGenes;
                 }
             }
-            
+
             //foreach (var element_rank in element_Ranks.Select((value, index) => new { value, index }))
             //{
-                
+
             //    }
             //}             
 
@@ -153,10 +143,10 @@ namespace GINtool
 
             chartPage.Axes(Excel.XlAxisType.xlValue).Format.Line.Weight = 0.25;
             chartPage.Axes(Excel.XlAxisType.xlValue).Format.Line.DashStyle = Excel.XlLineStyle.xlDashDot;
-            chartPage.Legend.Delete();            
-            
+            chartPage.Legend.Delete();
+
             chartPage.ChartColor = 22;
-            chartPage.Location(Excel.XlChartLocation.xlLocationAsNewSheet, chartName);            
+            chartPage.Location(Excel.XlChartLocation.xlLocationAsNewSheet, chartName);
 
             return chartPage;
 
@@ -164,7 +154,7 @@ namespace GINtool
 
 
 
-        public static Excel.Chart CreateRankingPlot2(List<element_rank> element_Ranks, string chartName, bool bestPlot=false, bool bestNew=false)
+        public static Excel.Chart CreateRankingPlot2(List<element_rank> element_Ranks, string chartName, bool bestPlot = false, bool bestNew = false)
         {
             if (theApp == null)
                 return null;
@@ -211,23 +201,23 @@ namespace GINtool
                     {
                         xy1.XValues = eRank.best_genes_percentage;
                         xy1.Values = eRank.average_fc;
-                    }                    
+                    }
                     else
                     {
                         xy1.XValues = eRank.average_fc;
                         xy1.Values = eRank.mad_fc;
                     }
                     xy1.BubbleSizes = eRank.nr_genes;
-                        
+
                     xy1.HasDataLabels = true;
                     dynamic dataLabels = xy1.DataLabels();
 
-                    for (int g=0;g<eRank.nr_genes.Length;g++)
+                    for (int g = 0; g < eRank.nr_genes.Length; g++)
                     {
-                        Excel.Point _point = xy1.Points(g+1);
+                        Excel.Point _point = xy1.Points(g + 1);
                         _point.DataLabel.Text = eRank.genes[g];
                     }
-                    
+
                     dataLabels.ShowRange = true;
                     dataLabels.ShowValue = false;
 
@@ -238,13 +228,13 @@ namespace GINtool
             chartPage.Axes(Excel.XlAxisType.xlValue).HasTitle = true;
             chartPage.Axes(Excel.XlAxisType.xlCategory).HasTitle = true;
 
-            string xLabel = (bestPlot & bestNew) ? "% logical regulation" :  (bestPlot ? "average ABS(FC)" : "average FC");
-            string yLabel = (bestPlot & bestNew) ? "average FC" : (bestPlot? "mad ABS(FC)": "mad FC");
+            string xLabel = (bestPlot & bestNew) ? "% logical regulation" : (bestPlot ? "average ABS(FC)" : "average FC");
+            string yLabel = (bestPlot & bestNew) ? "average FC" : (bestPlot ? "mad ABS(FC)" : "mad FC");
 
 
             chartPage.Axes(Excel.XlAxisType.xlCategory).AxisTitle.Text = xLabel;
             chartPage.Axes(Excel.XlAxisType.xlValue).AxisTitle.Text = yLabel;
-            
+
 
             chartPage.Axes(Excel.XlAxisType.xlValue).TickLabelPosition = Excel.XlTickLabelPosition.xlTickLabelPositionNone;
             chartPage.Axes(Excel.XlAxisType.xlValue).MajorGridLines.Delete();
@@ -300,7 +290,7 @@ namespace GINtool
                 var xy1 = series.NewSeries();
                 xy1.Name = element_Fc.value.catName;
                 xy1.ChartType = Excel.XlChartType.xlXYScatter;
-                if (element_Fc.value.fc_values!= null && element_Fc.value.fc_values.Length > 0)
+                if (element_Fc.value.fc_values != null && element_Fc.value.fc_values.Length > 0)
                 {
                     xy1.XValues = element_Fc.value.fc_values;
                     xy1.Values = Enumerable.Repeat(element_Fc.index + 0.5, element_Fc.value.fc_values.Length).ToArray();

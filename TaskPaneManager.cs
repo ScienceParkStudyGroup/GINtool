@@ -1,10 +1,6 @@
-﻿using System;
+﻿using Microsoft.Office.Tools;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Excel = Microsoft.Office.Interop.Excel;
-using Microsoft.Office.Tools;
 
 namespace GINtool
 {
@@ -12,7 +8,7 @@ namespace GINtool
     class TaskPaneManager
     {
         static Dictionary<string, CustomTaskPane> _createdPanes = new Dictionary<string, CustomTaskPane>();
-        
+
 
         /// <summary>
         /// Gets the taskpane by name (if exists for current excel window then returns existing instance, otherwise uses taskPaneCreatorFunc to create one). 
@@ -38,14 +34,14 @@ namespace GINtool
         private static void TaskPane_VisibleChangedEvent(object sender, EventArgs e)
         {
             if (sender != null)
-            {               
+            {
                 CustomTaskPane aPane = (CustomTaskPane)sender;
                 // sync status with button
-                if (aPane!=null &  aPane.Control is GINtool.GINtaskpane)
+                if (aPane != null & aPane.Control is GINtool.GINtaskpane)
                     ((GINtaskpane)aPane.Control).updateButtonStatus(aPane.Visible);
             }
-            
+
         }
     }
-    
+
 }

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using System.Collections.Generic;
 using System.Data;
+using System.Windows.Forms;
 
 namespace GINtool
 {
@@ -66,7 +62,7 @@ namespace GINtool
         {
             return dt.DefaultView.ToTable(true, Columns);
         }
-        public static TreeNode BuildMemTree(DataTable dt, bool catMode,TreeNode trv = null, int lvl = 1, string accumlevel = "")
+        public static TreeNode BuildMemTree(DataTable dt, bool catMode, TreeNode trv = null, int lvl = 1, string accumlevel = "")
         {
             // Clear the TreeView if there are another datas in this TreeView
             if (trv is null)
@@ -221,7 +217,7 @@ namespace GINtool
         {
             gNodes.Nodes.Clear();
             gNodes = BuildMemTree(dataTable, catMode, gNodes.Nodes.Add("Categories"), 1);
-            
+
             List<TreeNode> selection = new List<TreeNode>();
             List<cat_elements> elements = new List<cat_elements>();
 
@@ -237,8 +233,8 @@ namespace GINtool
             }
 
             foreach (TreeNode _t in selection)
-                    elements.Add(createCategoryItem(_t));            
-        
+                elements.Add(createCategoryItem(_t));
+
             return elements;
         }
 

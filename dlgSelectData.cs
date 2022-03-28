@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 
@@ -17,8 +14,8 @@ namespace GINtool
         Excel.Range rangeBSU;
         Excel.Range rangeFC;
         Excel.Range rangeP;
-        
-        
+
+
         public Excel.Application theApp = null;
         protected override void OnLoad(EventArgs e)
         {
@@ -49,7 +46,7 @@ namespace GINtool
             SendMessage(tbBSU.Handle, 0xd3, (IntPtr)2, (IntPtr)(btn.Width << 16));
             base.OnLoad(e);
         }
-      
+
 
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wp, IntPtr lp);
@@ -71,7 +68,7 @@ namespace GINtool
             return (_r[1], Int32.Parse(_r[2]));
         }
 
-        private string colint2cell(string col,int r)
+        private string colint2cell(string col, int r)
         {
             return string.Format("${0}${1}", col, r.ToString());
         }
@@ -88,7 +85,7 @@ namespace GINtool
 
 
         bool Checkoutput()
-        {       
+        {
             if (!(rangeBSU is null))
             {
                 if (rangeBSU.Rows.Count != rangeFC.Rows.Count || rangeBSU.Rows.Count != rangeP.Rows.Count || rangeFC.Rows.Count != rangeP.Rows.Count)
@@ -121,28 +118,28 @@ namespace GINtool
                    select c1 + c2 + c3;
         }
 
-        public dlgSelectData(Excel.Range selection=null)
+        public dlgSelectData(Excel.Range selection = null)
         {
             InitializeComponent();
-            if(selection!=null && selection.Columns.Count==3)
+            if (selection != null && selection.Columns.Count == 3)
             {
                 string s1 = RangeAddress(selection);
 
 
                 int startCol = selection.Column;
                 int startRow = selection.Row;
-                
-                int nrRows = selection.Rows.Count;                
+
+                int nrRows = selection.Rows.Count;
 
 
-                tbBSU.Text = string.Format("{3}!${0}${1}:${0}${2}", GetExcelStrings().ElementAt(startCol + 1), startRow, startRow + nrRows-1,selection.Worksheet.Name);
+                tbBSU.Text = string.Format("{3}!${0}${1}:${0}${2}", GetExcelStrings().ElementAt(startCol + 1), startRow, startRow + nrRows - 1, selection.Worksheet.Name);
                 tbFC.Text = string.Format("{3}!${0}${1}:${0}${2}", GetExcelStrings().ElementAt(startCol), startRow, startRow + nrRows - 1, selection.Worksheet.Name);
-                tbP.Text = string.Format("{3}!${0}${1}:${0}${2}", GetExcelStrings().ElementAt(startCol-1), startRow, startRow + nrRows - 1, selection.Worksheet.Name);
+                tbP.Text = string.Format("{3}!${0}${1}:${0}${2}", GetExcelStrings().ElementAt(startCol - 1), startRow, startRow + nrRows - 1, selection.Worksheet.Name);
 
 
                 rangeP = selection.Columns[1];
                 rangeFC = selection.Columns[2];
-                rangeBSU = selection.Columns[3];                                
+                rangeBSU = selection.Columns[3];
             }
         }
 
@@ -158,9 +155,9 @@ namespace GINtool
             {
                 this.DialogResult = DialogResult.OK;
                 this.Close();
-            }            
+            }
         }
-        
+
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -171,10 +168,10 @@ namespace GINtool
 
             if (range.GetType().ToString() == "System.Boolean")
             {
-                return ;
+                return;
             }
 
-            if(range == null || ((Excel.Range)range).Columns.Count>1)
+            if (range == null || ((Excel.Range)range).Columns.Count > 1)
             {
                 MessageBox.Show("Please select a single column");
                 return;
@@ -186,7 +183,7 @@ namespace GINtool
                 tbBSU.Text = string.Format("{0}!{1}", rangeBSU.Worksheet.Name, stripheader(rangeBSU));
             else
                 tbBSU.Text = string.Format("{0}!{1}", rangeBSU.Worksheet.Name, rangeBSU.Address.ToString());
-            
+
         }
 
         private Excel.Range GetAdjustedColumn(Excel.Range colData)
@@ -199,10 +196,10 @@ namespace GINtool
             if (cbHeader.Checked)
                 offset = 1;
 
-            string stStart = colint2cell(firstc, firstr+offset);
+            string stStart = colint2cell(firstc, firstr + offset);
             string stdEnd = colint2cell(lastc, lastr);
 
-          
+
             Excel.Range startCell = colData.Worksheet.Range[stStart];
             Excel.Range endCell = colData.Worksheet.Range[stdEnd];
 
@@ -219,12 +216,12 @@ namespace GINtool
 
         public Excel.Range getP()
         {
-            return GetAdjustedColumn(rangeP);            
+            return GetAdjustedColumn(rangeP);
         }
 
         public Excel.Range getFC()
         {
-            return GetAdjustedColumn(rangeFC);         
+            return GetAdjustedColumn(rangeFC);
         }
 
 
@@ -235,7 +232,7 @@ namespace GINtool
 
             this.Visible = false;
             this.BringToFront();
-            var range = theApp.InputBox(Prompt: "Select p-values", Title: "Select Range",  Type: 8);
+            var range = theApp.InputBox(Prompt: "Select p-values", Title: "Select Range", Type: 8);
             this.Visible = true;
 
             if (range.GetType().ToString() == "System.Boolean")
@@ -252,9 +249,9 @@ namespace GINtool
             rangeP = range;
 
             if (cbHeader.Checked)
-                tbP.Text = string.Format("{0}!{1}", range.Worksheet.Name, stripheader(rangeP)); 
+                tbP.Text = string.Format("{0}!{1}", range.Worksheet.Name, stripheader(rangeP));
             else
-                tbP.Text = string.Format("{0}!{1}", range.Worksheet.Name, rangeP.Address.ToString()); 
+                tbP.Text = string.Format("{0}!{1}", range.Worksheet.Name, rangeP.Address.ToString());
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -276,9 +273,9 @@ namespace GINtool
             rangeFC = range;
 
             if (cbHeader.Checked)
-                tbFC.Text = string.Format("{0}!{1}", range.Worksheet.Name, stripheader(rangeFC)); 
+                tbFC.Text = string.Format("{0}!{1}", range.Worksheet.Name, stripheader(rangeFC));
             else
-                tbFC.Text = string.Format("{0}!{1}", range.Worksheet.Name, rangeFC.Address.ToString()); 
+                tbFC.Text = string.Format("{0}!{1}", range.Worksheet.Name, rangeFC.Address.ToString());
         }
 
 
@@ -286,7 +283,7 @@ namespace GINtool
         {
             bool result = false;
             Excel.Range lRange = range;
-            
+
             string rstr = tb.Text;
             (string firstc, int firstr) = cell2colint(rstr.Split(':')[0]);
             (string lastc, int lastr) = cell2colint(rstr.Split(':')[1]);
@@ -320,7 +317,7 @@ namespace GINtool
                         lRange = tmpRange;
                         result = true;
                     }
-                    catch 
+                    catch
                     {
                         tb.Text = string.Format("{0}!{1)", lRange.Worksheet.Name, lRange.Address.ToString());
                         MessageBox.Show("You entered an invalid range");
@@ -328,7 +325,7 @@ namespace GINtool
 
                 }
             }
-            catch 
+            catch
             {
                 tb.Text = string.Format("{0}!{1)", lRange.Worksheet.Name, lRange.Address.ToString());
                 MessageBox.Show("You entered an invalid range");
@@ -339,7 +336,7 @@ namespace GINtool
 
         }
 
-     
+
 
         private void tbBSU_Validated(object sender, EventArgs e)
         {
@@ -351,7 +348,7 @@ namespace GINtool
             }
             else
             {
-                if(rangeBSU!=null)
+                if (rangeBSU != null)
                     tbBSU.Text = string.Format("{0}!{1}", rangeBSU.Worksheet.Name, rangeBSU.Address.ToString());
             }
         }

@@ -2,13 +2,13 @@
 
 namespace GINtool
 {
-    
+
     internal class CategoryItem
     {
         public string Name;
         public string Id;
         public string catID;
-        public CategoryItem(string aName, string aCatID, string aId) { Name = aName; catID = aCatID; Id = aId; }   
+        public CategoryItem(string aName, string aCatID, string aId) { Name = aName; catID = aCatID; Id = aId; }
 
     };
 
@@ -27,15 +27,15 @@ namespace GINtool
         public const double NO_FC = -12345.6;
         public const double NO_PVALUE = -654321.1;
         public double PVALUE = NO_PVALUE;
-     
+
         public List<RegulonItem> Regulons = new List<RegulonItem>();
         public List<CategoryItem> Categories = new List<CategoryItem>();
         public string BSU = "";
         public double FC = NO_FC;
-       
+
         public List<int> REGULON_UP = new List<int>();
         public List<int> REGULON_DOWN = new List<int>();
-        
+
         public string GeneName = "";
         public string GeneDescription = "";
         public string GeneFunction = "";
