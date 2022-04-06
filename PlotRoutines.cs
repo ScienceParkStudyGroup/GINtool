@@ -60,7 +60,7 @@ namespace GINtool
 
             var xAxis = (Excel.Axis)chartPage.Axes(Excel.XlAxisType.xlValue, Excel.XlAxisGroup.xlPrimary);
             xAxis.HasTitle = true;
-            xAxis.AxisTitle.Text = "fold change";
+            xAxis.AxisTitle.Text = "fold-change";
 
 
             chartPage.Axes(Excel.XlAxisType.xlCategory).TickLabelPosition = Excel.XlTickLabelPosition.xlTickLabelPositionNone;

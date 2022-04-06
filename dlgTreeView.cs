@@ -11,6 +11,8 @@ namespace GINtool
     {
         // define category columns 
         string[] catcols = new string[] { "cat1", "cat2", "cat3", "cat4", "cat5" };
+        string[] catints = new string[] { "ucat1_int", "ucat2_int", "ucat3_int", "ucat4_int", "ucat5_int" };
+
         string[] regColumn = new string[] { Properties.Settings.Default.referenceRegulon };
         //string[] refColumn = null;
         bool catMode = true;
@@ -68,24 +70,14 @@ namespace GINtool
 
         //    return null;
         //}
-        public void populateTree(SysData.DataTable dataTable, bool cat = true)
-        {
-            DataTable lView = null;
-            if (cat)
-            {
-                catMode = true;
-                lView = GetDistinctRecords(dataTable, catcols);
-                //refColumn = catcols;
-                BuildTree(dataTable, treeView1.Nodes.Add("Categories"), 1);
-            }
-            else
-            {
-                catMode = false;
-                lView = GetDistinctRecords(dataTable, regColumn);
-                //refColumn = regColumn;
-                BuildTree(dataTable, treeView1.Nodes.Add("Regulons"), 1);
-            }
 
+        public void populateTree(SysData.DataTable dataTable, bool cat = true)
+        {            
+            catMode = cat;
+            if (cat)                            
+                BuildTree(dataTable, treeView1.Nodes.Add("Categories"), 1);            
+            else
+                BuildTree(dataTable, treeView1.Nodes.Add("Regulons"), 1);            
         }
 
         public bool selectTableOutput()
@@ -123,14 +115,21 @@ namespace GINtool
 
 
             DataTable _lcats = null;
+            DataView dv = null;
 
             if (catMode)
-                _lcats = GetDistinctRecords(dt, new string[] { catcols[lvl - 1] });
+            {
+                _lcats = GetDistinctRecords(dt, new string[] { catcols[lvl - 1], catints[lvl - 1] });
+                _lcats.DefaultView.Sort = String.Format("{0} ASC",catints[lvl - 1]);
+                dv = _lcats.DefaultView;
+                _lcats = dv.ToTable();
+            }
+
             else
                 _lcats = GetDistinctRecords(dt, regColumn);
 
 
-            if (catMode ? lvl < 5 : lvl < 1)
+            if (catMode ? lvl <= 5 : lvl < 1)
             {
                 int _rownr = 0;
                 foreach (DataRow _row in _lcats.Rows)
@@ -149,9 +148,12 @@ namespace GINtool
 
                     node.ToolTipText = node.Tag.ToString();
 
-                    DataTable __lcats = dt.Select(string.Format("{0}='{1}'", catcols[lvl - 1], node.Text)).CopyToDataTable();
-                    if (__lcats.Rows.Count > 0)
-                        BuildTree(__lcats, node, lvl: lvl + 1, accumlevel != "" ? accumlevel + "." + _rownr.ToString() : _rownr.ToString());
+                    if (lvl < 5)
+                    {
+                        DataTable __lcats = dt.Select(string.Format("{0}='{1}'", catcols[lvl - 1], node.Text)).CopyToDataTable();
+                        if (__lcats.Rows.Count > 0)
+                            BuildTree(__lcats, node, lvl: lvl + 1, accumlevel != "" ? accumlevel + "." + _rownr.ToString() : _rownr.ToString());
+                    }
 
                 }
 
@@ -282,8 +284,9 @@ namespace GINtool
             // remove last part of tree
             int rstr = fp.LastIndexOf('\\');
             if (rstr > 0) fp = fp.Remove(rstr);
-            // add position information in Tag field
+            // add position information in Tag field            
             treeNode.Tag = treeNode.Tag + "_" + fp + "_" + nodeIndex.ToString();
+            
 
             treeView1.Nodes.Remove(treeNode);
 
@@ -393,8 +396,11 @@ namespace GINtool
         private (TreeNode, string, int) getPositionInfo(TreeNode treeNode)
         {
             string[] tags = treeNode.Tag.ToString().Split('_');
+            int lenTags = tags.Length;
+            string TagOne = String.Join("",tags.Skip(1).Take(lenTags - 2).Select(t => t.ToString()).ToArray());
+
             treeNode.Tag = tags[0];
-            return (treeNode, tags[1], Int32.Parse(tags[2]));
+            return (treeNode, TagOne, Int32.Parse(tags[lenTags-1]));
         }
 
         // insert in tree from treeview 1
@@ -536,6 +542,28 @@ namespace GINtool
                 }
                 selection = tmp_Selection2;
             }
+
+            if (level > 3)
+            {
+                tmp_Selection1 = new List<TreeNode>();
+                foreach (TreeNode subnode in tmp_Selection2)
+                {
+                    foreach (TreeNode subsubnode in subnode.Nodes)
+                        tmp_Selection1.Add(subsubnode);
+                }
+                selection = tmp_Selection1;
+            }
+
+            //if (level > 4)
+            //{
+            //    tmp_Selection2 = new List<TreeNode>();
+            //    foreach (TreeNode subnode in tmp_Selection1)
+            //    {
+            //        foreach (TreeNode subsubnode in subnode.Nodes)
+            //            tmp_Selection2.Add(subsubnode);
+            //    }
+            //    selection = tmp_Selection2;
+            //}
 
             return selection;
 

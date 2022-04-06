@@ -106,6 +106,7 @@ namespace GINtool
             this.treeView2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeView2.Location = new System.Drawing.Point(3, 16);
             this.treeView2.Name = "treeView2";
+            this.treeView2.ShowNodeToolTips = true;
             this.treeView2.Size = new System.Drawing.Size(233, 397);
             this.treeView2.TabIndex = 5;
             // 
@@ -288,6 +289,7 @@ namespace GINtool
             // 
             // udCat
             // 
+            this.udCat.Items.Add("V");
             this.udCat.Items.Add("IV");
             this.udCat.Items.Add("III");
             this.udCat.Items.Add("II");

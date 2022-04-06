@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using Excel = Microsoft.Office.Interop.Excel;
 using SysData = System.Data;
 
@@ -280,7 +281,7 @@ namespace GINtool
             string sheetName = chartName.Replace("Plot", "Tab");
             //aSheet.Name = sheetName;
 
-            string catRegLabel = Properties.Settings.Default.useCat ? "Categgory" : "Regulon";
+            string catRegLabel = Properties.Settings.Default.useCat ? "Category" : "Regulon";
 
             Excel.Worksheet lNewSheet = gApplication.Worksheets.Add();
             lNewSheet.Name = sheetName;
@@ -326,10 +327,10 @@ namespace GINtool
             DataTable lTable = ElementsToTable(all);
 
             string catRegHeader = Properties.Settings.Default.useCat ? "Category" : "Regulon";
-            string firstBlockHeader = Properties.Settings.Default.useCat ? "PLOT DATA" : "Without regulatory directionality";
-            string secondBlockHeader = Properties.Settings.Default.useCat ? "POSITIVE FC" : "When regulator is activated";
-            string thirdBlockHeader = Properties.Settings.Default.useCat ? "NEGATIVE FC" : "When regulator is repressed";
-            string fourthBlockHeader = Properties.Settings.Default.useCat ? "COMBINED RESULTS" : "Best score";
+            string firstBlockHeader = Properties.Settings.Default.useCat ? "Plot data" : "Without regulatory directionality";
+            string secondBlockHeader = Properties.Settings.Default.useCat ? "Positive fc" : "When regulator is activated";
+            string thirdBlockHeader = Properties.Settings.Default.useCat ? "Negative fc" : "When regulator is repressed";
+            string fourthBlockHeader = Properties.Settings.Default.useCat ? "Best results" : "Best score";
             string FCheader = Properties.Settings.Default.useCat ? "Average FC" : "Average ABS(FC)";
             string MADheader = Properties.Settings.Default.useCat ? "MAD FC" : "MAD ABS(FC)";
 
@@ -455,6 +456,11 @@ namespace GINtool
 
         }
 
+        private void AdjustColumns(Excel.Range aRange)
+        {
+            aRange.ColumnWidth = 17.0;
+        }
+
 
         /// <summary>
         /// Create the worksheet that contains the basic mapping gene - regulon table
@@ -490,7 +496,9 @@ namespace GINtool
                         string _val = dataRow[colFmt].ToString();
 
                         summaryInfo lItem = bestInfo.Find(item => item.catName == _val);
-                        _val = String.Format("{0}(FC:{1:0.00},{2:0}%)", _val, lItem.fc_average, lItem.best_gene_percentage);
+                        string strAvgFC = lItem.fc_average.ToString("0.00", CultureInfo.InvariantCulture);
+                        strAvgFC = strAvgFC.Replace(',', '.');
+                        _val = String.Format("{0}(FC:{1} {2:0}%)", _val, strAvgFC, lItem.best_gene_percentage);
 
                         dataRow.BeginEdit();
                         dataRow[colFmt] = _val;
@@ -511,13 +519,13 @@ namespace GINtool
             int suffix = FindSheetNames(new string[] { "Mapped", "Mapped_Details" });
             lNewSheet.Name = String.Format("Mapped_{0}", suffix);
 
-            lNewSheet.Cells[1, 1] = "BSU";
-            lNewSheet.Cells[1, 2] = "GENE";
-            lNewSheet.Cells[1, 3] = "FC";
-            lNewSheet.Cells[1, 4] = "PVALUE";
-            lNewSheet.Cells[1, 5] = "FUNCTION";
-            lNewSheet.Cells[1, 6] = "DESCRIPTION";
-            lNewSheet.Cells[1, 7] = UseCategoryData() ? "TOT CATEGORIES" : "TOT REGULONS";
+            lNewSheet.Cells[1, 1] = "Gene id";
+            lNewSheet.Cells[1, 2] = "Gene name";
+            lNewSheet.Cells[1, 3] = "Fold-change";
+            lNewSheet.Cells[1, 4] = "P-value";
+            lNewSheet.Cells[1, 5] = "Function";
+            lNewSheet.Cells[1, 6] = "Description";
+            lNewSheet.Cells[1, 7] = UseCategoryData() ? "Tot# Categories" : "Tot# Regulons";
 
             string lastColumn = workTable.Columns[workTable.Columns.Count - 1].ColumnName;
             lastColumn = lastColumn.Replace("col_", "");
@@ -534,7 +542,8 @@ namespace GINtool
             Excel.Range bottom = lNewSheet.Cells[workTable.Rows.Count + 1, workTable.Columns.Count];
             Excel.Range all = (Excel.Range)lNewSheet.get_Range(top, bottom);
 
-            all.Columns.AutoFit();
+            AdjustColumns(all);
+            //all.Columns.AutoFit();           
 
             // color cells according to table 
             //ColorCells(clrTbl, lNewSheet, startR, offsetColumn + 5, startR + nrRows - 1, offsetColumn + lTable.Columns.Count - 1);
