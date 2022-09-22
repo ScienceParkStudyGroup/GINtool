@@ -83,7 +83,7 @@ namespace GINtool
             gCategoriesWB.Columns.Add("ucat3_int", Type.GetType("System.Int32"));
             gCategoriesWB.Columns.Add("ucat4_int", Type.GetType("System.Int32"));
             gCategoriesWB.Columns.Add("ucat5_int", Type.GetType("System.Int32"));
-
+            gCategoriesWB.Columns.Add("cat_sum", Type.GetType("System.Int32"));
 
             string[] lcols = new string[] { "cat1_int", "cat2_int", "cat3_int", "cat4_int", "cat5_int" };
             string[] ulcols = new string[] { "ucat1_int", "ucat2_int", "ucat3_int", "ucat4_int", "ucat5_int" };
@@ -123,7 +123,7 @@ namespace GINtool
                 if (_desc.Rows.Count > 0)
                     catDesc = (string)_desc.Rows[0][1];
                 else
-                    catDesc = String.Format("category_{0}", codes[0]);
+                    catDesc = String.Format("category#{0}", codes[0]); //remove _ 
 
                 lNewRow["cat1"] = catDesc;
                 lNewRow["cat1_int"] = codes[0];
@@ -142,7 +142,7 @@ namespace GINtool
                     else
                     {
                         string _fmt = String.Join(".", codes.Take(l + 1).Select(iv => iv.ToString()).ToArray());
-                        catDesc = String.Format("category_{0}", _fmt);
+                        catDesc = String.Format("category#{0}", _fmt);
                     }
 
                     string colName = String.Format("cat{0}", l + 1);
@@ -153,6 +153,8 @@ namespace GINtool
                     lNewRow[colName] = Math.Pow(10, 5 - l) * codes[l];
                     offset = offset + (Int32)Math.Pow(10, 5 - l) * codes[l];
                 }
+
+                lNewRow["cat_sum"] = offset;
             }
 
             RemoveTask(TASKS.LOAD_CATEGORY_DATA);

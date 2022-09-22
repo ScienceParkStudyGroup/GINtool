@@ -132,14 +132,16 @@ namespace GINtool
                 int nrRows = selection.Rows.Count;
 
 
-                tbBSU.Text = string.Format("{3}!${0}${1}:${0}${2}", GetExcelStrings().ElementAt(startCol + 1), startRow, startRow + nrRows - 1, selection.Worksheet.Name);
+                tbBSU.Text = string.Format("{3}!${0}${1}:${0}${2}", GetExcelStrings().ElementAt(startCol-1), startRow, startRow + nrRows - 1, selection.Worksheet.Name);
                 tbFC.Text = string.Format("{3}!${0}${1}:${0}${2}", GetExcelStrings().ElementAt(startCol), startRow, startRow + nrRows - 1, selection.Worksheet.Name);
-                tbP.Text = string.Format("{3}!${0}${1}:${0}${2}", GetExcelStrings().ElementAt(startCol - 1), startRow, startRow + nrRows - 1, selection.Worksheet.Name);
+                tbP.Text = string.Format("{3}!${0}${1}:${0}${2}", GetExcelStrings().ElementAt(startCol +1), startRow, startRow + nrRows - 1, selection.Worksheet.Name);
 
 
-                rangeP = selection.Columns[1];
+                rangeBSU = selection.Columns[1];
                 rangeFC = selection.Columns[2];
-                rangeBSU = selection.Columns[3];
+                rangeP = selection.Columns[3];
+                
+                
             }
         }
 

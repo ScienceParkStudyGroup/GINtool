@@ -85,7 +85,6 @@
             this.cbDescending = this.Factory.CreateRibbonCheckBox();
             this.btLoad = this.Factory.CreateRibbonButton();
             this.toggleButton1 = this.Factory.CreateRibbonToggleButton();
-            this.tglTaskPane = this.Factory.CreateRibbonToggleButton();
             this.btnSelect = this.Factory.CreateRibbonButton();
             this.btApply = this.Factory.CreateRibbonButton();
             this.btPlot = this.Factory.CreateRibbonButton();
@@ -119,6 +118,8 @@
             this.separator2 = this.Factory.CreateRibbonSeparator();
             this.btnRegInfoFileName = this.Factory.CreateRibbonButton();
             this.btRegDirMap = this.Factory.CreateRibbonButton();
+            this.group2 = this.Factory.CreateRibbonGroup();
+            this.tglTaskPane = this.Factory.CreateRibbonToggleButton();
             this.TabGINtool.SuspendLayout();
             this.group1.SuspendLayout();
             this.grpDta.SuspendLayout();
@@ -133,6 +134,7 @@
             this.grpColMapCategory.SuspendLayout();
             this.grpCutOff.SuspendLayout();
             this.grpDirection.SuspendLayout();
+            this.group2.SuspendLayout();
             this.SuspendLayout();
             // 
             // TabGINtool
@@ -150,6 +152,7 @@
             this.TabGINtool.Groups.Add(this.grpColMapCategory);
             this.TabGINtool.Groups.Add(this.grpCutOff);
             this.TabGINtool.Groups.Add(this.grpDirection);
+            this.TabGINtool.Groups.Add(this.group2);
             this.TabGINtool.Label = "GIN tool";
             this.TabGINtool.Name = "TabGINtool";
             // 
@@ -157,7 +160,6 @@
             // 
             this.group1.Items.Add(this.btLoad);
             this.group1.Items.Add(this.toggleButton1);
-            this.group1.Items.Add(this.tglTaskPane);
             this.group1.Label = "main";
             this.group1.Name = "group1";
             // 
@@ -335,7 +337,7 @@
             // ddGenesBSU
             // 
             this.ddGenesBSU.Image = global::GINtool.Properties.Resources.target;
-            this.ddGenesBSU.Label = "gene ID";
+            this.ddGenesBSU.Label = "gene id";
             this.ddGenesBSU.Name = "ddGenesBSU";
             this.ddGenesBSU.ScreenTip = "map the column that defines the genes\' bsu code";
             this.ddGenesBSU.ShowImage = true;
@@ -387,7 +389,7 @@
             // 
             this.ddBSU.Enabled = false;
             this.ddBSU.Image = global::GINtool.Properties.Resources.target;
-            this.ddBSU.Label = "gene ID";
+            this.ddBSU.Label = "gene id";
             this.ddBSU.Name = "ddBSU";
             this.ddBSU.ScreenTip = "specify the column that contains the gene identifier (BSU) code";
             this.ddBSU.ShowImage = true;
@@ -483,7 +485,7 @@
             // 
             this.ddCatBSU.Enabled = false;
             this.ddCatBSU.Image = global::GINtool.Properties.Resources.target;
-            this.ddCatBSU.Label = "gene ID";
+            this.ddCatBSU.Label = "gene id";
             this.ddCatBSU.Name = "ddCatBSU";
             this.ddCatBSU.ShowImage = true;
             this.ddCatBSU.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ddCatBSU_SelectionChanged);
@@ -506,7 +508,7 @@
             // 
             // ebLow
             // 
-            this.ebLow.Label = "fold change";
+            this.ebLow.Label = "fold-change";
             this.ebLow.Name = "ebLow";
             this.ebLow.ScreenTip = "Set the value for the minimum FC category";
             this.ebLow.Text = null;
@@ -553,17 +555,6 @@
             this.toggleButton1.Name = "toggleButton1";
             this.toggleButton1.ShowImage = true;
             this.toggleButton1.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Toggle_Settings_Click);
-            // 
-            // tglTaskPane
-            // 
-            this.tglTaskPane.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-            this.tglTaskPane.Enabled = false;
-            this.tglTaskPane.Image = global::GINtool.Properties.Resources.clipboard;
-            this.tglTaskPane.Label = "show/hide manual";
-            this.tglTaskPane.Name = "tglTaskPane";
-            this.tglTaskPane.ShowImage = true;
-            this.tglTaskPane.Visible = false;
-            this.tglTaskPane.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.ToggleTaskPane_Click);
             // 
             // btnSelect
             // 
@@ -832,6 +823,20 @@
             this.btRegDirMap.ShowImage = true;
             this.btRegDirMap.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.Button_RegulonDirectionMap_Click);
             // 
+            // group2
+            // 
+            this.group2.Items.Add(this.tglTaskPane);
+            this.group2.Label = "help";
+            this.group2.Name = "group2";
+            // 
+            // tglTaskPane
+            // 
+            this.tglTaskPane.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.tglTaskPane.Image = global::GINtool.Properties.Resources.clipboard;
+            this.tglTaskPane.Label = "show/hide manual";
+            this.tglTaskPane.Name = "tglTaskPane";
+            this.tglTaskPane.ShowImage = true;
+            // 
             // GinRibbon
             // 
             this.Name = "GinRibbon";
@@ -866,6 +871,8 @@
             this.grpCutOff.PerformLayout();
             this.grpDirection.ResumeLayout(false);
             this.grpDirection.PerformLayout();
+            this.group2.ResumeLayout(false);
+            this.group2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -895,7 +902,6 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup grpCutOff;
         internal Microsoft.Office.Tools.Ribbon.RibbonEditBox editMinPval;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btnResetOperonFile;
-        internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton tglTaskPane;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup grpPlot;
         internal Microsoft.Office.Tools.Ribbon.RibbonCheckBox cbUseCategories;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btPlot;
@@ -957,6 +963,8 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btnClearGenInfo;
         internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator5;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btnClearRegulonInfo;
+        internal Microsoft.Office.Tools.Ribbon.RibbonGroup group2;
+        internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton tglTaskPane;
     }
 
     partial class ThisRibbonCollection

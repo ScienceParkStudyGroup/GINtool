@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
@@ -1409,10 +1410,13 @@ namespace GINtool
                 low = true;
             // can still add range checks e.g. high > mid > low  
 
-            if (double.TryParse(bx.Text, out double val))
+            var s = bx.Text.ToString(CultureInfo.InvariantCulture);
+            s = s.Replace(',', '.');
+
+            if (double.TryParse(s,NumberStyles.Any,CultureInfo.InvariantCulture, out double val))
             {
                 // set the text value to what is parsed
-                bx.Text = val.ToString();
+                bx.Text = val.ToString(CultureInfo.InvariantCulture);
                 if (low)
                     Properties.Settings.Default.fcLOW = val;
                 SetFlags(UPDATE_FLAGS.FC_dependent);
@@ -1827,8 +1831,8 @@ namespace GINtool
 
                 element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList();
 
-                if (Properties.Settings.Default.sortAscending)
-                    element_Fcs.All.Reverse();
+                //if (Properties.Settings.Default.sortAscending)
+                //    element_Fcs.All.Reverse();
             }
 
             return element_Fcs;
@@ -2364,7 +2368,10 @@ namespace GINtool
         /// <param name="e"></param>
         private void EditMinPval_TextChanged(object sender, RibbonControlEventArgs e)
         {
-            if (double.TryParse(editMinPval.Text, out double val))
+            var s = editMinPval.Text.ToString(CultureInfo.InvariantCulture);
+            s = s.Replace(',', '.');
+
+            if (double.TryParse(s,NumberStyles.Any,CultureInfo.InvariantCulture, out double val))
             {
                 // set the text value to what is parsed
                 editMinPval.Text = val.ToString();
