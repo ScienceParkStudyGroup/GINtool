@@ -2383,8 +2383,8 @@ namespace GINtool
         /// <param name="e"></param>
         private void ToggleTaskPane_Click(object sender, RibbonControlEventArgs e)
         {
-            var taskpane = TaskPaneManager.GetTaskPane("A", "GIN tool manual", () => new GINtaskpane(), SetTaskPaneVisbile);
-            taskpane.Visible = !taskpane.Visible;
+            //var taskpane = TaskPaneManager.GetTaskPane("A", "GIN tool manual", () => new GINtaskpane(), SetTaskPaneVisbile);
+            //taskpane.Visible = !taskpane.Visible;
         }
 
         /// <summary>

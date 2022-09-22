@@ -307,35 +307,35 @@
     <None Include="Resources\crossroads.png" />
     <None Include="Resources\check.png" />
     <None Include="Resources\gear.png" />
-    <EmbeddedResource Include="Resources\user_manual.htm">
+    <None Include="Resources\user_manual.htm">
       <CustomToolNamespace>GINtool</CustomToolNamespace>
-    </EmbeddedResource>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\step3.jpg">
+    <None Include="Resources\step3.jpg">
       <CustomToolNamespace>GINtool</CustomToolNamespace>
-    </EmbeddedResource>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\apply.jpg" />
-    <EmbeddedResource Include="Resources\load_data.jpg">
+    <None Include="Resources\apply.jpg" />
+    <None Include="Resources\load_data.jpg">
       <CustomToolNamespace>GINtool</CustomToolNamespace>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\mapping.jpg">
+    </None>
+    <None Include="Resources\mapping.jpg">
       <CustomToolNamespace>GINtool</CustomToolNamespace>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\p_or_fc.jpg">
+    </None>
+    <None Include="Resources\p_or_fc.jpg">
       <CustomToolNamespace>GINtool</CustomToolNamespace>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\select_operon_file.jpg">
+    </None>
+    <None Include="Resources\select_operon_file.jpg">
       <CustomToolNamespace>GINtool</CustomToolNamespace>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\select_regulon_file.jpg">
+    </None>
+    <None Include="Resources\select_regulon_file.jpg">
       <CustomToolNamespace>GINtool</CustomToolNamespace>
-    </EmbeddedResource>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\tools.png" />
@@ -364,10 +364,11 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>GINtool_2_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>24A69DAA120DA1CFEFE736B1E5712CFF090275F6</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>CF7170495EAC9DA8F5533CD114BF4EE1B8FEF162</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>
