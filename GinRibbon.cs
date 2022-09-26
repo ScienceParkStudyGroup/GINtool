@@ -3269,6 +3269,11 @@ namespace GINtool
                 Fill_RegulonInfoDropDownBoxes();
 
         }
+
+        private void tglTaskPane_Click(object sender, RibbonControlEventArgs e)
+        {
+
+        }
     }
 
     /// <summary>
