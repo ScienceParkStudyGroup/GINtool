@@ -339,6 +339,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <None Include="README.md" />
     <None Include="Resources\tools.png" />
     <None Include="Resources\takeoff.png" />
     <None Include="Resources\swatches.png" />
