@@ -284,7 +284,7 @@
     <Compile Include="ThisAddIn.cs">
       <SubType>Code</SubType>
     </Compile>
-    <None Include="README.md" />
+    <None Include="manual\README.md" />
     <None Include="ThisAddIn.Designer.xml">
       <DependentUpon>ThisAddIn.cs</DependentUpon>
     </None>
@@ -355,31 +355,31 @@
     <None Include="Resources\keyboard.png" />
     <None Include="Resources\gene-editing-icon-128_128.png" />
     <None Include="Resources\gene-editing-icon-64x64.png" />
-    <Content Include="media\image1.png" />
-    <Content Include="media\image10.png" />
-    <Content Include="media\image11.png" />
-    <Content Include="media\image12.png" />
-    <Content Include="media\image13.png" />
-    <Content Include="media\image14.png" />
-    <Content Include="media\image15.png" />
-    <Content Include="media\image16.png" />
-    <Content Include="media\image17.png" />
-    <Content Include="media\image18.png" />
-    <Content Include="media\image19.png" />
-    <Content Include="media\image2.png" />
-    <Content Include="media\image20.png" />
-    <Content Include="media\image21.png" />
-    <Content Include="media\image22.png" />
-    <Content Include="media\image23.png" />
-    <Content Include="media\image24.png" />
-    <Content Include="media\image25.png" />
-    <Content Include="media\image3.png" />
-    <Content Include="media\image4.png" />
-    <Content Include="media\image5.png" />
-    <Content Include="media\image6.png" />
-    <Content Include="media\image7.png" />
-    <Content Include="media\image8.png" />
-    <Content Include="media\image9.png" />
+    <Content Include="manual\media\image1.png" />
+    <Content Include="manual\media\image10.png" />
+    <Content Include="manual\media\image11.png" />
+    <Content Include="manual\media\image12.png" />
+    <Content Include="manual\media\image13.png" />
+    <Content Include="manual\media\image14.png" />
+    <Content Include="manual\media\image15.png" />
+    <Content Include="manual\media\image16.png" />
+    <Content Include="manual\media\image17.png" />
+    <Content Include="manual\media\image18.png" />
+    <Content Include="manual\media\image19.png" />
+    <Content Include="manual\media\image2.png" />
+    <Content Include="manual\media\image20.png" />
+    <Content Include="manual\media\image21.png" />
+    <Content Include="manual\media\image22.png" />
+    <Content Include="manual\media\image23.png" />
+    <Content Include="manual\media\image24.png" />
+    <Content Include="manual\media\image25.png" />
+    <Content Include="manual\media\image3.png" />
+    <Content Include="manual\media\image4.png" />
+    <Content Include="manual\media\image5.png" />
+    <Content Include="manual\media\image6.png" />
+    <Content Include="manual\media\image7.png" />
+    <Content Include="manual\media\image8.png" />
+    <Content Include="manual\media\image9.png" />
     <Content Include="Resources\Resources.txt" />
   </ItemGroup>
   <PropertyGroup>
