@@ -35,6 +35,7 @@ namespace GINtool
 
         public List<int> REGULON_UP = new List<int>();
         public List<int> REGULON_DOWN = new List<int>();
+        public List<int> REGULON_UNKNOWN_DIR = new List<int>();
 
         public string GeneName = "";
         public string GeneDescription = "";

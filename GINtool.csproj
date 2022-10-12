@@ -264,6 +264,7 @@
     <None Include="app.config" />
     <None Include="GINtool_1_TemporaryKey.pfx" />
     <None Include="GINtool_2_TemporaryKey.pfx" />
+    <None Include="GINtool_TemporaryKey.pfx" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -391,11 +392,10 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>
-    </ManifestKeyFile>
+    <ManifestKeyFile>GINtool_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>CF7170495EAC9DA8F5533CD114BF4EE1B8FEF162</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>991234CE4674AA16A2E5B5F3A32357888563CD87</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>

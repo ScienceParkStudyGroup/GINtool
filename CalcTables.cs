@@ -651,7 +651,7 @@ namespace GINtool
                 {
                     SysData.DataRow lRow = lTable.Rows.Add();
                     lRow["Regulon"] = __it.Name;
-                    lRow["DIR"] = __it.Direction == "UP" ? 1 : 0;
+                    lRow["DIR"] = __it.Direction == "UP" ? 1 : ( __it.Direction == "DOWN" ? -1 : 0); // add check for when no direction is given
                     lRow["Gene_ID"] = _it.BSU;
                     lRow["Gene"] = _it.GeneName;
                     lRow["FC"] = _it.FC;
@@ -1031,6 +1031,12 @@ namespace GINtool
                 }
 
                 lRow["Mode"] = swapped ? "repressed" : "activated";
+                
+                if ( (n1 == 0) & (n2 == 0))
+                {
+                    lRow["Mode"] = "not defined";
+                }
+
                 lRow["Count"] = _si1.genes.Length;
                 if (totnrgenes > 0)
                     lRow["Percentage"] = Math.Round((double)_si1.genes.Length / (double)totnrgenes * 100);

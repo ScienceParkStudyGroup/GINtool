@@ -45,6 +45,8 @@ namespace GINtool
             // cbHeader
             // 
             this.cbHeader.AutoSize = true;
+            this.cbHeader.Checked = true;
+            this.cbHeader.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbHeader.Location = new System.Drawing.Point(245, 25);
             this.cbHeader.Name = "cbHeader";
             this.cbHeader.Size = new System.Drawing.Size(124, 17);

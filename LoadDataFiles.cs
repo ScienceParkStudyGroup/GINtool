@@ -272,6 +272,7 @@ namespace GINtool
 
             AddTask(TASKS.LOAD_REGULON_DATA);
             gRegulonInfoWB = ExcelUtils.ReadExcelToDatable(gApplication, gSettings.regulonInfoSheet, gSettings.regulonInfoFIleName, 1, 1);
+            gRegulonInfoWB.CaseSensitive = false;
             gRegulonInfoWB.PrimaryKey = new DataColumn[] { gRegulonInfoWB.Columns[gSettings.regInfoIdColumn] };
 
 

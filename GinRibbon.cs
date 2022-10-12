@@ -570,6 +570,7 @@ namespace GINtool
                     for (int r = 0; r < results.Length; r++)
                     {
 
+                        // check for existence if mapped to regulon
                         string item = results[r][Properties.Settings.Default.referenceRegulon].ToString();
                         string direction = results[r][Properties.Settings.Default.referenceDIR].ToString();
 
@@ -587,7 +588,16 @@ namespace GINtool
                                 _it.Regulons.Add(new RegulonItem(item, "DOWN"));
                                 _it.REGULON_DOWN.Add(r);
                             }
+
+                            if (!gUpItems.Contains(direction) & !gDownItems.Contains(direction))
+                            {
+                                _it.REGULON_UNKNOWN_DIR.Add(r);
+                                _it.Regulons.Add(new RegulonItem(item, "NOT DEFINED"));
+                            }
+
                         }
+                        
+
 
                     }
                 }
@@ -1912,7 +1922,8 @@ namespace GINtool
                         }
 
 
-                        DataRow[] _inhibited = _dataTable.Select("(FC<0 AND DIR>0) OR (FC>0 AND DIR<=0) ");
+                        // DataRow[] _inhibited = _dataTable.Select("(FC<0 AND DIR>0) OR (FC>0 AND DIR<=0) ");
+                        DataRow[] _inhibited = _dataTable.Select("(FC<0 AND DIR>0) OR (FC>0 AND DIR<0) ");
                         for (int i = 0; i < _inhibited.Length; i++)
                         {
                             double fc = (double)_inhibited[i]["FC"];
@@ -1923,7 +1934,8 @@ namespace GINtool
                         }
 
 
-                        DataRow[] _activated = _dataTable.Select("(FC>0 AND DIR>0) OR (FC<0 AND DIR<=0) ");
+                        //DataRow[] _activated = _dataTable.Select("(FC>0 AND DIR>0) OR (FC<0 AND DIR<=0) ");
+                        DataRow[] _activated = _dataTable.Select("(FC>0 AND DIR>0) OR (FC<0 AND DIR<0) ");
                         for (int i = 0; i < _activated.Length; i++)
                         {
                             double fc = (double)_activated[i]["FC"];
@@ -2235,7 +2247,7 @@ namespace GINtool
                 lRow["Name"] = newname;
                 if (bestMode)
                 {
-                    lRow["Direction"] = elements[r].fc_average > 0 ? "activation" : "repression";
+                    lRow["Direction"] = Double.IsNaN(elements[r].fc_average) ? "not defined" : elements[r].fc_average > 0 ? "activation" : "repression";
                     lRow["Percentage"] = elements[r].best_gene_percentage;
                 }
 
