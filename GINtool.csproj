@@ -36,7 +36,7 @@
     <PublishUrl>publish\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.69</ApplicationVersion>
+    <ApplicationVersion>1.0.0.70</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -285,7 +285,6 @@
     <Compile Include="ThisAddIn.cs">
       <SubType>Code</SubType>
     </Compile>
-    <None Include="manual\README.md" />
     <None Include="ThisAddIn.Designer.xml">
       <DependentUpon>ThisAddIn.cs</DependentUpon>
     </None>
@@ -340,7 +339,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="README.md" />
     <None Include="Resources\tools.png" />
     <None Include="Resources\takeoff.png" />
     <None Include="Resources\swatches.png" />
@@ -358,31 +356,6 @@
     <None Include="Resources\gene-editing-icon-128_128.png" />
     <None Include="Resources\gene-editing-icon-64x64.png" />
     <Content Include="DNA_icon-icons.com_75035.ico" />
-    <Content Include="manual\media\image1.png" />
-    <Content Include="manual\media\image10.png" />
-    <Content Include="manual\media\image11.png" />
-    <Content Include="manual\media\image12.png" />
-    <Content Include="manual\media\image13.png" />
-    <Content Include="manual\media\image14.png" />
-    <Content Include="manual\media\image15.png" />
-    <Content Include="manual\media\image16.png" />
-    <Content Include="manual\media\image17.png" />
-    <Content Include="manual\media\image18.png" />
-    <Content Include="manual\media\image19.png" />
-    <Content Include="manual\media\image2.png" />
-    <Content Include="manual\media\image20.png" />
-    <Content Include="manual\media\image21.png" />
-    <Content Include="manual\media\image22.png" />
-    <Content Include="manual\media\image23.png" />
-    <Content Include="manual\media\image24.png" />
-    <Content Include="manual\media\image25.png" />
-    <Content Include="manual\media\image3.png" />
-    <Content Include="manual\media\image4.png" />
-    <Content Include="manual\media\image5.png" />
-    <Content Include="manual\media\image6.png" />
-    <Content Include="manual\media\image7.png" />
-    <Content Include="manual\media\image8.png" />
-    <Content Include="manual\media\image9.png" />
     <Content Include="Resources\Resources.txt" />
   </ItemGroup>
   <PropertyGroup>
@@ -393,11 +366,10 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>
-    </ManifestKeyFile>
+    <ManifestKeyFile>GINtool_1_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>C82EF9C7E17F903F08AE41DE3A39CD7E699C43B8</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>CF7170495EAC9DA8F5533CD114BF4EE1B8FEF162</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>DNA_icon-icons.com_75035.ico</ApplicationIcon>
