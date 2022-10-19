@@ -36,7 +36,7 @@
     <PublishUrl>publish\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.67</ApplicationVersion>
+    <ApplicationVersion>1.0.0.68</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -392,10 +392,10 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>GINtool_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>GINtool_1_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>991234CE4674AA16A2E5B5F3A32357888563CD87</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>CF7170495EAC9DA8F5533CD114BF4EE1B8FEF162</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>

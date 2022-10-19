@@ -1003,6 +1003,7 @@ namespace GINtool
                 SysData.DataRow lRow = lTable.Rows.Add();
                 string catName = _tmp[i].catName;
                 int totnrgenes = _tmp[i].genes.Length;
+                summaryInfo _all = element_info.All.GetCatValues(catName); // update 18_10_22
                 summaryInfo _pos = element_info.Activated.GetCatValues(catName);
                 summaryInfo _neg = element_info.Repressed.GetCatValues(catName);
                 summaryInfo _si1 = _pos;
@@ -1034,7 +1035,7 @@ namespace GINtool
                 
                 if ( (n1 == 0) & (n2 == 0))
                 {
-                    lRow["Mode"] = "not defined";
+                    lRow["Mode"] = "not defined";                    
                 }
 
                 lRow["Count"] = _si1.genes.Length;
@@ -1043,13 +1044,31 @@ namespace GINtool
 
                 _si1.best_gene_percentage = Math.Round((double)_si1.genes.Length / (double)totnrgenes * 100);
 
-                _output.Add(_si1);
+                 
+                if(( n1 ==0 ) & (n2 == 0)) // if no direction was specicified copy the data from the _all structure
+                {
+                    _all.best_gene_percentage = 0.0;
+                    _output.Add(_all);
+                }
+                else // otherwise copy the best one
+                {
+                    _output.Add(_si1);
+                }
 
-                if (n1 > 0)
+                
+
+                if (n1 > 0) // _s1 always contains the 'best' direction.
                 {
                     lRow["AverageABSFC"] = _si1.fc_average;
                     lRow["MadABSFC"] = _si1.fc_mad;
                     lRow["AverageP"] = _si1.p_average;
+                }
+                else // n1 == 0 & n2 == 0, added 19-10-22
+                {
+                    lRow["AverageABSFC"] = _all.fc_average;
+                    lRow["MadABSFC"] = _all.fc_mad;
+                    lRow["AverageP"] = _all.p_average;
+                    lRow["Percentage"] = 0.0;
                 }
 
             }

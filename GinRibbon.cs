@@ -1738,7 +1738,7 @@ namespace GINtool
                             _fcsA.Add(fc);
                             _pvaluesA.Add(double.Parse(_dt.Rows[i]["Pvalue"].ToString()));
 
-                            if (fc >= 0)
+                            if (fc > 0) // was if (fc >= 0) , 19-10-22
                             {
                                 _genesP.Add(_dt.Rows[i]["Gene"].ToString());
                                 _fcsP.Add(fc);
@@ -2247,7 +2247,7 @@ namespace GINtool
                 lRow["Name"] = newname;
                 if (bestMode)
                 {
-                    lRow["Direction"] = Double.IsNaN(elements[r].fc_average) ? "not defined" : elements[r].fc_average > 0 ? "activation" : "repression";
+                    lRow["Direction"] = (elements[r].best_gene_percentage == 0.0) ? "not defined" : elements[r].fc_average > 0 ? "activation" : "repression";
                     lRow["Percentage"] = elements[r].best_gene_percentage;
                 }
 
