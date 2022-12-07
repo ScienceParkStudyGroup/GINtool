@@ -228,8 +228,8 @@ namespace GINtool
             chartPage.Axes(Excel.XlAxisType.xlValue).HasTitle = true;
             chartPage.Axes(Excel.XlAxisType.xlCategory).HasTitle = true;
 
-            string xLabel = (bestPlot & bestNew) ? "% logical regulation" : (bestPlot ? "average ABS(FC)" : "average FC");
-            string yLabel = (bestPlot & bestNew) ? "average FC" : (bestPlot ? "mad ABS(FC)" : "mad FC");
+            string xLabel = (bestPlot & bestNew) ? "% logical regulation" : (bestPlot ? "average signed FC" : "average FC");
+            string yLabel = (bestPlot & bestNew) ? "average FC" : (bestPlot ? "mad abs(FC)" : "mad FC");
 
 
             chartPage.Axes(Excel.XlAxisType.xlCategory).AxisTitle.Text = xLabel;

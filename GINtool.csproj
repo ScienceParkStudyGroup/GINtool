@@ -33,7 +33,7 @@
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>C:\Users\fkloet\source\repos\franskloet\publish\</PublishUrl>
+    <PublishUrl>D:\Source\Repos\publish\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
     <ApplicationVersion>1.0.0.72</ApplicationVersion>
@@ -368,6 +368,7 @@
     <Content Include="DNA_icon-icons.com_75035.ico" />
     <None Include="Resources\question-mark-icon-flat-21.png" />
     <None Include="Resources\gene_info.png" />
+    <None Include="Resources\chat.png" />
     <Content Include="Resources\Resources.txt" />
   </ItemGroup>
   <PropertyGroup>

@@ -331,8 +331,8 @@ namespace GINtool
             string secondBlockHeader = Properties.Settings.Default.useCat ? "Positive fc" : "When regulator is activated";
             string thirdBlockHeader = Properties.Settings.Default.useCat ? "Negative fc" : "When regulator is repressed";
             string fourthBlockHeader = Properties.Settings.Default.useCat ? "Best results" : "Best score";
-            string FCheader = Properties.Settings.Default.useCat ? "Average FC" : "Average FC";
-            string MADheader = Properties.Settings.Default.useCat ? "MAD FC" : "MAD FC";
+            string FCheader = Properties.Settings.Default.useCat ? "Average FC" : "Average signed FC";
+            string MADheader = Properties.Settings.Default.useCat ? "MAD FC" : "MAD ABS(FC)";
 
             int hdrRow = 2;
 
@@ -431,8 +431,8 @@ namespace GINtool
             lNewSheet.Cells[hdrRow, 20] = "directon";
             lNewSheet.Cells[hdrRow, 21] = "Nr of genes";
             lNewSheet.Cells[hdrRow, 22] = "Percentage";
-            lNewSheet.Cells[hdrRow, 23] = "Average FC";
-            lNewSheet.Cells[hdrRow, 24] = "MAD FC";
+            lNewSheet.Cells[hdrRow, 23] = "Average signed FC";
+            lNewSheet.Cells[hdrRow, 24] = "MAD ABS(FC)";
             lNewSheet.Cells[hdrRow, 25] = "Average P";
 
             // Combine positive and negative mode results to obtain a 'best' result

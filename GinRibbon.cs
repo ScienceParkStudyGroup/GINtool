@@ -2604,6 +2604,8 @@ namespace GINtool
         {
             grpReference.Visible = show;
 
+            button2.Label = "";
+            button2.ShowLabel = false;
             grpGenesMapping.Visible = false;
             grpMap.Visible = false;
             grpColMapCategory.Visible = false;
