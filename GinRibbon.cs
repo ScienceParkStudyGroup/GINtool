@@ -2592,6 +2592,7 @@ namespace GINtool
             grpDta.Visible = !toggleButton1.Checked;
             grpFocus.Visible = !toggleButton1.Checked;
             grpFilter.Visible = !toggleButton1.Checked;
+            
 
         }
 
@@ -2615,6 +2616,9 @@ namespace GINtool
 
             grpCutOff.Visible = show;
             grpDirection.Visible = show;
+
+
+            group2.Visible = show;
 
         }
 
@@ -3285,6 +3289,12 @@ namespace GINtool
         private void tglTaskPane_Click(object sender, RibbonControlEventArgs e)
         {
 
+        }
+
+        private void button2_Click(object sender, RibbonControlEventArgs e)
+        {
+            AboutBox1 ab = new AboutBox1();
+            ab.ShowDialog();
         }
     }
 

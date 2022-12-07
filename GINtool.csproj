@@ -132,6 +132,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
@@ -190,6 +191,12 @@
     can be found.
   -->
   <ItemGroup>
+    <Compile Include="AboutBox1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AboutBox1.Designer.cs">
+      <DependentUpon>AboutBox1.cs</DependentUpon>
+    </Compile>
     <Compile Include="BsuLinkedItems.cs" />
     <Compile Include="CalcTables.cs">
       <SubType>Component</SubType>
@@ -241,6 +248,9 @@
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
+    <EmbeddedResource Include="AboutBox1.resx">
+      <DependentUpon>AboutBox1.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="dlgSelectData.resx">
       <DependentUpon>dlgSelectData.cs</DependentUpon>
     </EmbeddedResource>
@@ -356,6 +366,8 @@
     <None Include="Resources\gene-editing-icon-128_128.png" />
     <None Include="Resources\gene-editing-icon-64x64.png" />
     <Content Include="DNA_icon-icons.com_75035.ico" />
+    <None Include="Resources\question-mark-icon-flat-21.png" />
+    <None Include="Resources\gene_info.png" />
     <Content Include="Resources\Resources.txt" />
   </ItemGroup>
   <PropertyGroup>

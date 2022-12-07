@@ -120,6 +120,7 @@
             this.cbDescending = this.Factory.CreateRibbonCheckBox();
             this.group2 = this.Factory.CreateRibbonGroup();
             this.tglTaskPane = this.Factory.CreateRibbonToggleButton();
+            this.button2 = this.Factory.CreateRibbonButton();
             this.TabGINtool.SuspendLayout();
             this.group1.SuspendLayout();
             this.grpDta.SuspendLayout();
@@ -826,7 +827,8 @@
             // group2
             // 
             this.group2.Items.Add(this.tglTaskPane);
-            this.group2.Label = "help";
+            this.group2.Items.Add(this.button2);
+            this.group2.Label = "about";
             this.group2.Name = "group2";
             this.group2.Visible = false;
             // 
@@ -840,6 +842,15 @@
             this.tglTaskPane.ShowImage = true;
             this.tglTaskPane.Visible = false;
             this.tglTaskPane.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.tglTaskPane_Click);
+            // 
+            // button2
+            // 
+            this.button2.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.button2.Image = global::GINtool.Properties.Resources.question_mark_icon_flat_21;
+            this.button2.Label = "About";
+            this.button2.Name = "button2";
+            this.button2.ShowImage = true;
+            this.button2.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.button2_Click);
             // 
             // GinRibbon
             // 
@@ -969,6 +980,7 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btnClearRegulonInfo;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup group2;
         internal Microsoft.Office.Tools.Ribbon.RibbonToggleButton tglTaskPane;
+        internal Microsoft.Office.Tools.Ribbon.RibbonButton button2;
     }
 
     partial class ThisRibbonCollection
