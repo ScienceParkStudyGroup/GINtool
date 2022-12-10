@@ -3204,21 +3204,24 @@ namespace GINtool
         {
             gSettings.regInfoIdColumn = ddRegInfoId.SelectedItem.Label;
             SetFlags(UPDATE_FLAGS.ALL);
-            LoadRegulonInfoData();
+            gRegulonInfoFileSelected = LoadRegulonInfoData();
+            EnableSelectButton();
         }
 
         private void ddRegInfoSize_SelectionChanged(object sender, RibbonControlEventArgs e)
         {
             gSettings.regInfoSizeColumn = ddRegInfoSize.SelectedItem.Label;
             SetFlags(UPDATE_FLAGS.ALL);
-            LoadRegulonInfoData();
+            gRegulonInfoFileSelected = LoadRegulonInfoData();
+            EnableSelectButton();
         }
 
         private void ddRegInfoFunction_SelectionChanged(object sender, RibbonControlEventArgs e)
         {
             gSettings.regInfoFunctionColumn = ddRegInfoFunction.SelectedItem.Label;
             SetFlags(UPDATE_FLAGS.ALL);
-            LoadRegulonInfoData();
+            gRegulonInfoFileSelected = LoadRegulonInfoData();
+            EnableSelectButton();
         }
 
         private void splitBtnGenesFile_Click(object sender, RibbonControlEventArgs e)

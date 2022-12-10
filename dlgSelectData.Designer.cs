@@ -69,7 +69,7 @@ namespace GINtool
             this.tbP.Name = "tbP";
             this.tbP.Size = new System.Drawing.Size(170, 20);
             this.tbP.TabIndex = 12;
-            this.tbP.Validated += new System.EventHandler(this.tbP_Validated);
+            this.tbP.Leave += new System.EventHandler(this.tbP_Leave);            
             // 
             // groupBox2
             // 
@@ -92,7 +92,7 @@ namespace GINtool
             this.tbFC.Name = "tbFC";
             this.tbFC.Size = new System.Drawing.Size(170, 20);
             this.tbFC.TabIndex = 11;
-            this.tbFC.Validated += new System.EventHandler(this.tbFC_Validated);
+            this.tbFC.Leave += new System.EventHandler(this.tbFC_Leave);            
             // 
             // tbBSU
             // 
@@ -100,7 +100,7 @@ namespace GINtool
             this.tbBSU.Name = "tbBSU";
             this.tbBSU.Size = new System.Drawing.Size(170, 20);
             this.tbBSU.TabIndex = 10;
-            this.tbBSU.Validated += new System.EventHandler(this.tbBSU_Validated);
+            this.tbBSU.Leave += new System.EventHandler(this.tbBSU_Leave);            
             // 
             // label2
             // 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 
@@ -15,7 +16,7 @@ namespace GINtool
         Excel.Range rangeFC;
         Excel.Range rangeP;
 
-
+        bool fcischanging = false;
         public Excel.Application theApp = null;
         protected override void OnLoad(EventArgs e)
         {
@@ -63,9 +64,24 @@ namespace GINtool
 
         private (string, int) cell2colint(string cell)
         {
-            string[] _r = cell.Split('$');
+            if (cell.Length == 0)
+                return ("", 0);
+            // The first item can be a reference to a worksheet, split from string
+            string[] _cell = cell.Split('!');
+    
+            string _r = _cell.Last().Replace("$","");            
+            // return only digits
+            string regexp = @"\D+";            
+            string[] digits = Regex.Split(_r, regexp);
 
-            return (_r[1], Int32.Parse(_r[2]));
+            // expect the number to be the last part 
+            string value = digits.Last();            
+            string letters = _r.Replace(value, "");            
+
+            // remove possible whitespace  
+            letters = letters.Replace(" ", "");
+            
+            return (letters, Int32.Parse(value));
         }
 
         private string colint2cell(string col, int r)
@@ -181,10 +197,10 @@ namespace GINtool
 
             rangeBSU = (Excel.Range)range;
 
-            if (cbHeader.Checked)
-                tbBSU.Text = string.Format("{0}!{1}", rangeBSU.Worksheet.Name, stripheader(rangeBSU));
-            else
-                tbBSU.Text = string.Format("{0}!{1}", rangeBSU.Worksheet.Name, rangeBSU.Address.ToString());
+            //if (cbHeader.Checked)
+            //    tbBSU.Text = string.Format("{0}!{1}", rangeBSU.Worksheet.Name, stripheader(rangeBSU));
+            //else
+            tbBSU.Text = string.Format("{0}!{1}", rangeBSU.Worksheet.Name, rangeBSU.Address.ToString());
 
         }
 
@@ -250,10 +266,10 @@ namespace GINtool
 
             rangeP = range;
 
-            if (cbHeader.Checked)
-                tbP.Text = string.Format("{0}!{1}", range.Worksheet.Name, stripheader(rangeP));
-            else
-                tbP.Text = string.Format("{0}!{1}", range.Worksheet.Name, rangeP.Address.ToString());
+            //if (cbHeader.Checked)
+            //    tbP.Text = string.Format("{0}!{1}", range.Worksheet.Name, stripheader(rangeP));
+            //else
+            tbP.Text = string.Format("{0}!{1}", range.Worksheet.Name, rangeP.Address.ToString());
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -274,10 +290,10 @@ namespace GINtool
 
             rangeFC = range;
 
-            if (cbHeader.Checked)
-                tbFC.Text = string.Format("{0}!{1}", range.Worksheet.Name, stripheader(rangeFC));
-            else
-                tbFC.Text = string.Format("{0}!{1}", range.Worksheet.Name, rangeFC.Address.ToString());
+            //if (cbHeader.Checked)
+            //    tbFC.Text = string.Format("{0}!{1}", range.Worksheet.Name, stripheader(rangeFC));
+            //else
+            tbFC.Text = string.Format("{0}!{1}", range.Worksheet.Name, rangeFC.Address.ToString());
         }
 
 
@@ -298,8 +314,8 @@ namespace GINtool
             }
 
             int offset = 0;
-            if (cbHeader.Checked)
-                offset = 1;
+            //if (cbHeader.Checked)
+            //    offset = 1;
 
             string stStart = colint2cell(firstc, firstr + offset);
             string stdEnd = colint2cell(lastc, lastr);
@@ -338,50 +354,75 @@ namespace GINtool
 
         }
 
-
-
-        private void tbBSU_Validated(object sender, EventArgs e)
+        private void tbBSU_Leave(object sender, EventArgs e)
         {
-            (bool result, Excel.Range lRange) = ValidateTextBox2(tbBSU, rangeBSU);
-            if (result)
+            string rstr = tbBSU.Text;
+            if (rstr.Length > 0)
             {
-                rangeBSU = lRange;
-                tbBSU.Text = string.Format("{0}!{1}", rangeBSU.Worksheet.Name, rangeBSU.Address.ToString());
-            }
-            else
-            {
-                if (rangeBSU != null)
+                if (rangeBSU == null)
+                    rangeBSU = theApp.Range[tbBSU.Text];
+
+                (bool result, Excel.Range lRange) = ValidateTextBox2(tbBSU, rangeBSU);
+                if (result)
+                {
+                    rangeBSU = lRange;
                     tbBSU.Text = string.Format("{0}!{1}", rangeBSU.Worksheet.Name, rangeBSU.Address.ToString());
+                }
+                else
+                {
+                    if (rangeBSU != null)
+                        tbBSU.Text = string.Format("{0}!{1}", rangeBSU.Worksheet.Name, rangeBSU.Address.ToString());
+                }
             }
         }
 
-        private void tbFC_Validated(object sender, EventArgs e)
+        private void tbFC_Leave(object sender, EventArgs e)
         {
-            (bool result, Excel.Range lRange) = ValidateTextBox2(tbFC, rangeFC);
-            if (result)
+            
+            string rstr = tbFC.Text;
+            if (rstr.Length > 0)
             {
-                rangeFC = lRange;
-                tbFC.Text = string.Format("{0}!{1}", rangeFC.Worksheet.Name, rangeFC.Address.ToString());
-            }
-            else
-            {
-                if (rangeFC != null)
+                if (rangeFC == null)
+                    rangeFC = theApp.Range[tbFC.Text];
+
+
+                (bool result, Excel.Range lRange) = ValidateTextBox2(tbFC, rangeFC);
+                if (result)
+                {
+                    rangeFC = lRange;
                     tbFC.Text = string.Format("{0}!{1}", rangeFC.Worksheet.Name, rangeFC.Address.ToString());
+                }
+                else
+                {
+                    if (rangeFC != null)
+                        tbFC.Text = string.Format("{0}!{1}", rangeFC.Worksheet.Name, rangeFC.Address.ToString());
+                }
+
             }
+
         }
 
-        private void tbP_Validated(object sender, EventArgs e)
+        private void tbP_Leave(object sender, EventArgs e)
         {
-            (bool result, Excel.Range lRange) = ValidateTextBox2(tbP, rangeP);
-            if (result)
+
+            string rstr = tbP.Text;
+            if (rstr.Length > 0)
             {
-                rangeP = lRange;
-                tbP.Text = string.Format("{0}!{1}", rangeP.Worksheet.Name, rangeP.Address.ToString());
-            }
-            else
-            {
-                if (rangeP != null)
+                if (rangeP == null)
+                    rangeP = theApp.Range[tbP.Text];
+
+                (bool result, Excel.Range lRange) = ValidateTextBox2(tbP, rangeP);
+                if (result)
+                {
+                    rangeP = lRange;
                     tbP.Text = string.Format("{0}!{1}", rangeP.Worksheet.Name, rangeP.Address.ToString());
+                }
+                else
+                {
+                    if (rangeP != null)
+                        tbP.Text = string.Format("{0}!{1}", rangeP.Worksheet.Name, rangeP.Address.ToString());
+                }
+                
             }
         }
     }
