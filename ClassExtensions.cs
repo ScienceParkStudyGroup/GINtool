@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.OleDb;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -22,6 +23,7 @@ namespace GINtool
         {
             return date.AddDays(1);
         }
+        
 
         public static double fisherz(double r)
         {
@@ -107,9 +109,41 @@ namespace GINtool
             return 2.0 * Gauss(-y); // ACM algorithm 209
         }
 
-
-        public static double paverage(this List<double> list)
+        /// <summary>
+        /// Return Fisher Statistic based on Geometric Mean of p-values 
+        /// </summary>
+        /// <param name="List"></param>
+        /// <returns></returns>
+        public static double pgm(this List<double> List)
         {
+            double sum = 0;
+            foreach(double pVal in List)
+            {
+                sum += Math.Log(pVal);
+            }            
+            return -2 * sum;
+        }
+
+        // average using Harmonic mean p-value
+        public static double paverage_hmp(this List<double> List)
+        {
+            double w = 1 / (double) List.Count;
+            double sum = 0;
+            foreach (double pVal in List)
+            {
+                sum += w/pVal;
+            }
+            return 1/sum;
+        }
+
+        public static double paverage_fisher_new(this List<double> list)
+        {
+            double AvgP = list.pgm();
+            return 1-MathNet.Numerics.Distributions.ChiSquared.CDF(list.Count*2, AvgP);
+        }
+
+        public static double paverage_fisher(this List<double> list)
+        {            
             List<double> _fz = list.Select(x => fisherz(x)).ToList();
             double AvgP = _fz.Average();
             return fzBack(AvgP);

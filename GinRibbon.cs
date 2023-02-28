@@ -1776,9 +1776,9 @@ namespace GINtool
                     __Neg.fc_mad = _fcsN.Count > 0 ? _fcsN.mad() : Double.NaN;
 
 
-                    __Pos.p_average = _pvaluesP.Count > 0 ? _pvaluesP.paverage() : Double.NaN;
-                    __Neg.p_average = _pvaluesN.Count > 0 ? _pvaluesN.paverage() : Double.NaN;
-                    __All.p_average = _pvaluesA.Count > 0 ? _pvaluesA.paverage() : Double.NaN;
+                    __Pos.p_average = _pvaluesP.Count > 0 ? _pvaluesP.paverage_hmp() : Double.NaN;
+                    __Neg.p_average = _pvaluesN.Count > 0 ? _pvaluesN.paverage_hmp() : Double.NaN;
+                    __All.p_average = _pvaluesA.Count > 0 ? _pvaluesA.paverage_hmp() : Double.NaN;
 
                     __Pos.p_mad = _pvaluesP.Count > 0 ? _pvaluesP.mad() : Double.NaN;
                     __Neg.p_mad = _pvaluesN.Count > 0 ? _pvaluesN.mad() : Double.NaN;
@@ -1969,9 +1969,9 @@ namespace GINtool
                     __Rep.p_values = _pvaluesR.Count > 0 ? _pvaluesR.ToArray() : new double[0];// { };
                     __All.p_values = _pvaluesT.Count > 0 ? _pvaluesT.ToArray() : new double[0];// { };
 
-                    __Act.p_average = _pvaluesA.Count > 0 ? _pvaluesA.paverage() : Double.NaN;
-                    __Rep.p_average = _pvaluesR.Count > 0 ? _pvaluesR.paverage() : Double.NaN;
-                    __All.p_average = _pvaluesT.Count > 0 ? _pvaluesT.paverage() : Double.NaN;
+                    __Act.p_average = _pvaluesA.Count > 0 ? _pvaluesA.paverage_hmp() : Double.NaN;
+                    __Rep.p_average = _pvaluesR.Count > 0 ? _pvaluesR.paverage_hmp() : Double.NaN;
+                    __All.p_average = _pvaluesT.Count > 0 ? _pvaluesT.paverage_hmp() : Double.NaN;
 
                     __Act.p_mad = _pvaluesA.Count > 0 ? _pvaluesA.mad() : Double.NaN;
                     __Rep.p_mad = _pvaluesR.Count > 0 ? _pvaluesR.mad() : Double.NaN;
