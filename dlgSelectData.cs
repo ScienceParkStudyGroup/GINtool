@@ -16,7 +16,7 @@ namespace GINtool
         Excel.Range rangeFC;
         Excel.Range rangeP;
 
-        bool fcischanging = false;
+        // bool fcischanging = false;
         public Excel.Application theApp = null;
         protected override void OnLoad(EventArgs e)
         {

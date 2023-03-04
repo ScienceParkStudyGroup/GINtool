@@ -2,6 +2,7 @@
 
 using Microsoft.Office.Tools.Ribbon;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data;
@@ -10,12 +11,16 @@ using System.Linq;
 using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 using SysData = System.Data;
-
+using stat_dict = System.Collections.Generic.Dictionary<string, double>;
+using rank_dict = System.Collections.Generic.Dictionary<string, int>;
+using dict_rank = System.Collections.Generic.Dictionary<int, string>;
+using lib_dict = System.Collections.Generic.Dictionary<string, string[]>;
 //certificate CdF7RoqS9KXLvWtk6OZf chk
 
 
 namespace GINtool
 {
+    using gsea_dict = System.Collections.Generic.Dictionary<string, GINtool.S_GSEA>;
 
     /// <summary>
     /// The main class of the Excel Addin
@@ -56,7 +61,11 @@ namespace GINtool
         /// <value>gRegulonInfoColNames contains the columns names of the regulon info file</value>
         private string[] gRegulonInfoColNames = new string[] { };
 
-
+        Dictionary<string, DataItem> gDataSetDict = new Dictionary<string, DataItem>();
+        lib_dict gCategoryDict = new Dictionary<string, string[]>();
+        lib_dict gRegulonDict = new Dictionary<string, string[]>();
+        Hashtable gFgseaHash = new Hashtable();
+        gsea_dict gGSEA_dict = new gsea_dict();
 
         //readonly string gCategoryGeneColumn = "locus_tag"; // the fixed column name that refers to the genes inthe category csv file
         Excel.Application gApplication = null;
@@ -548,7 +557,7 @@ namespace GINtool
         /// <param name="theCells"></param>
         /// <returns>A list of data genes</returns>
         private List<BsuLinkedItems> AugmentWithRegulonData(List<BsuLinkedItems> theInputData)
-        {
+        {            
 
             AddTask(TASKS.AUGMENTING_WITH_REGULON_DATA);
 
@@ -559,8 +568,7 @@ namespace GINtool
             // loop of the number of rows in rangeBSU
 
             foreach (BsuLinkedItems _it in theInputData)
-            {
-
+            {                
                 if ((_it.BSU.Length > 0) & !(gRegulonWB is null))
                 {
                     // find the entries that are linked by the same gene
@@ -595,12 +603,14 @@ namespace GINtool
                                 _it.Regulons.Add(new RegulonItem(item, "NOT DEFINED"));
                             }
 
-                        }
-                        
-
-
+                        }                        
                     }
                 }
+            }
+
+            foreach (BsuLinkedItems _it in theInputData)
+            {
+                gRegulonDict.Add(_it.GeneName, _it.Regulons.Select(r => r.Name).ToArray());
             }
 
             RemoveTask(TASKS.AUGMENTING_WITH_REGULON_DATA);
@@ -981,7 +991,7 @@ namespace GINtool
                 if (!IsErrorCell(rangeFC[_r, 1]))
                     if (!Double.TryParse(rangeFC[_r, 1].ToString(), out lFC))
                         lFC = 0;
-
+                              
                 // create a mapping entry .. not annotated with category data (yet!)
                 BsuLinkedItems lMap = new BsuLinkedItems(lFC, lPvalue, lBSU);
 
@@ -998,9 +1008,13 @@ namespace GINtool
                     }
                 }
 
+                DataItem lItem = new DataItem
+                {
+                    pval = lMap.PVALUE,
+                    FC = lMap.FC
+                };
 
-
-
+                gDataSetDict.Add(lMap.GeneName, lItem);
 
                 lList.Add(lMap);
             }
@@ -2679,13 +2693,17 @@ namespace GINtool
             /// <value>Create category plot</value>
             CATEGORY_CHART,
             /// <value>Create regulon plot</value>
-            REGULON_CHART
+            REGULON_CHART,
+            /// <value>Enrichment score calibration</value>
+            ES_CALIBRATION,
+            /// <value>Calculate enrichment scores</value>
+            ES_CALCULATION
         };
 
         public string[] taks_strings = new string[] { "Ready", "Load genes data","Load regulon data", "Load operon data", "Load category data",
         "Augmenting with gene data", "Augmenting with with regulon data", "Augmenting with category data", "Read sheet data", "Read sheet categorized data",
             "Update mapping table", "Update summary table", "Update combined table", "Update operon table", "Color cells", "Create category chart",
-            "Create regulon chart" };
+            "Create regulon chart", "Calibrate enrichment scores", "Calculate enrichment scores"};
 
         private enum FOCUS_ITEMS : int
         {
@@ -2937,6 +2955,7 @@ namespace GINtool
                 gRangeBSU = sd.getBSU();
                 gRangeFC = sd.getFC();
                 gRangeP = sd.getP();
+
 
                 gList = ReadDataAndAugment();
 

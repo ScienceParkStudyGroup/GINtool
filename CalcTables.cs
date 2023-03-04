@@ -1,10 +1,17 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 using SysData = System.Data;
+using static GINtool.ES_Functions;
+using stat_dict = System.Collections.Generic.Dictionary<string, double>;
+using rank_dict = System.Collections.Generic.Dictionary<string, int>;
+using dict_rank = System.Collections.Generic.Dictionary<int, string>;
+using lib_dict = System.Collections.Generic.Dictionary<string, string[]>;
+using Microsoft.Office.Core;
 
 
 namespace GINtool
@@ -206,6 +213,9 @@ namespace GINtool
                     lResults = AugmentWithRegulonData(lResults);
 
                 RemoveTask(TASKS.READ_SHEET_DATA);
+
+                CalibrateES();
+
                 return lResults;
             }
             catch
@@ -217,6 +227,30 @@ namespace GINtool
             }
 
         }
+
+        private void CalibrateES()
+        {
+
+            if (gCategoryDict.Count == 0 && gRegulonDict.Count == 0)
+                return;
+
+            AddTask(TASKS.ES_CALIBRATION);
+
+            // gsea_calibrate(stat_dict signature, lib_dict library, ref Hashtable hashtable, int permutations = 2000, int anchors = 20, int min_size = 5, int max_size = 10000, bool verbose = false, bool symmetric = true, bool signature_cache = true, bool shared_null = false, int seed = 0)
+            stat_dict _tmp = new stat_dict();
+            foreach (KeyValuePair<string, DataItem> record in gDataSetDict)
+            {
+                _tmp.Add(record.Key, record.Value.FC);
+            }
+            gsea_calibrate(_tmp, gRegulonDict, ref gFgseaHash, min_size:1);
+            
+            RemoveTask(TASKS.ES_CALIBRATION);
+
+            AddTask(TASKS.ES_CALCULATION);
+            gGSEA_dict = gsea_enrich(_tmp, gRegulonDict, gFgseaHash, min_size: 1);
+            RemoveTask(TASKS.ES_CALCULATION);
+        }
+
 
 
         /// <summary>

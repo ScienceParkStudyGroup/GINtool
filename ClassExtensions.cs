@@ -6,7 +6,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace GINtool
-{
+{    
+
     internal static class ClassExtensions
     {
 
@@ -136,11 +137,11 @@ namespace GINtool
             return 1/sum;
         }
 
-        public static double paverage_fisher_new(this List<double> list)
-        {
-            double AvgP = list.pgm();
-            return 1-MathNet.Numerics.Distributions.ChiSquared.CDF(list.Count*2, AvgP);
-        }
+        //public static double paverage_fisher_new(this List<double> list)
+        //{
+        //    double AvgP = list.pgm();
+        //    return 1-MathNet.Numerics.Distributions.ChiSquared.CDF(list.Count*2, AvgP);
+        //}
 
         public static double paverage_fisher(this List<double> list)
         {            
