@@ -15,6 +15,7 @@ namespace GINtool
     internal class DataItem
     {
         public double FC, pval;
+        public string BSU;
     }
 
     internal class RegulonItem

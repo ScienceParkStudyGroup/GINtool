@@ -64,8 +64,11 @@ namespace GINtool
         Dictionary<string, DataItem> gDataSetDict = new Dictionary<string, DataItem>();
         lib_dict gCategoryDict = new Dictionary<string, string[]>();
         lib_dict gRegulonDict = new Dictionary<string, string[]>();
+        lib_dict gCombinedDict = new Dictionary<string, string[]>();
         Hashtable gFgseaHash = new Hashtable();
         gsea_dict gGSEA_dict = new gsea_dict();
+        Dictionary<string, string> gBSU_gene_dict = new Dictionary<string, string>();
+        stat_dict gDataSetStat_dict = new stat_dict();
 
         //readonly string gCategoryGeneColumn = "locus_tag"; // the fixed column name that refers to the genes inthe category csv file
         Excel.Application gApplication = null;
@@ -608,10 +611,11 @@ namespace GINtool
                 }
             }
 
-            foreach (BsuLinkedItems _it in theInputData)
-            {
-                gRegulonDict.Add(_it.GeneName, _it.Regulons.Select(r => r.Name).ToArray());
-            }
+            //foreach (BsuLinkedItems _it in theInputData)
+            //{               
+            //    if (_it.GeneName!="")
+            //        gRegulonDict.Add(_it.GeneName, _it.Regulons.Select(r => r.Name).ToArray());
+            //}
 
             RemoveTask(TASKS.AUGMENTING_WITH_REGULON_DATA);
             return theInputData;
@@ -660,6 +664,13 @@ namespace GINtool
 
                 }
             }
+            
+            //foreach (BsuLinkedItems _it in theInputData)
+            //{
+            //    if (_it.GeneName != "")
+            //        gCategoryDict.Add(_it.GeneName, _it.Categories.Select(r => r.catID).ToArray());
+            //}
+
 
             RemoveTask(TASKS.AUGMENTING_WITH_CATEGORY_DATA);
             return theInputData;
@@ -971,7 +982,8 @@ namespace GINtool
             object[,] rangeFC = theCells[1].Value2;
             object[,] rangeP = theCells[0].Value2;
 
-
+            //gDataSetStat_dict.Clear();
+            gDataSetDict.Clear();            
             // Initialize the list
             List<BsuLinkedItems> lList = new List<BsuLinkedItems>();
 
@@ -1011,13 +1023,27 @@ namespace GINtool
                 DataItem lItem = new DataItem
                 {
                     pval = lMap.PVALUE,
-                    FC = lMap.FC
+                    FC = lMap.FC,
+                    BSU = lMap.BSU
                 };
 
-                gDataSetDict.Add(lMap.GeneName, lItem);
+                try
+                {
+                    //gDataSetStat_dict.Add(lMap.BSU, lItem.FC);                    
+                    gDataSetDict.Add(lMap.BSU, lItem);          
+                    // map for BSU to gene ... might be deleted later .. 
+                    gBSU_gene_dict.Add(lMap.BSU, lMap.GeneName);
+                }
+                catch
+                {
+                    gApplication.StatusBar = String.Format("no information for BSU ({0}) number was found ", lMap.BSU);
+                }
 
                 lList.Add(lMap);
             }
+
+            // focus GSEA on absolute values ONLY!! because of directionality .. 
+            gDataSetStat_dict = gDataSetDict.ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
 
             RemoveTask(TASKS.AUGMENTING_WITH_GENES_INFO);
 
@@ -1300,8 +1326,7 @@ namespace GINtool
         /// Reset main variables to initial values
         /// </summary>
         private void ResetTables()
-        {
-
+        {          
             gList = null;
             gOldRangeBSU = "";
             gOldRangeFC = "";
@@ -1711,7 +1736,7 @@ namespace GINtool
 
                 if (dataView.Count > 0) // set this to true to output all results.. also the zeros
                 {
-                    SysData.DataTable _dt = dataView.ToTable(true, "Gene", "FC", "Pvalue");
+                    SysData.DataTable _dt = dataView.ToTable(true, "Gene_ID", "FC", "Pvalue");
 
                     summaryInfo __All = new summaryInfo();
                     summaryInfo __Pos = new summaryInfo();
@@ -1747,20 +1772,20 @@ namespace GINtool
 
                             double fc = (double)_dt.Rows[i]["FC"];
 
-                            chk_Genes.Add(_dt.Rows[i]["Gene"].ToString());
-                            _genesA.Add(_dt.Rows[i]["Gene"].ToString());
+                            chk_Genes.Add(_dt.Rows[i]["Gene_ID"].ToString());
+                            _genesA.Add(_dt.Rows[i]["Gene_ID"].ToString());
                             _fcsA.Add(fc);
                             _pvaluesA.Add(double.Parse(_dt.Rows[i]["Pvalue"].ToString()));
 
                             if (fc > 0) // was if (fc >= 0) , 19-10-22
                             {
-                                _genesP.Add(_dt.Rows[i]["Gene"].ToString());
+                                _genesP.Add(_dt.Rows[i]["Gene_ID"].ToString());
                                 _fcsP.Add(fc);
                                 _pvaluesP.Add(double.Parse(_dt.Rows[i]["Pvalue"].ToString()));
                             }
                             else if (fc < 0)
                             {
-                                _genesN.Add(_dt.Rows[i]["Gene"].ToString());
+                                _genesN.Add(_dt.Rows[i]["Gene_ID"].ToString());
                                 _fcsN.Add(fc);
                                 _pvaluesN.Add(double.Parse(_dt.Rows[i]["Pvalue"].ToString()));
                             }
@@ -1790,9 +1815,23 @@ namespace GINtool
                     __Neg.fc_mad = _fcsN.Count > 0 ? _fcsN.mad() : Double.NaN;
 
 
-                    __Pos.p_average = _pvaluesP.Count > 0 ? _pvaluesP.paverage_hmp() : Double.NaN;
-                    __Neg.p_average = _pvaluesN.Count > 0 ? _pvaluesN.paverage_hmp() : Double.NaN;
-                    __All.p_average = _pvaluesA.Count > 0 ? _pvaluesA.paverage_hmp() : Double.NaN;
+                    //__Pos.p_average = _pvaluesP.Count > 0 ? _pvaluesP.paverage_hmp() : Double.NaN;
+                    //__Neg.p_average = _pvaluesN.Count > 0 ? _pvaluesN.paverage_hmp() : Double.NaN;
+                    //__All.p_average = _pvaluesA.Count > 0 ? _pvaluesA.paverage_hmp() : Double.NaN;
+
+                    double _pp, _pfdr;
+                    (_pp,_pfdr) = calcES(_genesP.ToArray());
+                    __Pos.p_average = _pvaluesP.Count > 0 ? _pp : Double.NaN;
+                    __Pos.p_fdr = _pfdr;
+                    
+                    (_pp, _pfdr) = calcES(_genesN.ToArray());
+                    __Neg.p_average = _pvaluesN.Count > 0 ? _pp : Double.NaN;
+                    __Neg.p_fdr = _pfdr;
+
+                    (_pp, _pfdr) = calcES(_genesA.ToArray());
+                    __All.p_average = _pvaluesA.Count > 0 ? _pp : Double.NaN;
+                    __All.p_fdr = _pfdr;
+
 
                     __Pos.p_mad = _pvaluesP.Count > 0 ? _pvaluesP.mad() : Double.NaN;
                     __Neg.p_mad = _pvaluesN.Count > 0 ? _pvaluesN.mad() : Double.NaN;
@@ -1929,7 +1968,7 @@ namespace GINtool
                         for (int i = 0; i < _dataTable.Rows.Count; i++)
                         {
                             double fc = (double)_dataTable.Rows[i]["FC"];
-                            string _geneName = _dataTable.Rows[i]["Gene"].ToString();
+                            string _geneName = _dataTable.Rows[i]["Gene_ID"].ToString();
                             _genesT.Add(_geneName);
                             _fcsT.Add(fc);
                             _pvaluesT.Add(double.Parse(_dataTable.Rows[i]["Pvalue"].ToString()));
@@ -1941,7 +1980,7 @@ namespace GINtool
                         for (int i = 0; i < _inhibited.Length; i++)
                         {
                             double fc = (double)_inhibited[i]["FC"];
-                            string _geneName = _inhibited[i]["Gene"].ToString();
+                            string _geneName = _inhibited[i]["Gene_ID"].ToString();
                             _genesR.Add(_geneName);
                             _fcsR.Add(fc);
                             _pvaluesR.Add(double.Parse(_inhibited[i]["Pvalue"].ToString()));
@@ -1953,7 +1992,7 @@ namespace GINtool
                         for (int i = 0; i < _activated.Length; i++)
                         {
                             double fc = (double)_activated[i]["FC"];
-                            string _geneName = _activated[i]["Gene"].ToString();
+                            string _geneName = _activated[i]["Gene_ID"].ToString();
                             _genesA.Add(_geneName);
                             _fcsA.Add(fc);
                             _pvaluesA.Add(double.Parse(_activated[i]["Pvalue"].ToString()));
@@ -1983,13 +2022,31 @@ namespace GINtool
                     __Rep.p_values = _pvaluesR.Count > 0 ? _pvaluesR.ToArray() : new double[0];// { };
                     __All.p_values = _pvaluesT.Count > 0 ? _pvaluesT.ToArray() : new double[0];// { };
 
-                    __Act.p_average = _pvaluesA.Count > 0 ? _pvaluesA.paverage_hmp() : Double.NaN;
-                    __Rep.p_average = _pvaluesR.Count > 0 ? _pvaluesR.paverage_hmp() : Double.NaN;
-                    __All.p_average = _pvaluesT.Count > 0 ? _pvaluesT.paverage_hmp() : Double.NaN;
+                    //__Act.p_average = _pvaluesA.Count > 0 ? _pvaluesA.paverage_hmp() : Double.NaN;
+                    //__Rep.p_average = _pvaluesR.Count > 0 ? _pvaluesR.paverage_hmp() : Double.NaN;
+                    //__All.p_average = _pvaluesT.Count > 0 ? _pvaluesT.paverage_hmp() : Double.NaN;
+                    
+                    double _pp, _pfdr;
+                    // A = activated
+                    (_pp, _pfdr) = calcES(_genesA.ToArray());
+                    __Act.p_average = _pvaluesA.Count > 0 ?  _pp : Double.NaN;
+                    __Act.p_fdr = _pfdr;
+                    
+                    // R = repressed
+                    (_pp, _pfdr) = calcES(_genesR.ToArray());
+                    __Rep.p_average = _pvaluesR.Count > 0 ? _pp : Double.NaN;
+                    __Rep.p_fdr = _pfdr;
+                    
+                    // T = total
+                    (_pp, _pfdr) = calcES(_genesT.ToArray());
+                    __All.p_average = _pvaluesT.Count > 0 ? _pp: Double.NaN;
+                    __All.p_fdr = _pfdr;
 
                     __Act.p_mad = _pvaluesA.Count > 0 ? _pvaluesA.mad() : Double.NaN;
                     __Rep.p_mad = _pvaluesR.Count > 0 ? _pvaluesR.mad() : Double.NaN;
                     __All.p_mad = _pvaluesT.Count > 0 ? _pvaluesT.mad() : Double.NaN;
+
+
 
                     _All.Add(__All);
                     _Act.Add(__Act);

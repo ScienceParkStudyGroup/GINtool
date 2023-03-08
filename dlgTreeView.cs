@@ -140,11 +140,14 @@ namespace GINtool
 
                     _rownr++;
 
+                    // with update for real level (not iterated level, gave errors for non-existing tree items) (FK 8/3/2023)
+
                     TreeNode node = trv.Nodes.Add(_row[0].ToString());
+                    int ucat = Convert.ToInt32(double.Parse(_row[1].ToString()) / Math.Pow(10, 6 - lvl));
                     // Set ToolTip text to reflect number of sub categories
                     //node.ToolTipText = string.Format("# subcat {0}", _lcats.Rows.Count.ToString());
                     // Store selection code in tag field
-                    node.Tag = accumlevel == "" ? string.Format("{0}", _rownr) : string.Format("{0}.{1}", accumlevel, _rownr);
+                    node.Tag = accumlevel == "" ? string.Format("{0}", _rownr) : string.Format("{0}.{1}", accumlevel, ucat);
 
                     node.ToolTipText = node.Tag.ToString();
 
@@ -752,6 +755,7 @@ namespace GINtool
         public string catNameFormat;
         public double[] p_values;
         public double[] fc_values;
+        public double p_fdr;
         public double p_average;
         public double fc_average;
         public double p_mad;

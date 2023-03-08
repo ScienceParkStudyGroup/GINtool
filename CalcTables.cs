@@ -12,6 +12,7 @@ using rank_dict = System.Collections.Generic.Dictionary<string, int>;
 using dict_rank = System.Collections.Generic.Dictionary<int, string>;
 using lib_dict = System.Collections.Generic.Dictionary<string, string[]>;
 using Microsoft.Office.Core;
+using Accord.Math.Distances;
 
 
 namespace GINtool
@@ -205,6 +206,11 @@ namespace GINtool
             // generate the results for outputting the data and summary
             try
             {
+                gFgseaHash.Clear();
+                gDataSetStat_dict.Clear();
+                gGSEA_dict.Clear();
+                gBSU_gene_dict.Clear();
+
                 List<BsuLinkedItems> lResults = AugmentWithGeneInfo(theInputCells);
 
                 if (CanAugmentWithCategoryData())
@@ -214,18 +220,29 @@ namespace GINtool
 
                 RemoveTask(TASKS.READ_SHEET_DATA);
 
+                // make sure that there are no duplicate keys ... not expected 
+                gCombinedDict = gRegulonDict.Concat(gCategoryDict).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                 CalibrateES();
 
                 return lResults;
             }
-            catch
+            catch (Exception ex) 
             {
-                MessageBox.Show("Are you sure the columns are properly mapped?");
+                MessageBox.Show("Are you sure the columns are properly mapped? " + ex.Message);
                 RemoveTask(TASKS.READ_SHEET_DATA);
 
                 return null;
             }
 
+        }
+
+        private (double, double) calcES(string[] geneset)
+        {
+            //string[] keys = result.Select(i => i.Key).ToArray();
+            double[] _allps = gGSEA_dict.Select(i => i.Value.pval).ToArray();
+            //stat_dict _tmp = gDataSetDict.ToDictionary(kvp => kvp.Key,kvp => Math.Abs(kvp.Value.FC));
+            S_GSEA _result = gsea_calc(gDataSetStat_dict, geneset, gFgseaHash, _allps, min_size: 1);
+            return (_result.pval, _result.fdr);
         }
 
         private void CalibrateES()
@@ -234,20 +251,12 @@ namespace GINtool
             if (gCategoryDict.Count == 0 && gRegulonDict.Count == 0)
                 return;
 
-            AddTask(TASKS.ES_CALIBRATION);
-
-            // gsea_calibrate(stat_dict signature, lib_dict library, ref Hashtable hashtable, int permutations = 2000, int anchors = 20, int min_size = 5, int max_size = 10000, bool verbose = false, bool symmetric = true, bool signature_cache = true, bool shared_null = false, int seed = 0)
-            stat_dict _tmp = new stat_dict();
-            foreach (KeyValuePair<string, DataItem> record in gDataSetDict)
-            {
-                _tmp.Add(record.Key, record.Value.FC);
-            }
-            gsea_calibrate(_tmp, gRegulonDict, ref gFgseaHash, min_size:1);
-            
+            AddTask(TASKS.ES_CALIBRATION);                       
+            gsea_calibrate(gDataSetStat_dict, gCombinedDict, ref gFgseaHash, min_size:1);            
             RemoveTask(TASKS.ES_CALIBRATION);
 
             AddTask(TASKS.ES_CALCULATION);
-            gGSEA_dict = gsea_enrich(_tmp, gRegulonDict, gFgseaHash, min_size: 1);
+            gGSEA_dict = gsea_enrich(gDataSetStat_dict, gCombinedDict, gFgseaHash, min_size: 1);                        
             RemoveTask(TASKS.ES_CALCULATION);
         }
 

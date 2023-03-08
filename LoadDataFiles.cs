@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using Excel = Microsoft.Office.Interop.Excel;
@@ -90,7 +91,7 @@ namespace GINtool
 
             foreach (SysData.DataRow lRow in _tmp.Rows)
             {
-
+                
                 string sw_code = "";
                 string lc_tag = "";
                 string sw_short = "";
@@ -106,6 +107,12 @@ namespace GINtool
                     continue;
                 }
 
+                // update dictionary .. append items if exists
+                List<string> dict_value = new List<string>();
+                if (gCategoryDict.ContainsKey(sw_code))                
+                    dict_value = gCategoryDict[sw_code].ToList();                
+                dict_value.Add(lc_tag);
+                gCategoryDict[sw_code] = dict_value.ToArray();
 
 
                 int[] codes = sw_short.Split('.').Select(str => Int32.Parse(str.Trim())).ToArray();
@@ -349,6 +356,18 @@ namespace GINtool
             gRegulonWB = ExcelUtils.ReadExcelToDatable(gApplication, Properties.Settings.Default.referenceSheetName, Properties.Settings.Default.referenceFile, 1, 1);
 
             RemoveTask(TASKS.LOAD_REGULON_DATA);
+
+            for (int i = 0;i<gRegulonWB.Rows.Count;i++)
+            {
+                string _key = gRegulonWB.Rows[i][colSel[3]].ToString();
+                string _value = gRegulonWB.Rows[i][colSel[0]].ToString();
+                string[] _curval = new string[] { };
+                if (gRegulonDict.ContainsKey(_key))
+                    _curval = gRegulonDict[_key];
+                _curval = _curval.Append(_value).ToArray();
+                gRegulonDict[_key] = _curval; 
+            }
+
             return gRegulonWB != null;
         }
 

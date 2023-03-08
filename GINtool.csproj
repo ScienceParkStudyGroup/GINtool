@@ -36,7 +36,7 @@
     <PublishUrl>D:\Source\Repos\publish\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.73</ApplicationVersion>
+    <ApplicationVersion>1.0.1.1</ApplicationVersion>
     <AutoIncrementApplicationRevision>false</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -294,6 +294,7 @@
     <None Include="app.config" />
     <None Include="GINtool_1_TemporaryKey.pfx" />
     <None Include="GINtool_2_TemporaryKey.pfx" />
+    <None Include="GINtool_3_TemporaryKey.pfx" />
     <None Include="GINtool_TemporaryKey.pfx" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
@@ -399,10 +400,10 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>GINtool_1_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>GINtool_3_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>CF7170495EAC9DA8F5533CD114BF4EE1B8FEF162</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>ACC19C45A258F20CA745561804641C83ADC552BB</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>DNA_icon-icons.com_75035.ico</ApplicationIcon>

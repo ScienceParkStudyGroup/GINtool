@@ -136,6 +136,7 @@ namespace GINtool
             }
             return 1/sum;
         }
+      
 
         //public static double paverage_fisher_new(this List<double> list)
         //{
