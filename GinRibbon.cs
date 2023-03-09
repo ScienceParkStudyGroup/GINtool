@@ -11,10 +11,15 @@ using System.Linq;
 using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 using SysData = System.Data;
+using static GINtool.ES_Extensions;
 using stat_dict = System.Collections.Generic.Dictionary<string, double>;
+using dataset_dict = System.Collections.Generic.Dictionary<string, GINtool.DataItem>;
 using rank_dict = System.Collections.Generic.Dictionary<string, int>;
 using dict_rank = System.Collections.Generic.Dictionary<int, string>;
 using lib_dict = System.Collections.Generic.Dictionary<string, string[]>;
+using Accord.Statistics.Distributions.Univariate;
+using System.Text;
+using System.Security.Cryptography;
 //certificate CdF7RoqS9KXLvWtk6OZf chk
 
 
@@ -61,15 +66,23 @@ namespace GINtool
         /// <value>gRegulonInfoColNames contains the columns names of the regulon info file</value>
         private string[] gRegulonInfoColNames = new string[] { };
 
-        Dictionary<string, DataItem> gDataSetDict = new Dictionary<string, DataItem>();
+        #region ES related variables
+        dataset_dict gDataSetDict = new dataset_dict();
         lib_dict gCategoryDict = new Dictionary<string, string[]>();
         lib_dict gRegulonDict = new Dictionary<string, string[]>();
         lib_dict gCombinedDict = new Dictionary<string, string[]>();
         Hashtable gFgseaHash = new Hashtable();
-        gsea_dict gGSEA_dict = new gsea_dict();
-        Dictionary<string, string> gBSU_gene_dict = new Dictionary<string, string>();
-        stat_dict gDataSetStat_dict = new stat_dict();
-
+        Hashtable gGSEAHash = new Hashtable();
+        Dictionary<string, string> gBSU_gene_dict = new Dictionary<string, string>();        
+        stat_dict gES_signature = new stat_dict();
+        stat_dict gES_signature_ordered = new stat_dict();
+        dict_rank gES_map_signature = new dict_rank();
+        rank_dict gES_signature_map = new rank_dict();
+        string[] gES_signature_genes = new string[] { };
+        double[] gES_sigvalues = new double[] { };
+        double[] gES_abs_signature = new double[] { };
+        string gES_key;
+        #endregion
         //readonly string gCategoryGeneColumn = "locus_tag"; // the fixed column name that refers to the genes inthe category csv file
         Excel.Application gApplication = null;
 
@@ -1043,7 +1056,7 @@ namespace GINtool
             }
 
             // focus GSEA on absolute values ONLY!! because of directionality .. 
-            gDataSetStat_dict = gDataSetDict.ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
+            // gDataSetStat_dict = gDataSetDict.ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
 
             RemoveTask(TASKS.AUGMENTING_WITH_GENES_INFO);
 
@@ -1713,6 +1726,51 @@ namespace GINtool
 
             List<string> chk_Genes = new List<string>();
 
+
+            stat_dict pvalues_all = new stat_dict();
+            stat_dict pvalues_pos = new stat_dict();
+            stat_dict pvalues_neg = new stat_dict();
+
+
+            foreach (cat_elements ce in cat_Elements)
+            {
+                string key = String.Format("SW.{0}", ce.elTag.Split('_')[0]);
+                string key_pos = String.Format("{0}_pos",key);
+                string key_neg = String.Format("{0}_neg", key);
+                
+                if (gGSEAHash.ContainsKey(key)) 
+                    pvalues_all.Add(key, ((S_GSEA)gGSEAHash[key]).pval);
+
+                if (gGSEAHash.ContainsKey(key_pos))
+                    pvalues_pos.Add(key, ((S_GSEA)gGSEAHash[key_pos]).pval);
+
+                if (gGSEAHash.ContainsKey(key_neg))
+                    pvalues_neg.Add(key, ((S_GSEA)gGSEAHash[key_neg]).pval);
+
+            }
+
+            stat_dict pvalues_fdr_all = new stat_dict();
+            stat_dict pvalues_fdr_pos = new stat_dict();   
+            stat_dict pvalues_fdr_neg = new stat_dict();
+
+
+            double[] _pvalues_fdr_all = fdr_correction(pvalues_all.Values.ToArray());
+            double[] _pvalues_fdr_neg = fdr_correction(pvalues_neg.Values.ToArray());
+            double[] _pvalues_fdr_pos = fdr_correction(pvalues_pos.Values.ToArray());
+
+            int cnt = 0;
+            foreach (string key in pvalues_all.Keys)            
+                pvalues_fdr_all.Add(key, _pvalues_fdr_all[cnt++]);
+
+            cnt = 0;
+            foreach (string key in pvalues_neg.Keys)
+                pvalues_fdr_neg.Add(key, _pvalues_fdr_neg[cnt++]);
+            
+            cnt = 0;
+            foreach (string key in pvalues_pos.Keys)
+                pvalues_fdr_pos.Add(key, _pvalues_fdr_pos[cnt++]);
+
+
             foreach (cat_elements ce in cat_Elements)
             {
                 string categories = string.Join(",", ce.elements.ToArray());
@@ -1818,20 +1876,21 @@ namespace GINtool
                     //__Pos.p_average = _pvaluesP.Count > 0 ? _pvaluesP.paverage_hmp() : Double.NaN;
                     //__Neg.p_average = _pvaluesN.Count > 0 ? _pvaluesN.paverage_hmp() : Double.NaN;
                     //__All.p_average = _pvaluesA.Count > 0 ? _pvaluesA.paverage_hmp() : Double.NaN;
+                    // double _pp, _pfdr;
 
-                    double _pp, _pfdr;
-                    (_pp,_pfdr) = calcES(_genesP.ToArray());
-                    __Pos.p_average = _pvaluesP.Count > 0 ? _pp : Double.NaN;
-                    __Pos.p_fdr = _pfdr;
-                    
-                    (_pp, _pfdr) = calcES(_genesN.ToArray());
-                    __Neg.p_average = _pvaluesN.Count > 0 ? _pp : Double.NaN;
-                    __Neg.p_fdr = _pfdr;
 
-                    (_pp, _pfdr) = calcES(_genesA.ToArray());
-                    __All.p_average = _pvaluesA.Count > 0 ? _pp : Double.NaN;
-                    __All.p_fdr = _pfdr;
+                    // (_pp,_pfdr) = calcES(_genesP.ToArray());
+                    string _key = String.Format("SW.{0}", ce.elTag.Split('_')[0]);
+                    __Pos.p_average = pvalues_pos.ContainsKey(_key) ? pvalues_pos[_key] : Double.NaN;
+                    __Pos.p_fdr = pvalues_fdr_pos.ContainsKey(_key) ? pvalues_fdr_pos[_key] : Double.NaN;
 
+                    //(_pp, _pfdr) = calcES(_genesN.ToArray());
+                    __Neg.p_average = pvalues_neg.ContainsKey(_key) ? pvalues_neg[_key] : Double.NaN;
+                    __Neg.p_fdr = pvalues_fdr_neg.ContainsKey(_key) ? pvalues_fdr_neg[_key] : Double.NaN;
+
+                    //(_pp, _pfdr) = calcES(_genesA.ToArray());                    
+                    __All.p_average = pvalues_all.ContainsKey(_key) ? pvalues_all[_key] : Double.NaN;
+                    __All.p_fdr = pvalues_fdr_all.ContainsKey(_key) ? pvalues_all[_key] : Double.NaN; ;
 
                     __Pos.p_mad = _pvaluesP.Count > 0 ? _pvaluesP.mad() : Double.NaN;
                     __Neg.p_mad = _pvaluesN.Count > 0 ? _pvaluesN.mad() : Double.NaN;
@@ -1918,6 +1977,51 @@ namespace GINtool
             List<summaryInfo> _Act = new List<summaryInfo>();
             List<summaryInfo> _Rep = new List<summaryInfo>();
 
+            stat_dict pvalues_all = new stat_dict();
+            stat_dict pvalues_pos = new stat_dict();
+            stat_dict pvalues_neg = new stat_dict();
+           
+
+            stat_dict pvalues_fdr_all = new stat_dict();
+            stat_dict pvalues_fdr_pos = new stat_dict();
+            stat_dict pvalues_fdr_neg = new stat_dict();
+
+
+            //foreach (cat_elements ce in cat_Elements)
+            //{
+            //    string key = ce.catName;
+            //    string key_pos = String.Format("{0}_pos", key);
+            //    string key_neg = String.Format("{0}_neg", key);
+
+            //    if (gGSEAHash.ContainsKey(key))
+            //        pvalues_all.Add(key, ((S_GSEA)gGSEAHash[key]).pval);
+
+            //    if (gGSEAHash.ContainsKey(key_pos))
+            //        pvalues_pos.Add(key, ((S_GSEA)gGSEAHash[key_pos]).pval);
+
+            //    if (gGSEAHash.ContainsKey(key_neg))
+            //        pvalues_neg.Add(key, ((S_GSEA)gGSEAHash[key_neg]).pval);
+
+            //}
+
+            //double[] _pvalues_fdr_all = fdr_correction(pvalues_all.Values.ToArray());
+            //double[] _pvalues_fdr_neg = fdr_correction(pvalues_neg.Values.ToArray());
+            //double[] _pvalues_fdr_pos = fdr_correction(pvalues_pos.Values.ToArray());
+
+            //int cnt = 0;
+            //foreach (string key in pvalues_all.Keys)
+            //    pvalues_fdr_all.Add(key, _pvalues_fdr_all[cnt++]);
+
+            //cnt = 0;
+            //foreach (string key in pvalues_neg.Keys)
+            //    pvalues_fdr_neg.Add(key, _pvalues_fdr_neg[cnt++]);
+
+            //cnt = 0;
+            //foreach (string key in pvalues_pos.Keys)
+            //    pvalues_fdr_pos.Add(key, _pvalues_fdr_pos[cnt++]);
+
+
+
             foreach (cat_elements el in cat_Elements)
             {
                 dataView.RowFilter = String.Format("Regulon='{0}'", el.catName);
@@ -1998,8 +2102,14 @@ namespace GINtool
                             _pvaluesA.Add(double.Parse(_activated[i]["Pvalue"].ToString()));
                         }
 
-                    }
+                       
 
+                    }
+                    double _pvalAll = CalcES(_genesT);
+                    double _pvalPos = CalcES(_genesA);
+                    double _pvalNeg = CalcES(_genesR);
+
+                    // HIER KOMEN DE P_VALUE BEREKENINGEN ... 
 
                     __Act.fc_average = _fcsA.Count > 0 ? _fcsA.AbsAverage() : Double.NaN;
                     __Rep.fc_average = _fcsR.Count > 0 ? -_fcsR.AbsAverage() : Double.NaN;
@@ -2026,21 +2136,34 @@ namespace GINtool
                     //__Rep.p_average = _pvaluesR.Count > 0 ? _pvaluesR.paverage_hmp() : Double.NaN;
                     //__All.p_average = _pvaluesT.Count > 0 ? _pvaluesT.paverage_hmp() : Double.NaN;
                     
-                    double _pp, _pfdr;
-                    // A = activated
-                    (_pp, _pfdr) = calcES(_genesA.ToArray());
-                    __Act.p_average = _pvaluesA.Count > 0 ?  _pp : Double.NaN;
-                    __Act.p_fdr = _pfdr;
+                    //double _pp, _pfdr;
+                    //// A = activated
+                    //(_pp, _pfdr) = calcES(_genesA.ToArray());
+                    //__Act.p_average = _pvaluesA.Count > 0 ?  _pp : Double.NaN;
+                    //__Act.p_fdr = _pfdr;
                     
-                    // R = repressed
-                    (_pp, _pfdr) = calcES(_genesR.ToArray());
-                    __Rep.p_average = _pvaluesR.Count > 0 ? _pp : Double.NaN;
-                    __Rep.p_fdr = _pfdr;
+                    //// R = repressed
+                    //(_pp, _pfdr) = calcES(_genesR.ToArray());
+                    //__Rep.p_average = _pvaluesR.Count > 0 ? _pp : Double.NaN;
+                    //__Rep.p_fdr = _pfdr;
                     
-                    // T = total
-                    (_pp, _pfdr) = calcES(_genesT.ToArray());
-                    __All.p_average = _pvaluesT.Count > 0 ? _pp: Double.NaN;
-                    __All.p_fdr = _pfdr;
+                    //// T = total
+                    //(_pp, _pfdr) = calcES(_genesT.ToArray());
+                    //__All.p_average = _pvaluesT.Count > 0 ? _pp: Double.NaN;
+                    //__All.p_fdr = _pfdr;
+
+                    string _key = el.catName;
+                    __Act.p_average = pvalues_pos.ContainsKey(_key) ? pvalues_pos[_key] : Double.NaN;
+                    __Act.p_fdr = pvalues_fdr_pos.ContainsKey(_key) ? pvalues_fdr_pos[_key] : Double.NaN;
+
+                    //(_pp, _pfdr) = calcES(_genesN.ToArray());
+                    __Rep.p_average = pvalues_neg.ContainsKey(_key) ? pvalues_neg[_key] : Double.NaN;
+                    __Rep.p_fdr = pvalues_fdr_neg.ContainsKey(_key) ? pvalues_fdr_neg[_key] : Double.NaN;
+
+                    //(_pp, _pfdr) = calcES(_genesA.ToArray());                    
+                    __All.p_average = pvalues_all.ContainsKey(_key) ? pvalues_all[_key] : Double.NaN;
+                    __All.p_fdr = pvalues_fdr_all.ContainsKey(_key) ? pvalues_all[_key] : Double.NaN; ;
+
 
                     __Act.p_mad = _pvaluesA.Count > 0 ? _pvaluesA.mad() : Double.NaN;
                     __Rep.p_mad = _pvaluesR.Count > 0 ? _pvaluesR.mad() : Double.NaN;
@@ -2276,7 +2399,7 @@ namespace GINtool
             SysData.DataColumn avgColumn = new SysData.DataColumn("Average", Type.GetType("System.Double"));
             SysData.DataColumn madColumn = new SysData.DataColumn("Mad", Type.GetType("System.Double"));
             SysData.DataColumn avgPColumn = new SysData.DataColumn("P_Average", Type.GetType("System.Double"));
-
+            SysData.DataColumn fdrPColumn = new SysData.DataColumn("P_FDR", Type.GetType("System.Double"));
 
             lTable.Columns.Add(regColumn);
             if (bestMode)
@@ -2291,6 +2414,9 @@ namespace GINtool
             lTable.Columns.Add(madColumn);
 
             lTable.Columns.Add(avgPColumn);
+
+            if(bestMode)
+                lTable.Columns.Add(fdrPColumn);
 
             if (bestMode && gRegulonInfoFileSelected && !gSettings.useCat)
             {
@@ -2320,6 +2446,8 @@ namespace GINtool
                 {
                     lRow["Direction"] = (elements[r].best_gene_percentage == 0.0) ? "not defined" : elements[r].fc_average > 0 ? "activation" : "repression";
                     lRow["Percentage"] = elements[r].best_gene_percentage;
+                    if (!(elements[r].p_fdr is Double.NaN))
+                        lRow["P_FDR"] = elements[r].p_fdr;
                 }
 
                 lRow["Count"] = elements[r].p_values == null ? 0 : elements[r].p_values.Count();

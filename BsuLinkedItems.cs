@@ -12,7 +12,7 @@ namespace GINtool
 
     };
 
-    internal class DataItem
+    public class DataItem
     {
         public double FC, pval;
         public string BSU;

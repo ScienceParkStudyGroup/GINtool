@@ -434,6 +434,7 @@ namespace GINtool
             lNewSheet.Cells[hdrRow, 23] = "Average signed FC";
             lNewSheet.Cells[hdrRow, 24] = "MAD ABS(FC)";
             lNewSheet.Cells[hdrRow, 25] = "Average P";
+            lNewSheet.Cells[hdrRow, 26] = "P(FDR)";
 
             // Combine positive and negative mode results to obtain a 'best' result
 

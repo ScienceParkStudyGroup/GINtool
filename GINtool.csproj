@@ -400,10 +400,10 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>GINtool_3_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>GINtool_1_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>ACC19C45A258F20CA745561804641C83ADC552BB</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>CF7170495EAC9DA8F5533CD114BF4EE1B8FEF162</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>DNA_icon-icons.com_75035.ico</ApplicationIcon>

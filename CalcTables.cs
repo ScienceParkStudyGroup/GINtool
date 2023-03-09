@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -7,13 +6,10 @@ using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 using SysData = System.Data;
 using static GINtool.ES_Functions;
-using stat_dict = System.Collections.Generic.Dictionary<string, double>;
-using rank_dict = System.Collections.Generic.Dictionary<string, int>;
-using dict_rank = System.Collections.Generic.Dictionary<int, string>;
-using lib_dict = System.Collections.Generic.Dictionary<string, string[]>;
-using Microsoft.Office.Core;
-using Accord.Math.Distances;
-
+using Accord.Statistics.Distributions.Univariate;
+using static GINtool.ES_Extensions;
+using Accord.Math;
+using System.Collections;
 
 namespace GINtool
 {
@@ -207,8 +203,8 @@ namespace GINtool
             try
             {
                 gFgseaHash.Clear();
-                gDataSetStat_dict.Clear();
-                gGSEA_dict.Clear();
+                //gDataSetStat_dict.Clear();
+                //gGSEADict.Clear();
                 gBSU_gene_dict.Clear();
 
                 List<BsuLinkedItems> lResults = AugmentWithGeneInfo(theInputCells);
@@ -236,14 +232,14 @@ namespace GINtool
 
         }
 
-        private (double, double) calcES(string[] geneset)
-        {
-            //string[] keys = result.Select(i => i.Key).ToArray();
-            double[] _allps = gGSEA_dict.Select(i => i.Value.pval).ToArray();
-            //stat_dict _tmp = gDataSetDict.ToDictionary(kvp => kvp.Key,kvp => Math.Abs(kvp.Value.FC));
-            S_GSEA _result = gsea_calc(gDataSetStat_dict, geneset, gFgseaHash, _allps, min_size: 1);
-            return (_result.pval, _result.fdr);
-        }
+        //private (double, double) calcES(string[] geneset)
+        //{
+        //    //string[] keys = result.Select(i => i.Key).ToArray();
+        //    double[] _allps = gGSEADict.Select(i => i.Value.pval).ToArray();
+        //    //stat_dict _tmp = gDataSetDict.ToDictionary(kvp => kvp.Key,kvp => Math.Abs(kvp.Value.FC));
+        //    S_GSEA _result = gsea_calc(gDataSetDict, geneset, gFgseaHash, _allps, min_size: 1);
+        //    return (_result.pval, _result.fdr);
+        //}
 
         private void CalibrateES()
         {
@@ -251,15 +247,43 @@ namespace GINtool
             if (gCategoryDict.Count == 0 && gRegulonDict.Count == 0)
                 return;
 
+
+
+
             AddTask(TASKS.ES_CALIBRATION);                       
-            gsea_calibrate(gDataSetStat_dict, gCombinedDict, ref gFgseaHash, min_size:1);            
+            gsea_calibrate(gDataSetDict, gCombinedDict, ref gFgseaHash, min_size:1);            
             RemoveTask(TASKS.ES_CALIBRATION);
 
             AddTask(TASKS.ES_CALCULATION);
-            gGSEA_dict = gsea_enrich(gDataSetStat_dict, gCombinedDict, gFgseaHash, min_size: 1);                        
+            gsea_enrich(gDataSetDict, gCombinedDict, gFgseaHash, ref gGSEAHash, min_size: 1);                        
             RemoveTask(TASKS.ES_CALCULATION);
+
+            CopyStaticESParameters();
+
+
         }
 
+        private void CopyStaticESParameters()
+        {
+            gES_signature = gDataSetDict.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
+            gES_signature_ordered = gES_signature.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+            gES_map_signature = gES_signature_ordered.MapRank();
+            gES_signature_map = gES_signature_ordered.RankMap();
+            NormalDistribution normal = new NormalDistribution();
+            gES_signature_genes = gES_signature_ordered.Keys.ToArray();                        
+            gES_sigvalues = gES_signature_ordered.Values.ToArray();
+            gES_sigvalues = gES_sigvalues.Plus(Pmult(normal.Generate(gES_sigvalues.Length), 1 / (gES_sigvalues.Average() * 10000)));
+            gES_abs_signature = gES_sigvalues.Abs();
+            gES_key = gFgseaHash.Keys.Cast<string>().First();
+
+
+        }
+
+        private double CalcES(List<string> gene_set)
+        {
+            S_GSEA result = gsea_calc(gES_abs_signature, gES_signature_genes, gES_map_signature, gES_signature_map, gene_set.ToArray(), (S_ESPARAMS) gFgseaHash[gES_key], ref gGSEAHash, min_size: 1);
+            return result.pval;
+        }
 
 
         /// <summary>

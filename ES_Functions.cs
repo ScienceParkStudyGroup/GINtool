@@ -9,6 +9,9 @@ using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
 using static GINtool.ES_Extensions;
+using System.Data;
+using Microsoft.Office.Core;
+
 
 namespace GINtool
 {
@@ -18,6 +21,7 @@ namespace GINtool
     using dict_rank = Dictionary<int, string>;
     using gsea_dict = Dictionary<string, S_GSEA>;
     using lib_dict = Dictionary<string, string[]>;
+    using dataset_dict = Dictionary<string, GINtool.DataItem>;
 
     public static class ES_Functions
     {
@@ -281,7 +285,7 @@ namespace GINtool
         }
 
 
-        public static void gsea_calibrate(stat_dict signature, lib_dict library, ref Hashtable hashtable, int permutations = 2000, int anchors = 20, int min_size = 5, int max_size = 10000, bool verbose = false, bool symmetric = true, bool signature_cache = true, bool shared_null = false, int seed = 0)
+        public static void gsea_calibrate(dataset_dict dataset, lib_dict library, ref Hashtable hashtable, int permutations = 2000, int anchors = 20, int min_size = 5, int max_size = 10000, bool verbose = false, bool symmetric = true, bool signature_cache = true, bool shared_null = false, int seed = 0)
         {
             if (permutations < 1000 && !symmetric)
             {
@@ -295,6 +299,10 @@ namespace GINtool
                     Console.WriteLine("Low numer of permutations can lead to inaccurate p-value estimation. Consider increasing number of permutations.");
                 symmetric = true;
             }
+
+            stat_dict signature = dataset.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
+
+            // stat_dict signature = dataset.ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
 
             Random random = new Random(seed);
             byte[] sig_hash = Hashvalue(signature);
@@ -329,13 +337,74 @@ namespace GINtool
 
         }
 
-
-        public static gsea_dict gsea_enrich(stat_dict signature, lib_dict library, Hashtable hashtable, int min_size = 5, int max_size = 25000)
+        public static S_GSEA gsea_calc_es(double[] abs_signature, dict_rank map_signature, rank_dict signature_map, S_ESPARAMS es_params, string[] geneset)
         {
-            gsea_dict result = new gsea_dict();
+            S_GSEA lib_result = new S_GSEA();
+            int gsize = geneset.Length;
+            double[] rs;
+            double es;
+            (rs, es) = enrichment_score(abs_signature, signature_map, geneset);
+            string legenes = get_leading_edge(rs, map_signature, geneset, signature_map);
 
-            byte[] sig_hash = Hashvalue(signature);
-            string sig_hash_str = System.Text.Encoding.Default.GetString(sig_hash);
+            double pos_alpha = es_params.alpha_pos.predict(gsize);
+            double pos_beta = es_params.beta_pos.predict(gsize);
+            double pos_ratio = es_params.pos_ratio.predict(gsize);
+
+            GammaDistribution gamma = new GammaDistribution(pos_beta, pos_alpha);
+            NormalDistribution normal = new NormalDistribution();
+
+            double prob = 1;
+            double prob_two_tailed = 1;
+            double nes = 0;
+            if (es > 0)
+            {
+                prob = 1 - gamma.ComplementaryDistributionFunction(es);
+                prob_two_tailed = Math.Min(0.5, (1 - Math.Min((1 - pos_ratio) + prob * pos_ratio, 1)));
+
+                if (prob_two_tailed < 1)
+                {
+                    nes = normal.InverseDistributionFunction(1 - Math.Min(1, prob_two_tailed));
+                }
+
+            }
+            else
+            {
+                prob = 1 - gamma.ComplementaryDistributionFunction(-es);
+                prob_two_tailed = Math.Min(0.5, (1 - Math.Min(prob * (1 - pos_ratio) + pos_ratio, 1)));
+                nes = normal.InverseDistributionFunction(Math.Min(1, prob_two_tailed));
+            }
+
+            double pval = 2 * prob_two_tailed;
+            lib_result.pval = pval;
+            lib_result.es = es;
+            lib_result.nes = nes;
+            lib_result.size = gsize;
+            lib_result.leading_edge = legenes;
+
+            return lib_result;
+
+        }
+
+        public static string getHashValue(object x)
+        {
+            byte[] sig_hash = Hashvalue(x);
+            return System.Text.Encoding.Default.GetString(sig_hash);
+            
+        }
+
+
+        // pre calculate expected genesets 
+        public static void gsea_enrich(dataset_dict dataset, lib_dict library, Hashtable hashtable, ref Hashtable hashgsea, int min_size = 5, int max_size = 25000)
+        {
+            //gsea_dict result = new gsea_dict();
+
+            stat_dict signature = dataset.Where(kvp=>kvp.Value.FC!=0).ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
+
+            //byte[] sig_hash = Hashvalue(signature);
+            //string sig_hash_str = System.Text.Encoding.Default.GetString(sig_hash);
+
+            string sig_hash_str = getHashValue(signature);
+
 
             S_ESPARAMS es_params;
             if (!hashtable.ContainsKey(sig_hash_str))
@@ -346,7 +415,6 @@ namespace GINtool
             signature = signature.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
             dict_rank map_signature = signature.MapRank();
             rank_dict signature_map = signature.RankMap();
-
 
             NormalDistribution norm = new NormalDistribution();
 
@@ -359,172 +427,180 @@ namespace GINtool
 
             foreach (string key in library.Keys)
             {
-                S_GSEA lib_result = new S_GSEA();
-                string[] stripped_set = strip_gene_set(signature_genes, library[key]);
+                string[] gene_set = library[key];
+                string[] stripped_set = strip_gene_set(signature_genes, gene_set);                
                 if (stripped_set.Length >= min_size && stripped_set.Length <= max_size)
                 {
-                    gsets.Add(key);
-                    int gsize = stripped_set.Length;
-                    double[] rs;
-                    double es;
-                    (rs, es) = enrichment_score(abs_signature, signature_map, stripped_set);
-                    string legenes = get_leading_edge(rs, map_signature, stripped_set, signature_map);
-                    // 'ABCG1,ABCB1,ABCB8,ABCC3,ABCA8,ABCA9,ABCA7,ABCA1,ABCA6,ABCC8,ABCD4,ABCG2,ABCA10'
-
-                    double pos_alpha = es_params.alpha_pos.predict(gsize);
-                    double pos_beta = es_params.beta_pos.predict(gsize);
-                    double pos_ratio = es_params.pos_ratio.predict(gsize);
-
-
-                    GammaDistribution gamma = new GammaDistribution(pos_beta, pos_alpha);
-
-                    // This does work .. 
-                    //double[] random_results = gamma.Generate(1000);
-                    //double r_pos_mean = random_results.Where(x => x >= 0).DefaultIfEmpty(0).Average();
-                    //double r_neg_mean = random_results.Where(x => x < 0).DefaultIfEmpty(0).Average();
-
-
-                    NormalDistribution normal = new NormalDistribution();
-
-                    double prob = 1;
-                    double prob_two_tailed = 1;
-                    double nes = 0;
-                    if (es > 0)
-                    {
-                        prob = 1 - gamma.ComplementaryDistributionFunction(es);
-                        prob_two_tailed = Math.Min(0.5, (1 - Math.Min((1 - pos_ratio) + prob * pos_ratio, 1)));
-
-                        if (prob_two_tailed < 1)
-                        {
-                            nes = normal.InverseDistributionFunction(1 - Math.Min(1, prob_two_tailed));
-                        }
-
-                    }
-                    else
-                    {
-                        prob = 1 - gamma.ComplementaryDistributionFunction(-es);
-                        prob_two_tailed = Math.Min(0.5, (1 - Math.Min(prob * (1 - pos_ratio) + pos_ratio, 1)));
-                        nes = normal.InverseDistributionFunction(Math.Min(1, prob_two_tailed));
-                    }
-
-                    double pval = 2 * prob_two_tailed;
-                    lib_result.pval = pval;
-                    lib_result.es = es;
-                    lib_result.nes = nes;
-                    lib_result.size = gsize;
-                    lib_result.leading_edge = legenes;
-                    result.Add(key, lib_result);
-
+                    int gsHash = stripped_set.GetHashCode();
+                    if (!hashgsea.ContainsKey(gsHash))                    
+                        //gsets.Add(key);
+                        hashgsea[gsHash] = gsea_calc_es(abs_signature, map_signature, signature_map, es_params, stripped_set);                                            
+                    //result.Add(key, lib_result);
                 }
-
-                //return result;
-
+                string[] gene_set_pos = stripped_set.Where(k => dataset[k].FC > 0).ToArray();
+                string[] stripped_set_pos = strip_gene_set(signature_genes, gene_set_pos);
+                if (stripped_set_pos.Length >= min_size && stripped_set_pos.Length <= max_size)
+                {
+                    int gsHash = stripped_set_pos.GetHashCode();
+                    if (!hashgsea.ContainsKey(gsHash))
+                        hashgsea[gsHash] = gsea_calc_es(abs_signature, map_signature, signature_map, es_params, stripped_set_pos);
+                    // gsets.Add(String.Format("{0}_pos",key));
+                    //S_GSEA lib_result =
+                    //result.Add(String.Format("{0}_pos", key), lib_result);
+                }
+                string[] gene_set_neg = stripped_set.Where(k => dataset[k].FC < 0).ToArray();
+                string[] stripped_set_neg = strip_gene_set(signature_genes, gene_set_neg);                
+                if (stripped_set_neg.Length >= min_size && stripped_set_neg.Length <= max_size)
+                {
+                    int gsHash = stripped_set_neg.GetHashCode();
+                    if (!hashgsea.ContainsKey(gsHash))
+                        hashgsea[gsHash] = gsea_calc_es(abs_signature, map_signature, signature_map, es_params, stripped_set_neg);
+                    
+                    //gsets.Add(String.Format("{0}_neg", key));
+                    //S_GSEA lib_result = gsea_calc_es(abs_signature, map_signature, signature_map, es_params, stripped_set_neg);
+                    //result.Add(String.Format("{0}_neg", key), lib_result);
+                }
             }
 
-            string[] keys = result.Select(i => i.Key).ToArray();
-            double[] _allps = result.Select(i => i.Value.pval).ToArray();
-            double[] _sidak = sidak_correction(_allps);
 
-            double[] _fdrs = fdr_correction(_allps);
+            // perform FDR etc.. later
 
-            int _cnt = 0;
-            foreach (string key in keys)
-            {
-                S_GSEA val = result[key];
-                val.sidak = _sidak[_cnt];
-                val.fdr = _fdrs[_cnt++];
-                result[key] = val;
-            }
+            //string[] keys = result.Select(i => i.Key).ToArray();
+            //double[] _allps = result.Select(i => i.Value.pval).ToArray();
+            //double[] _sidak = sidak_correction(_allps);
+            //double[] _fdrs = fdr_correction(_allps);
 
-            return result;
+            //int _cnt = 0;
+            //foreach (string key in keys)
+            //{
+            //    S_GSEA val = result[key];
+            //    val.sidak = _sidak[_cnt];
+            //    val.fdr = _fdrs[_cnt++];
+            //    result[key] = val;
+            //}
+
+            //return result;
         }
 
-        public static S_GSEA gsea_calc(stat_dict signature, string[] geneset, Hashtable hashtable, double[] _pvalues, int min_size = 5, int max_size = 25000)
-        {
-            gsea_dict result = new gsea_dict();
 
-            byte[] sig_hash = Hashvalue(signature);
-            string sig_hash_str = System.Text.Encoding.Default.GetString(sig_hash);
+        public static S_GSEA gsea_calc(double[] abs_signature, string[] signature_genes, dict_rank map_signature, rank_dict signature_map, string[] geneset, S_ESPARAMS calibrated_model, ref Hashtable hashgsea, int min_size = 5, int max_size = 25000)
+        {            
 
-            S_ESPARAMS es_params;
-            if (!hashtable.ContainsKey(sig_hash_str))
-                throw new Exception("Calibrate first");
-            else
-                es_params = (S_ESPARAMS)hashtable[sig_hash_str];
-
-            signature = signature.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
-
-            dict_rank map_signature = signature.MapRank();
-            rank_dict signature_map = signature.RankMap();
-
-            NormalDistribution normal = new NormalDistribution();
-
-            string[] signature_genes = signature.Keys.ToArray();
-            List<string> gsets = new List<string>();
+//            stat_dict signature = dataset.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));            
+  //          string sig_hash_str = getHashValue(signature);
+            
+            //signature = signature.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+            //dict_rank map_signature = signature.MapRank();
+            //rank_dict signature_map = signature.RankMap();
+            //NormalDistribution norm = new NormalDistribution();
+            //string[] signature_genes = signature.Keys.ToArray();            
             // from here enrichment analysis
-            double[] sigvalues = signature.Values.ToArray();
-            sigvalues = sigvalues.Plus(Pmult(normal.Generate(sigvalues.Length), 1 / (sigvalues.Average() * 10000)));
-            double[] abs_signature = sigvalues.Abs();
+            //double[] sigvalues = signature.Values.ToArray();
+            //sigvalues = sigvalues.Plus(Pmult(norm.Generate(sigvalues.Length), 1 / (sigvalues.Average() * 10000)));
+            //double[] abs_signature = sigvalues.Abs();
 
-            S_GSEA lib_result = new S_GSEA();
-            string[] stripped_set = strip_gene_set(signature_genes, geneset);
+            string[] gene_set = geneset;
+            string[] stripped_set = strip_gene_set(signature_genes, gene_set);
+            int gsHash = stripped_set.GetHashCode();
             if (stripped_set.Length >= min_size && stripped_set.Length <= max_size)
-            {                    
-                int gsize = stripped_set.Length;
-                double[] rs;
-                double es;
-                (rs, es) = enrichment_score(abs_signature, signature_map, stripped_set);
-                string legenes = get_leading_edge(rs, map_signature, stripped_set, signature_map);                
-
-                double pos_alpha = es_params.alpha_pos.predict(gsize);
-                double pos_beta = es_params.beta_pos.predict(gsize);
-                double pos_ratio = es_params.pos_ratio.predict(gsize);
-
-                GammaDistribution gamma = new GammaDistribution(pos_beta, pos_alpha);
-                //NormalDistribution normal = new NormalDistribution();
-
-                double prob = 1;
-                double prob_two_tailed = 1;
-                double nes = 0;
-                if (es > 0)
-                {
-                    prob = 1 - gamma.ComplementaryDistributionFunction(es);
-                    prob_two_tailed = Math.Min(0.5, (1 - Math.Min((1 - pos_ratio) + prob * pos_ratio, 1)));
-
-                    if (prob_two_tailed < 1)
-                    {
-                        nes = normal.InverseDistributionFunction(1 - Math.Min(1, prob_two_tailed));
-                    }
-
-                }
-                else
-                {
-                    prob = 1 - gamma.ComplementaryDistributionFunction(-es);
-                    prob_two_tailed = Math.Min(0.5, (1 - Math.Min(prob * (1 - pos_ratio) + pos_ratio, 1)));
-                    nes = normal.InverseDistributionFunction(Math.Min(1, prob_two_tailed));
-                }
-
-                double pval = 2 * prob_two_tailed;
-                lib_result.pval = pval;
-                lib_result.es = es;
-                lib_result.nes = nes;
-                lib_result.size = gsize;
-                lib_result.leading_edge = legenes;
-
-                double[] _pvals = _pvalues.Append(pval).ToArray();
-
-                double[] _sidak = sidak_correction(_pvals);
-                double[] _fdrs = fdr_correction(_pvals);
-
-                lib_result.fdr = _fdrs.Last();
-                lib_result.sidak = _sidak.Last();
-
+            {                
+                if (!hashgsea.ContainsKey(gsHash))
+                    hashgsea[gsHash] = gsea_calc_es(abs_signature, map_signature, signature_map, calibrated_model, stripped_set);
             }
 
-
-            return lib_result;
-         
+            return hashgsea.ContainsKey(gsHash) ? (S_GSEA)hashgsea[gsHash] : new S_GSEA();
         }
+
+
+
+        //public static S_GSEA gsea_calc(dataset_dict dataset, string[] geneset, Hashtable hashtable, double[] _pvalues, int min_size = 5, int max_size = 25000)
+        //{
+        //    gsea_dict result = new gsea_dict();
+
+        //    stat_dict signature = dataset.ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
+
+        //    byte[] sig_hash = Hashvalue(signature);
+        //    string sig_hash_str = System.Text.Encoding.Default.GetString(sig_hash);
+
+        //    S_ESPARAMS es_params;
+        //    if (!hashtable.ContainsKey(sig_hash_str))
+        //        throw new Exception("Calibrate first");
+        //    else
+        //        es_params = (S_ESPARAMS)hashtable[sig_hash_str];
+
+        //    signature = signature.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+
+        //    dict_rank map_signature = signature.MapRank();
+        //    rank_dict signature_map = signature.RankMap();
+
+        //    NormalDistribution normal = new NormalDistribution();
+
+        //    string[] signature_genes = signature.Keys.ToArray();
+        //    List<string> gsets = new List<string>();
+        //    // from here enrichment analysis
+        //    double[] sigvalues = signature.Values.ToArray();
+        //    sigvalues = sigvalues.Plus(Pmult(normal.Generate(sigvalues.Length), 1 / (sigvalues.Average() * 10000)));
+        //    double[] abs_signature = sigvalues.Abs();
+
+        //    S_GSEA lib_result = new S_GSEA();
+        //    string[] stripped_set = strip_gene_set(signature_genes, geneset);
+        //    if (stripped_set.Length >= min_size && stripped_set.Length <= max_size)
+        //    {                    
+        //        int gsize = stripped_set.Length;
+        //        double[] rs;
+        //        double es;
+        //        (rs, es) = enrichment_score(abs_signature, signature_map, stripped_set);
+        //        string legenes = get_leading_edge(rs, map_signature, stripped_set, signature_map);                
+
+        //        double pos_alpha = es_params.alpha_pos.predict(gsize);
+        //        double pos_beta = es_params.beta_pos.predict(gsize);
+        //        double pos_ratio = es_params.pos_ratio.predict(gsize);
+
+        //        GammaDistribution gamma = new GammaDistribution(pos_beta, pos_alpha);
+        //        //NormalDistribution normal = new NormalDistribution();
+
+        //        double prob = 1;
+        //        double prob_two_tailed = 1;
+        //        double nes = 0;
+        //        if (es > 0)
+        //        {
+        //            prob = 1 - gamma.ComplementaryDistributionFunction(es);
+        //            prob_two_tailed = Math.Min(0.5, (1 - Math.Min((1 - pos_ratio) + prob * pos_ratio, 1)));
+
+        //            if (prob_two_tailed < 1)
+        //            {
+        //                nes = normal.InverseDistributionFunction(1 - Math.Min(1, prob_two_tailed));
+        //            }
+
+        //        }
+        //        else
+        //        {
+        //            prob = 1 - gamma.ComplementaryDistributionFunction(-es);
+        //            prob_two_tailed = Math.Min(0.5, (1 - Math.Min(prob * (1 - pos_ratio) + pos_ratio, 1)));
+        //            nes = normal.InverseDistributionFunction(Math.Min(1, prob_two_tailed));
+        //        }
+
+        //        double pval = 2 * prob_two_tailed;
+        //        lib_result.pval = pval;
+        //        lib_result.es = es;
+        //        lib_result.nes = nes;
+        //        lib_result.size = gsize;
+        //        lib_result.leading_edge = legenes;
+
+        //        double[] _pvals = _pvalues.Append(pval).ToArray();
+
+        //        double[] _sidak = sidak_correction(_pvals);
+        //        double[] _fdrs = fdr_correction(_pvals);
+
+        //        lib_result.fdr = _fdrs.Last();
+        //        lib_result.sidak = _sidak.Last();
+
+        //    }
+
+
+        //    return lib_result;
+
+        //}
 
     }
 }
