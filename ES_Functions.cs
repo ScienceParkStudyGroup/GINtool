@@ -300,7 +300,8 @@ namespace GINtool
                 symmetric = true;
             }
 
-            stat_dict signature = dataset.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
+            //stat_dict signature = dataset.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
+            stat_dict signature = dataset.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.FC);
 
             // stat_dict signature = dataset.ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
 
@@ -398,7 +399,8 @@ namespace GINtool
         {
             //gsea_dict result = new gsea_dict();
 
-            stat_dict signature = dataset.Where(kvp=>kvp.Value.FC!=0).ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
+            //stat_dict signature = dataset.Where(kvp=>kvp.Value.FC!=0).ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
+            stat_dict signature = dataset.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.FC);
 
             //byte[] sig_hash = Hashvalue(signature);
             //string sig_hash_str = System.Text.Encoding.Default.GetString(sig_hash);
@@ -431,7 +433,7 @@ namespace GINtool
                 string[] stripped_set = strip_gene_set(signature_genes, gene_set);                
                 if (stripped_set.Length >= min_size && stripped_set.Length <= max_size)
                 {
-                    int gsHash = stripped_set.GetHashCode();
+                    int gsHash = stripped_set.GetHashCodeValue();
                     if (!hashgsea.ContainsKey(gsHash))                    
                         //gsets.Add(key);
                         hashgsea[gsHash] = gsea_calc_es(abs_signature, map_signature, signature_map, es_params, stripped_set);                                            
@@ -441,7 +443,7 @@ namespace GINtool
                 string[] stripped_set_pos = strip_gene_set(signature_genes, gene_set_pos);
                 if (stripped_set_pos.Length >= min_size && stripped_set_pos.Length <= max_size)
                 {
-                    int gsHash = stripped_set_pos.GetHashCode();
+                    int gsHash = stripped_set_pos.GetHashCodeValue();
                     if (!hashgsea.ContainsKey(gsHash))
                         hashgsea[gsHash] = gsea_calc_es(abs_signature, map_signature, signature_map, es_params, stripped_set_pos);
                     // gsets.Add(String.Format("{0}_pos",key));
@@ -452,7 +454,7 @@ namespace GINtool
                 string[] stripped_set_neg = strip_gene_set(signature_genes, gene_set_neg);                
                 if (stripped_set_neg.Length >= min_size && stripped_set_neg.Length <= max_size)
                 {
-                    int gsHash = stripped_set_neg.GetHashCode();
+                    int gsHash = stripped_set_neg.GetHashCodeValue();
                     if (!hashgsea.ContainsKey(gsHash))
                         hashgsea[gsHash] = gsea_calc_es(abs_signature, map_signature, signature_map, es_params, stripped_set_neg);
                     
@@ -483,7 +485,7 @@ namespace GINtool
         }
 
 
-        public static S_GSEA gsea_calc(double[] abs_signature, string[] signature_genes, dict_rank map_signature, rank_dict signature_map, string[] geneset, S_ESPARAMS calibrated_model, ref Hashtable hashgsea, int min_size = 5, int max_size = 25000)
+        public static S_GSEA gsea_calc(double[] abs_signature, string[] signature_genes, dict_rank map_signature, rank_dict signature_map, IEnumerable<string> geneset, S_ESPARAMS calibrated_model, ref Hashtable hashgsea, int min_size = 5, int max_size = 25000)
         {            
 
 //            stat_dict signature = dataset.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));            
@@ -499,16 +501,16 @@ namespace GINtool
             //sigvalues = sigvalues.Plus(Pmult(norm.Generate(sigvalues.Length), 1 / (sigvalues.Average() * 10000)));
             //double[] abs_signature = sigvalues.Abs();
 
-            string[] gene_set = geneset;
+            string[] gene_set = geneset.ToArray();
             string[] stripped_set = strip_gene_set(signature_genes, gene_set);
-            int gsHash = stripped_set.GetHashCode();
+            int gsHash = stripped_set.GetHashCodeValue();
             if (stripped_set.Length >= min_size && stripped_set.Length <= max_size)
             {                
                 if (!hashgsea.ContainsKey(gsHash))
                     hashgsea[gsHash] = gsea_calc_es(abs_signature, map_signature, signature_map, calibrated_model, stripped_set);
             }
 
-            return hashgsea.ContainsKey(gsHash) ? (S_GSEA)hashgsea[gsHash] : new S_GSEA();
+            return hashgsea.ContainsKey(gsHash) ? (S_GSEA)hashgsea[gsHash] : new S_GSEA() { pval = double.NaN };
         }
 
 

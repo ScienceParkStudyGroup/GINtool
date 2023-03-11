@@ -10,6 +10,9 @@ using Accord.Statistics.Distributions.Univariate;
 using static GINtool.ES_Extensions;
 using Accord.Math;
 using System.Collections;
+using System.Windows.Input;
+using Accord.Math.Distances;
+using System.Windows.Markup;
 
 namespace GINtool
 {
@@ -218,6 +221,11 @@ namespace GINtool
 
                 // make sure that there are no duplicate keys ... not expected 
                 gCombinedDict = gRegulonDict.Concat(gCategoryDict).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+                CheckValues();
+
+
+
                 CalibrateES();
 
                 return lResults;
@@ -231,6 +239,64 @@ namespace GINtool
             }
 
         }
+
+        private void CheckValues()
+        {
+            Dictionary<string, int> hashValues = new Dictionary<string, int>();
+
+            Dictionary<string, double> signature = gDataSetDict.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
+
+            signature = signature.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+            //dict_rank map_signature = signature.MapRank();
+            //rank_dict signature_map = signature.RankMap();
+
+            //NormalDistribution norm = new NormalDistribution();
+
+            string[] signature_genes = signature.Keys.ToArray();
+
+            int min_size = 1, max_size = 25000;
+
+            foreach (string key in gCombinedDict.Keys)
+            {
+                string[] gene_set = gCombinedDict[key];
+                string[] stripped_set = strip_gene_set(signature_genes, gene_set);
+                if (stripped_set.Length >= min_size && stripped_set.Length <= max_size)
+                {
+                    int gsHash = stripped_set.GetHashCodeValue();
+                    hashValues.Add(key, gsHash);
+                }
+                string[] gene_set_pos = stripped_set.Where(k => gDataSetDict[k].FC > 0).ToArray();
+                string[] stripped_set_pos = strip_gene_set(signature_genes, gene_set_pos);
+                if (stripped_set_pos.Length >= min_size && stripped_set_pos.Length <= max_size)
+                {
+                    int gsHash = stripped_set_pos.GetHashCodeValue();
+                    hashValues.Add(String.Format("{0}_pos", key), gsHash);
+
+                }
+                string[] gene_set_neg = stripped_set.Where(k => gDataSetDict[k].FC < 0).ToArray();
+                string[] stripped_set_neg = strip_gene_set(signature_genes, gene_set_neg);
+
+                if (stripped_set_neg.Length >= min_size && stripped_set_neg.Length <= max_size)
+                {
+                    int gsHash = stripped_set_neg.GetHashCodeValue();
+                    hashValues.Add(String.Format("{0}_neg", key), gsHash);
+                }
+            }
+
+            var distinctList = hashValues.Values.Distinct().ToList();
+
+            Dictionary<int, IEnumerable<string>> myDict = new Dictionary<int, IEnumerable<string>>();
+            foreach(int v in  distinctList)
+            {
+                IEnumerable<string> myKeys = hashValues.Where(pair => pair.Value == v).Select(pair => pair.Key);
+                myDict.Add(v, myKeys);
+            }
+
+            //System.IO.File.WriteAllLines(@"c:\temp\pathtocsv.csv", myDict.Select(x => x.Key + "," + String.Join(",",x.Value.ToArray()) + ","));
+
+
+        }
+
 
         //private (double, double) calcES(string[] geneset)
         //{
@@ -279,9 +345,9 @@ namespace GINtool
 
         }
 
-        private double CalcES(List<string> gene_set)
+        private double CalcES(IEnumerable<string> gene_set)
         {
-            S_GSEA result = gsea_calc(gES_abs_signature, gES_signature_genes, gES_map_signature, gES_signature_map, gene_set.ToArray(), (S_ESPARAMS) gFgseaHash[gES_key], ref gGSEAHash, min_size: 1);
+            S_GSEA result = gsea_calc(gES_abs_signature, gES_signature_genes, gES_map_signature, gES_signature_map, gene_set, (S_ESPARAMS) gFgseaHash[gES_key], ref gGSEAHash, min_size: 1);
             return result.pval;
         }
 
@@ -816,7 +882,9 @@ namespace GINtool
                 List<string> _works = null;
                 List<double> _workp = null;
 
-                if (sInfo.p_average < 0.06125 && sInfo.genes[0] != "")
+                double chkVal = -Math.Log10(sInfo.p_fdr);
+
+                if (chkVal > 6 && sInfo.genes[0] != "")
                 {
                     _workfc = e1_fc;
                     _workm = e1_m;
@@ -825,7 +893,7 @@ namespace GINtool
                     _workp = e1_p;
                 }
 
-                if (sInfo.p_average >= 0.06125 && sInfo.p_average < 0.125 && sInfo.genes[0] != "")
+                if (chkVal <= 6 && chkVal > 4 && sInfo.genes[0] != "")
                 {
                     _workfc = e2_fc;
                     _workm = e2_m;
@@ -835,7 +903,7 @@ namespace GINtool
                 }
 
 
-                if (sInfo.p_average >= 0.125 && sInfo.p_average < 0.25 && sInfo.genes[0] != "")
+                if (chkVal <= 4 && chkVal>2 && sInfo.genes[0] != "")
                 {
                     _workfc = e3_fc;
                     _workm = e3_m;
@@ -843,7 +911,7 @@ namespace GINtool
                     _works = e3_s;
                     _workp = e3_p;
                 }
-                if (sInfo.p_average >= 0.25 && sInfo.p_average < 0.5 && sInfo.genes[0] != "")
+                if (chkVal<=2 && chkVal >1 && sInfo.genes[0] != "")
                 {
                     _workfc = e4_fc;
                     _workm = e4_m;
@@ -853,7 +921,7 @@ namespace GINtool
                 }
 
 
-                if (sInfo.p_average >= 0.5 && sInfo.p_average <= 1 && sInfo.genes[0] != "")
+                if (chkVal <=1 && sInfo.genes[0] != "")
                 {
                     _workfc = e5_fc;
                     _workm = e5_m;
@@ -877,7 +945,7 @@ namespace GINtool
 
             element_rank e1 = new element_rank()
             {
-                catName = "p<0.0625",
+                catName = "p<10e-6",
                 average_fc = e1_fc.ToArray(),
                 mad_fc = e1_m.ToArray(),
                 nr_genes = e1_n.ToArray(),
@@ -887,7 +955,7 @@ namespace GINtool
 
             element_rank e2 = new element_rank()
             {
-                catName = "0.0625>=p<0.125",
+                catName = "10e-6>=p<10e-4",
                 average_fc = e2_fc.ToArray(),
                 mad_fc = e2_m.ToArray(),
                 nr_genes = e2_n.ToArray(),
@@ -897,7 +965,7 @@ namespace GINtool
 
             element_rank e3 = new element_rank()
             {
-                catName = "0.125>=p<0.25",
+                catName = "10e-4>=p<10e-2",
                 average_fc = e3_fc.ToArray(),
                 mad_fc = e3_m.ToArray(),
                 nr_genes = e3_n.ToArray(),
@@ -907,7 +975,7 @@ namespace GINtool
 
             element_rank e4 = new element_rank()
             {
-                catName = "0.25>=p<0.5",
+                catName = "10e-2>=p<10e-1",
                 average_fc = e4_fc.ToArray(),
                 mad_fc = e4_m.ToArray(),
                 nr_genes = e4_n.ToArray(),
@@ -918,7 +986,7 @@ namespace GINtool
 
             element_rank e5 = new element_rank()
             {
-                catName = "0.5>=p=<1",
+                catName = "0.1>=p=<1",
                 average_fc = e5_fc.ToArray(),
                 mad_fc = e5_m.ToArray(),
                 nr_genes = e5_n.ToArray(),

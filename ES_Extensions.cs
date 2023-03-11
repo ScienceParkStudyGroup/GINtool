@@ -8,6 +8,7 @@ using Accord.Statistics.Distributions.Multivariate;
 using Accord;
 using System.ComponentModel;
 using Accord.Math;
+using Microsoft.Office.Interop.Excel;
 
 namespace GINtool
 {
@@ -30,6 +31,22 @@ namespace GINtool
             }
         }
 
+        // https://stackoverflow.com/questions/2733541/what-is-the-best-way-to-implement-this-composite-gethashcode
+        public static int GetHashCodeValue(this IEnumerable<string> ar)
+        {
+            ar = ar.OrderBy(x => x);
+            int hash = 3;
+            unchecked
+            {
+                foreach (string s in ar)
+                {
+                    hash = hash * 5 + s.GetHashCode();
+                }
+                // Maybe nullity checks, if these are objects not primitives!                            
+            }
+            return hash;
+
+        }
         public static IEnumerable<double> CumulativeMin(this IEnumerable<double> sequence)
         {
             double m = sequence.First();
@@ -140,6 +157,9 @@ namespace GINtool
 
         public static double[] fdr_correction(double[] pvals, double alpha = 0.05)
         {
+            // https://stackoverflow.com/questions/10443461/c-sharp-array-findallindexof-which-findall-indexof
+            List<int> _missings = Enumerable.Range(0, pvals.Length).Where(i => double.IsNaN(pvals[i])).ToList();
+            //pvals = pvals.Where(x => !double.IsNaN(x)).ToArray();
             var sortedElements = pvals.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToArray();
 
             List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
@@ -162,6 +182,8 @@ namespace GINtool
                 pvals_corrected_raw[sortedIndex[i]] = pvals_corrected[i];
             }
 
+            foreach (int i in _missings)
+                pvals_corrected_raw[i] = double.NaN;
 
             return pvals_corrected_raw;
 

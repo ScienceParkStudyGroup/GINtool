@@ -348,7 +348,7 @@ namespace GINtool
             lNewSheet.Cells[hdrRow, 2] = "Nr Genes";
             lNewSheet.Cells[hdrRow, 3] = "Average FC";
             lNewSheet.Cells[hdrRow, 4] = "MAD FC";
-            lNewSheet.Cells[hdrRow, 5] = "Average P";
+            lNewSheet.Cells[hdrRow, 5] = "P (FDR)";
 
             // Sort the data with ascending p-values
             DataView lView = lTable.DefaultView;
@@ -378,7 +378,7 @@ namespace GINtool
             lNewSheet.Cells[hdrRow, 8] = "Nr Genes";
             lNewSheet.Cells[hdrRow, 9] = FCheader;
             lNewSheet.Cells[hdrRow, 10] = MADheader;
-            lNewSheet.Cells[hdrRow, 11] = "Average P";
+            lNewSheet.Cells[hdrRow, 11] = "P (FDR)";
 
             lView = lTable.DefaultView;
 
@@ -406,7 +406,7 @@ namespace GINtool
             lNewSheet.Cells[hdrRow, 14] = "Nr Genes";
             lNewSheet.Cells[hdrRow, 15] = FCheader;
             lNewSheet.Cells[hdrRow, 16] = MADheader;
-            lNewSheet.Cells[hdrRow, 17] = "Average P";
+            lNewSheet.Cells[hdrRow, 17] = "P (FDR)";
 
             lView = lTable.DefaultView;
 
@@ -433,8 +433,8 @@ namespace GINtool
             lNewSheet.Cells[hdrRow, 22] = "Percentage";
             lNewSheet.Cells[hdrRow, 23] = "Average signed FC";
             lNewSheet.Cells[hdrRow, 24] = "MAD ABS(FC)";
-            lNewSheet.Cells[hdrRow, 25] = "Average P";
-            lNewSheet.Cells[hdrRow, 26] = "P(FDR)";
+            lNewSheet.Cells[hdrRow, 25] = "P (FDR)";
+            //lNewSheet.Cells[hdrRow, 26] = "P(FDR)";
 
             // Combine positive and negative mode results to obtain a 'best' result
 

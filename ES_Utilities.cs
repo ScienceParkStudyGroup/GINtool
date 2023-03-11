@@ -171,6 +171,8 @@ namespace GINtool
         public double pval, sidak, es, nes, fdr;
         public int size;
         public string leading_edge;
+
+        // public S_GSEA() { pval = sidak = es = nes = fdr = double.NaN; size = 0;leading_edge = "";  }
     }
 
     [Serializable]
