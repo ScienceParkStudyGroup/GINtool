@@ -221,7 +221,6 @@ namespace GINtool
 
                 // make sure that there are no duplicate keys ... not expected 
                 gCombinedDict = gRegulonDict.Concat(gCategoryDict).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-
                 CheckValues();
 
 
@@ -313,9 +312,6 @@ namespace GINtool
             if (gCategoryDict.Count == 0 && gRegulonDict.Count == 0)
                 return;
 
-
-
-
             AddTask(TASKS.ES_CALIBRATION);                       
             gsea_calibrate(gDataSetDict, gCombinedDict, ref gFgseaHash, min_size:1);            
             RemoveTask(TASKS.ES_CALIBRATION);
@@ -345,10 +341,10 @@ namespace GINtool
 
         }
 
-        private double CalcES(IEnumerable<string> gene_set)
+        private (double,double) CalcES(IEnumerable<string> gene_set)
         {
             S_GSEA result = gsea_calc(gES_abs_signature, gES_signature_genes, gES_map_signature, gES_signature_map, gene_set, (S_ESPARAMS) gFgseaHash[gES_key], ref gGSEAHash, min_size: 1);
-            return result.pval;
+            return (result.es, result.pval);
         }
 
 

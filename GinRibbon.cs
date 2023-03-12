@@ -1831,19 +1831,13 @@ namespace GINtool
                     __Pos.fc_mad = _fcsP.Count > 0 ? _fcsP.mad() : Double.NaN;
                     __Neg.fc_mad = _fcsN.Count > 0 ? _fcsN.mad() : Double.NaN;
 
+                    (__Pos.es, __Pos.p_average) = CalcES(_genesP);
+                    (__Neg.es, __Neg.p_average) = CalcES(_genesN); 
+                    (__All.es, __All.p_average) = CalcES(_genesA);
 
-                    //__Pos.p_average = _pvaluesP.Count > 0 ? _pvaluesP.paverage_hmp() : Double.NaN;
-                    //__Neg.p_average = _pvaluesN.Count > 0 ? _pvaluesN.paverage_hmp() : Double.NaN;
-                    //__All.p_average = _pvaluesA.Count > 0 ? _pvaluesA.paverage_hmp() : Double.NaN;
-                    // double _pp, _pfdr;
-                    
-                    __Pos.p_average = CalcES(_genesP);
-                    __Neg.p_average = CalcES(_genesN); //pvalues_neg.ContainsKey(_key) ? pvalues_neg[_key] : Double.NaN;
-                    __All.p_average = CalcES(_genesA);// pvalues_all.ContainsKey(_key) ? pvalues_all[_key] : Double.NaN;
-
-                    pvalues_all.Add(ce.elTag, __All.p_average);
-                    pvalues_pos.Add(ce.elTag, __Pos.p_average);
-                    pvalues_neg.Add(ce.elTag, __Neg.p_average);
+                    pvalues_all.Add(ce.catName, __All.p_average);
+                    pvalues_pos.Add(ce.catName, __Pos.p_average);
+                    pvalues_neg.Add(ce.catName, __Neg.p_average);
 
                     __Pos.p_mad = _pvaluesP.Count > 0 ? _pvaluesP.mad() : Double.NaN;
                     __Neg.p_mad = _pvaluesN.Count > 0 ? _pvaluesN.mad() : Double.NaN;
@@ -1881,6 +1875,7 @@ namespace GINtool
             _All = _All.Select(d => new summaryInfo()
             {
                 catName = d.catName,
+                es = d.es,
                 catNameFormat = d.catNameFormat,
                 p_values = d.p_values,
                 fc_values = d.fc_values,
@@ -1896,6 +1891,7 @@ namespace GINtool
             _Neg = _Neg.Select(d => new summaryInfo()
             {
                 catName = d.catName,
+                es = d.es,
                 catNameFormat = d.catNameFormat,
                 p_values = d.p_values,
                 fc_values = d.fc_values,
@@ -1911,6 +1907,7 @@ namespace GINtool
             _Pos = _Pos.Select(d => new summaryInfo()
             {
                 catName = d.catName,
+                es = d.es,
                 catNameFormat = d.catNameFormat,
                 p_values = d.p_values,
                 fc_values = d.fc_values,
@@ -1972,7 +1969,7 @@ namespace GINtool
 
             // sort the values according to average FC and order in the preferred direction
             //if (Properties.Settings.Default.useSort)
-
+            if(!(topTenP>0))
             {
                 double[] __values = element_Fcs.All.Select(x => x.fc_average).ToArray();
                 var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
@@ -2117,9 +2114,9 @@ namespace GINtool
                     __Rep.p_values = _pvaluesR.Count > 0 ? _pvaluesR.ToArray() : new double[0];// { };
                     __All.p_values = _pvaluesT.Count > 0 ? _pvaluesT.ToArray() : new double[0];// { };
                    
-                    __All.p_average= CalcES(_genesT);
-                    __Act.p_average = CalcES(_genesA);
-                    __Rep.p_average = CalcES(_genesR);
+                    (__All.es, __All.p_average) = CalcES(_genesT);
+                    (__Act.es, __Act.p_average) = CalcES(_genesA);
+                    (__Rep.es, __Rep.p_average) = CalcES(_genesR);
 
 
                     pvalues_all.Add(el.catName, __All.p_average);
@@ -2158,6 +2155,7 @@ namespace GINtool
             _All = _All.Select(d => new summaryInfo()
             {
                 catName = d.catName,
+                es = d.es,
                 catNameFormat = d.catNameFormat,
                 p_values = d.p_values,
                 fc_values = d.fc_values,
@@ -2173,6 +2171,7 @@ namespace GINtool
             _Rep = _Rep.Select(d => new summaryInfo()
             {
                 catName = d.catName,
+                es = d.es,
                 catNameFormat = d.catNameFormat,
                 p_values = d.p_values,
                 fc_values = d.fc_values,
@@ -2188,6 +2187,7 @@ namespace GINtool
             _Act = _Act.Select(d => new summaryInfo()
             {
                 catName = d.catName,
+                es = d.es,
                 catNameFormat = d.catNameFormat,
                 p_values = d.p_values,
                 fc_values = d.fc_values,

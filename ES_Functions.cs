@@ -211,19 +211,22 @@ namespace GINtool
         public static S_ESPARAMS estimate_parameters(stat_dict signature, double[] abs_signatures, rank_dict signature_map, lib_dict library, int permutations = 2000, bool symmetric = false, int calibration_anchors = 20, int seed = 0)
         {
             int[] ll = library.lengths();
-            ll.Sort();
+            ll.Sort(); // for percentile calculation
+            
             //Count().lengths().OrderBy(v => v).ToArray();         
             // from https://stackoverflow.com/questions/1139181/a-method-to-count-occurrences-in-a-list
 
+            int signature_count = signature.Count();
 
             //int[] cumsum = g.Select(grp => grp.Count()).CumulativeSum().ToArray();
             double[] q = Range(2, 100, calibration_anchors - 1).ToArray();
+            // partion the library sizes in 5% groups .. this makes this method a-priori dependent on selection of genesets .. 
             double[] nn = percentiles(ll, q).OrderBy(v => v).ToArray();
+            //double[] nn = q.Select(v => v / 100 * (signature_count - 1)).ToArray();
 
-            int signature_count = signature.Count();
-
-            int[] x = { 1, 4, 6, ll.Max(), (int)signature_count / 2, signature_count - 1 };
-            int[] y = nn.toint().ToArray();
+            
+            int[] x = { 1, 4, 6, ll.Max(), signature_count / 2, signature_count - 1 };
+            int[] y = nn.ToList().ConvertAll(Convert.ToInt32).ToArray();
 
             var z = new int[x.Length + y.Length];
             x.CopyTo(z, 0);
@@ -325,7 +328,7 @@ namespace GINtool
             {
                 if (verbose)
                     Console.WriteLine("Calibrating es parameters");
-                es_params = estimate_parameters(signature, abs_signature, signature_map, library, permutations);
+                es_params = estimate_parameters(signature, abs_signature, signature_map, library, permutations, seed:seed);
                 hashtable.Add(sig_hash_str, es_params);
             }
             else
@@ -353,10 +356,10 @@ namespace GINtool
 
             GammaDistribution gamma = new GammaDistribution(pos_beta, pos_alpha);
             NormalDistribution normal = new NormalDistribution();
-
-            double prob = 1;
-            double prob_two_tailed = 1;
             double nes = 0;
+            double prob_two_tailed;
+
+            double prob;
             if (es > 0)
             {
                 prob = 1 - gamma.ComplementaryDistributionFunction(es);
@@ -485,7 +488,7 @@ namespace GINtool
         }
 
 
-        public static S_GSEA gsea_calc(double[] abs_signature, string[] signature_genes, dict_rank map_signature, rank_dict signature_map, IEnumerable<string> geneset, S_ESPARAMS calibrated_model, ref Hashtable hashgsea, int min_size = 5, int max_size = 25000)
+        public static S_GSEA gsea_calc(double[] abs_signature, string[] signature_genes, dict_rank map_signature, rank_dict signature_map, IEnumerable<string> geneset, S_ESPARAMS calibrated_model, ref Hashtable hashgsea, int min_size = 5, int max_size = 2000)
         {            
 
 //            stat_dict signature = dataset.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));            

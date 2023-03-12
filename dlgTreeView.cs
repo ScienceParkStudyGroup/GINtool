@@ -756,6 +756,7 @@ namespace GINtool
         public double[] p_values;
         public double[] fc_values;
         public double p_fdr;
+        public double es;
         public double p_average;
         public double fc_average;
         public double p_mad;
