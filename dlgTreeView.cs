@@ -31,22 +31,34 @@ namespace GINtool
         {
             return splitNP;
         }
-        public dlgTreeView(bool categoryView = false, bool spreadingOptions = true, bool rankingOptions = true)
+        public dlgTreeView(bool categoryView = false, bool spreadingOptions = true, bool rankingOptions = true, bool volcanoOptions = false)
         {
             InitializeComponent();
             udCat.SelectedItem = udCat.Items[3];
             cbTopFC.Checked = false;
-            cbTopP.Checked = false;
+            
             udTopFC.Enabled = false;
-            udTOPP.Enabled = false;
+           
             cbCat.Checked = false;
             cbCat.Enabled = categoryView;
             udCat.Enabled = false;
             cbTableOutput.Enabled = spreadingOptions;
             cbTopFC.Enabled = spreadingOptions;//& !categoryView;
-            cbTopP.Enabled = spreadingOptions; //& !categoryView;
+            
+            // disable topN p values
+
+            cbTopP.Enabled = false; // spreadingOptions; //& !categoryView;
+            cbTopP.Visible = false;
+            udTOPP.Enabled = false;
+            cbTopP.Checked = false;
+
+
             cbSplit.Checked = false;
             cbSplit.Enabled = rankingOptions;
+            cbMaxExtremes.Checked = false;
+            cbMaxExtremes.Enabled = volcanoOptions;
+            udExtremes.Enabled = volcanoOptions;
+            udExtremes.Enabled = false;
         }
 
         // utility to select unique records
@@ -91,12 +103,15 @@ namespace GINtool
             return cbTopFC.Checked ? (int)udTopFC.Value : -1;
         }
 
-        public int getTopP()
+        //public int getTopP()
+        //{
+        //    return cbTopP.Checked ? (int)udTOPP.Value : -1;
+        //}
+
+        public int getExtremeP()
         {
-            return cbTopP.Checked ? (int)udTOPP.Value : -1;
+            return cbMaxExtremes.Checked ? (int)udExtremes.Value : -1;
         }
-
-
 
         private DataTable GetDistinctRegulons(DataTable dataTable, string[] regColumn)
         {
@@ -707,20 +722,25 @@ namespace GINtool
             }
         }
 
-        private void cbTopP_CheckedChanged(object sender, EventArgs e)
-        {
-            udTOPP.Enabled = cbTopP.Checked;
-            EnableSingleSelectionButtons(!cbTopP.Checked);
-            if (cbTopP.Checked)
-            {
-                udTopFC.Enabled = false;
-                cbTopFC.Checked = false;
-            }
-        }
+        //private void cbTopP_CheckedChanged(object sender, EventArgs e)
+        //{
+        //    udTOPP.Enabled = cbTopP.Checked;
+        //    EnableSingleSelectionButtons(!cbTopP.Checked);
+        //    if (cbTopP.Checked)
+        //    {
+        //        udTopFC.Enabled = false;
+        //        cbTopFC.Checked = false;
+        //    }
+        //}
 
         private void cbSplit_Click(object sender, EventArgs e)
         {
             splitNP = cbSplit.Checked;
+        }
+
+        private void cbMaxExtremes_CheckedChanged(object sender, EventArgs e)
+        {
+            udExtremes.Enabled = cbMaxExtremes.Checked;
         }
     }
 
@@ -816,7 +836,7 @@ namespace GINtool
 
         public double[] average_fc;
         public double[] mad_fc;
-        //public double[] average_p;
+        public double[] p_fdr;
         public int[] nr_genes;
         public string[] genes;
         // only used in case of best results 

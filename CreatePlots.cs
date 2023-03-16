@@ -48,53 +48,26 @@ namespace GINtool
         /// <param name="topTenP"></param>
         /// <param name="outputTable"></param>
         //private void SpreadingPlot(List<FC_BSU> aOutput, SysData.DataTable aSummary, List<cat_elements> cat_Elements, int topTenFC = -1, int topTenP = -1, bool outputTable = false)
-        private void SpreadingPlot(List<cat_elements> cat_Elements, int topTenFC = -1, int topTenP = -1, bool outputTable = false)
+        private void SpreadingPlot(List<cat_elements> cat_Elements, int topTenFC = -1, bool outputTable = false)
         {
 
             AddTask(TASKS.CATEGORY_CHART);
 
-            Func<DataView, List<cat_elements>, int, int, element_fc> CatElementsPtr = null;
-
-            ////SysData.DataTable _fc_BSU = ReformatRegulonResults(aOutput);
-            //if (gRegulonTable is null | NeedsUpdate(UPDATE_FLAGS.TRegulon))
-            //{
-            //    gRegulonTable = CreateRegulonUsageTable(GetDataSelection());
-
-
-            //if (gCategoryTable is null | NeedsUpdate(UPDATE_FLAGS.TCategory))
-            //    gRegulonTable = CreateRegulonUsageTable(GetDataSelection());
-
-            //// SysData.DataTable _fc_BSU = ReformatRegulonResults(aOutput);
+            Func<DataView, List<cat_elements>, int, element_fc> CatElementsPtr = null;
+            
             cat_Elements = GetUniqueElements(cat_Elements);
-
-            // HashSet ensures unique list
-            //            HashSet<string> lRegulons = new HashSet<string>();
-
-            //          if gSettings.useCat? 
-
-
-            //foreach (SysData.DataRow row in gRegulonTable.Rows)
-            //    lRegulons.Add(row.ItemArray[0].ToString());
 
             SysData.DataView dataView = gSettings.useCat ? gCategoryTable.AsDataView() : gRegulonTable.AsDataView();
             element_fc catPlotData;
-            //if (Properties.Settings.Default.useCat)
-            //{
-            //    //funcPtr = CatElements2ElementsFC(dataView, cat_Elements, topTenFC, topTenP);
-            // CatElementsPtr = Properties.Settings.Default.useCat ? CatElements2ElementsFC : Regulons2ElementsFC;
-            //}
-            //else
-            //    //catPlotData = Regulons2ElementsFC(dataView, cat_Elements, topTenFC: topTenFC, topTenP: topTenP); // need to alter caller
-            //    CatElementsPtr = Regulons2ElementsFC;// need to alter caller
 
             if (Properties.Settings.Default.useCat)
                 CatElementsPtr = CatElements2ElementsFC;
             else
                 CatElementsPtr = Regulons2ElementsFC;
 
-            catPlotData = CatElementsPtr(dataView, cat_Elements, topTenFC, topTenP);
+            catPlotData = CatElementsPtr(dataView, cat_Elements, topTenFC);
 
-            string postFix = topTenFC > -1 ? string.Format("Top{0}FC", topTenFC) : (topTenP > -1 ? string.Format("Top{0}P", topTenP) : "");
+            string postFix = topTenFC > -1 ? string.Format("Top{0}FC", topTenFC) : "";
             string chartBase = (Properties.Settings.Default.useCat ? string.Format("CatSpreadPlot{0}_", postFix) : string.Format("RegSpreadPlot{0}_", postFix));
             int chartNr = NextWorksheet(chartBase);
             string chartName = chartBase + chartNr.ToString();
@@ -112,6 +85,39 @@ namespace GINtool
             RemoveTask(TASKS.CATEGORY_CHART);
 
         }
+
+        
+        private void VolcanoPlot(List<cat_elements> cat_Elements, SysData.DataTable aSummary, int maxExtreme=-1)
+        {
+            AddTask(TASKS.VOLCANO_PLOT);
+
+            cat_Elements = GetUniqueElements(cat_Elements);
+
+            SysData.DataView dataView = aSummary.AsDataView();
+            element_fc catPlotData;
+            if (Properties.Settings.Default.useCat)
+            {
+                catPlotData = CatElements2ElementsFC(dataView, cat_Elements);
+            }
+            else
+                catPlotData = Regulons2ElementsFC(dataView, cat_Elements);
+
+            List<element_rank> plotData = CreateVolcanoPlotData(catPlotData, maxExtreme:maxExtreme);
+            int suffix = 0;
+
+            if (gSettings.useCat)
+                suffix = FindSheetNames(new string[] { "CatVolcanoPlot", "Plot"});
+            else
+                suffix = FindSheetNames(new string[] { "RegVolcanoPlot", "Plot"});
+
+            string chartName = (Properties.Settings.Default.useCat ? "CatVolcanoPlot_" : "RegVolcanoPlot_") + suffix.ToString();            
+            PlotRoutines.CreateVolcanoPlot(plotData, chartName);
+
+            this.RibbonUI.ActivateTab("TabGINtool");
+            RemoveTask(TASKS.VOLCANO_PLOT);
+
+        }
+
 
         /// <summary>
         /// The routine that outputs the two bubble charts and worksheets to visualize the importance of the category/regulon

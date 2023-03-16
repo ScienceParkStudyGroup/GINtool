@@ -53,6 +53,10 @@ namespace GINtool
             this.groupBox7 = new System.Windows.Forms.GroupBox();
             this.groupBox8 = new System.Windows.Forms.GroupBox();
             this.cbSplit = new System.Windows.Forms.CheckBox();
+            this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.groupBox9 = new System.Windows.Forms.GroupBox();
+            this.cbMaxExtremes = new System.Windows.Forms.CheckBox();
+            this.udExtremes = new System.Windows.Forms.NumericUpDown();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -62,6 +66,9 @@ namespace GINtool
             ((System.ComponentModel.ISupportInitialize)(this.udTopFC)).BeginInit();
             this.groupBox7.SuspendLayout();
             this.groupBox8.SuspendLayout();
+            this.groupBox6.SuspendLayout();
+            this.groupBox9.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.udExtremes)).BeginInit();
             this.SuspendLayout();
             // 
             // treeView1
@@ -200,6 +207,7 @@ namespace GINtool
             this.groupBox4.Size = new System.Drawing.Size(144, 51);
             this.groupBox4.TabIndex = 14;
             this.groupBox4.TabStop = false;
+            this.groupBox4.Visible = false;
             // 
             // udTOPP
             // 
@@ -227,6 +235,7 @@ namespace GINtool
             0,
             0,
             0});
+            this.udTOPP.Visible = false;
             // 
             // cbTopP
             // 
@@ -237,7 +246,8 @@ namespace GINtool
             this.cbTopP.TabIndex = 0;
             this.cbTopP.Text = "top P-values";
             this.cbTopP.UseVisualStyleBackColor = true;
-            this.cbTopP.CheckedChanged += new System.EventHandler(this.cbTopP_CheckedChanged);
+            this.cbTopP.Visible = false;
+            // this.cbTopP.CheckedChanged += new System.EventHandler(this.cbTopP_CheckedChanged);
             // 
             // groupBox5
             // 
@@ -317,7 +327,7 @@ namespace GINtool
             this.groupBox7.Controls.Add(this.groupBox4);
             this.groupBox7.Location = new System.Drawing.Point(706, 12);
             this.groupBox7.Name = "groupBox7";
-            this.groupBox7.Size = new System.Drawing.Size(155, 187);
+            this.groupBox7.Size = new System.Drawing.Size(155, 118);
             this.groupBox7.TabIndex = 17;
             this.groupBox7.TabStop = false;
             this.groupBox7.Text = "spreading plot options";
@@ -325,9 +335,9 @@ namespace GINtool
             // groupBox8
             // 
             this.groupBox8.Controls.Add(this.cbSplit);
-            this.groupBox8.Location = new System.Drawing.Point(706, 238);
+            this.groupBox8.Location = new System.Drawing.Point(706, 316);
             this.groupBox8.Name = "groupBox8";
-            this.groupBox8.Size = new System.Drawing.Size(155, 117);
+            this.groupBox8.Size = new System.Drawing.Size(155, 39);
             this.groupBox8.TabIndex = 18;
             this.groupBox8.TabStop = false;
             this.groupBox8.Text = "ranking plot options";
@@ -345,11 +355,70 @@ namespace GINtool
             this.cbSplit.Visible = false;
             this.cbSplit.Click += new System.EventHandler(this.cbSplit_Click);
             // 
+            // groupBox6
+            // 
+            this.groupBox6.Controls.Add(this.groupBox9);
+            this.groupBox6.Location = new System.Drawing.Point(706, 141);
+            this.groupBox6.Name = "groupBox6";
+            this.groupBox6.Size = new System.Drawing.Size(155, 95);
+            this.groupBox6.TabIndex = 19;
+            this.groupBox6.TabStop = false;
+            this.groupBox6.Text = "volcano plot options";
+            // 
+            // groupBox9
+            // 
+            this.groupBox9.Controls.Add(this.cbMaxExtremes);
+            this.groupBox9.Controls.Add(this.udExtremes);
+            this.groupBox9.Location = new System.Drawing.Point(6, 31);
+            this.groupBox9.Name = "groupBox9";
+            this.groupBox9.Size = new System.Drawing.Size(143, 47);
+            this.groupBox9.TabIndex = 0;
+            this.groupBox9.TabStop = false;
+            // 
+            // cbMaxExtremes
+            // 
+            this.cbMaxExtremes.AutoSize = true;
+            this.cbMaxExtremes.Location = new System.Drawing.Point(9, -1);
+            this.cbMaxExtremes.Name = "cbMaxExtremes";
+            this.cbMaxExtremes.Size = new System.Drawing.Size(113, 17);
+            this.cbMaxExtremes.TabIndex = 1;
+            this.cbMaxExtremes.Text = "maximize extremes";
+            this.cbMaxExtremes.UseVisualStyleBackColor = true;
+            this.cbMaxExtremes.CheckedChanged += new System.EventHandler(this.cbMaxExtremes_CheckedChanged);
+            // 
+            // udExtremes
+            // 
+            this.udExtremes.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.udExtremes.Location = new System.Drawing.Point(6, 24);
+            this.udExtremes.Maximum = new decimal(new int[] {
+            25,
+            0,
+            0,
+            0});
+            this.udExtremes.Minimum = new decimal(new int[] {
+            10,
+            0,
+            0,
+            0});
+            this.udExtremes.Name = "udExtremes";
+            this.udExtremes.Size = new System.Drawing.Size(132, 20);
+            this.udExtremes.TabIndex = 2;
+            this.udExtremes.Value = new decimal(new int[] {
+            10,
+            0,
+            0,
+            0});
+            // 
             // dlgTreeView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(873, 450);
+            this.Controls.Add(this.groupBox6);
             this.Controls.Add(this.udCat);
             this.Controls.Add(this.groupBox8);
             this.Controls.Add(this.cbCat);
@@ -383,6 +452,10 @@ namespace GINtool
             this.groupBox7.PerformLayout();
             this.groupBox8.ResumeLayout(false);
             this.groupBox8.PerformLayout();
+            this.groupBox6.ResumeLayout(false);
+            this.groupBox9.ResumeLayout(false);
+            this.groupBox9.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.udExtremes)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -414,5 +487,9 @@ namespace GINtool
         private System.Windows.Forms.GroupBox groupBox7;
         private System.Windows.Forms.GroupBox groupBox8;
         private System.Windows.Forms.CheckBox cbSplit;
+        private System.Windows.Forms.GroupBox groupBox6;
+        private System.Windows.Forms.GroupBox groupBox9;
+        private System.Windows.Forms.CheckBox cbMaxExtremes;
+        private System.Windows.Forms.NumericUpDown udExtremes;
     }
 }

@@ -47,6 +47,23 @@ namespace GINtool
             return hash;
 
         }
+
+        public static int GetHashCodeValue(this IEnumerable<double> ar)
+        {
+            ar = ar.OrderBy(x => x);
+            int hash = 3;
+            unchecked
+            {
+                foreach (double d in ar)
+                {
+                    hash = hash * 5 + d.GetHashCode();
+                }
+                // Maybe nullity checks, if these are objects not primitives!                            
+            }
+            return hash;
+
+        }
+
         public static IEnumerable<double> CumulativeMin(this IEnumerable<double> sequence)
         {
             double m = sequence.First();
@@ -189,9 +206,13 @@ namespace GINtool
 
         }
 
-
         public static double percentile(int[] sortedData, double p)
+        {            
+            return (percentile(sortedData.Select(x => Convert.ToDouble(x)).ToArray(), p));
+        }
+        public static double percentile(double[] sortedData, double p)
         {
+
             // algo derived from Aczel pg 15 bottom
             if (p >= 100.0d) return sortedData[sortedData.Length - 1];
 
@@ -225,6 +246,11 @@ namespace GINtool
             return ParallelEnumerable.Range(0, array.Length).Select(pp => Convert.ToInt32(array[pp]));
         }
         public static IEnumerable<double> percentiles(int[] array, double[] p)
+        {
+            return ParallelEnumerable.Range(0, p.Length).Select(pp => percentile(array, p[pp]));
+        }
+
+        public static IEnumerable<double> percentiles(double[] array, double[] p)
         {
             return ParallelEnumerable.Range(0, p.Length).Select(pp => percentile(array, p[pp]));
         }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Office.Core;
+﻿using Accord.Statistics.Filters;
+using Microsoft.Office.Core;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -225,6 +226,7 @@ namespace GINtool
                 }
             }
 
+            myChart.Chart.ChartGroups(1).BubbleScale = 50;
             chartPage.Axes(Excel.XlAxisType.xlValue).HasTitle = true;
             chartPage.Axes(Excel.XlAxisType.xlCategory).HasTitle = true;
 
@@ -244,6 +246,96 @@ namespace GINtool
             chartPage.Legend.Delete();
 
             chartPage.ChartColor = (bestPlot | bestNew) ? 21 : 22;
+            chartPage.Location(Excel.XlChartLocation.xlLocationAsNewSheet, chartName);
+
+            aSheet.Delete();
+
+            return chartPage;
+
+        }
+
+
+
+        public static Excel.Chart CreateVolcanoPlot (List<element_rank> element_Ranks, string chartName)
+        {
+            if (theApp == null)
+                return null;
+
+
+            if (theApp == null)
+                return null;
+
+            Excel.Worksheet aSheet = theApp.Worksheets.Add();
+            
+            Excel.ChartObjects xlCharts = (Excel.ChartObjects)aSheet.ChartObjects(Type.Missing);
+            Excel.ChartObject myChart = (Excel.ChartObject)xlCharts.Add(10, 80, 500, 500);
+            Excel.Chart chartPage = myChart.Chart;
+
+            chartPage.ChartType = Excel.XlChartType.xlXYScatter;
+
+            var series = (Excel.SeriesCollection)chartPage.SeriesCollection();
+
+            int offset = 3;
+            List<int> __offset = new List<int>() { offset };
+
+            int[] _offset = element_Ranks.Select(w => offset += w.nr_genes.Length).ToArray();
+            __offset.AddRange(_offset);
+            int[] offsets = __offset.GetRange(0, element_Ranks.Count).ToArray();
+
+
+
+            for (int i = element_Ranks.Count - 1; i >= 0; i--)
+            {
+                element_rank eRank = element_Ranks[i];
+                var xy1 = series.NewSeries();
+                xy1.Name = eRank.catName;
+                xy1.ChartType = Excel.XlChartType.xlBubble3DEffect;
+
+                int nrGenes = eRank.nr_genes.Length;
+                if (eRank.mad_fc != null && nrGenes > 0)
+                {
+                    xy1.XValues = eRank.average_fc;
+                    xy1.Values = eRank.p_fdr;
+                  
+                    xy1.BubbleSizes = eRank.nr_genes; //Enumerable.Repeat(10, eRank.nr_genes.Length).ToArray();
+
+                    xy1.HasDataLabels = true;
+                    dynamic dataLabels = xy1.DataLabels();
+
+                    for (int g = 0; g < eRank.nr_genes.Length; g++)
+                    {
+                        Excel.Point _point = xy1.Points(g + 1);
+                        _point.DataLabel.Text = eRank.genes[g];
+                    }
+
+                    dataLabels.ShowRange = true;
+                    dataLabels.ShowValue = false;
+
+                    offset += nrGenes;
+                }
+             
+            }            
+            
+            myChart.Chart.ChartGroups(1).BubbleScale = 50;
+
+            chartPage.Axes(Excel.XlAxisType.xlValue).HasTitle = true;
+            chartPage.Axes(Excel.XlAxisType.xlCategory).HasTitle = true;
+
+            string xLabel = "average signed FC";
+            string yLabel = "-log(P)";
+
+
+            chartPage.Axes(Excel.XlAxisType.xlCategory).AxisTitle.Text = xLabel;
+            chartPage.Axes(Excel.XlAxisType.xlValue).AxisTitle.Text = yLabel;
+            
+            chartPage.Axes(Excel.XlAxisType.xlValue).TickLabelPosition = Excel.XlTickLabelPosition.xlTickLabelPositionNextToAxis;
+            chartPage.Axes(Excel.XlAxisType.xlValue).MajorGridLines.Delete();
+
+            chartPage.Axes(Excel.XlAxisType.xlValue).Format.Line.Weight = 0.25;
+            chartPage.Axes(Excel.XlAxisType.xlValue).Format.Line.DashStyle = Excel.XlLineStyle.xlDashDot;
+            chartPage.Legend.Delete();
+
+            chartPage.ChartColor = 10; 
             chartPage.Location(Excel.XlChartLocation.xlLocationAsNewSheet, chartName);
 
             aSheet.Delete();

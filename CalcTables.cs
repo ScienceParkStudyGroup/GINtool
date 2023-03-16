@@ -13,6 +13,7 @@ using System.Collections;
 using System.Windows.Input;
 using Accord.Math.Distances;
 using System.Windows.Markup;
+using Microsoft.Office.Core;
 
 namespace GINtool
 {
@@ -190,7 +191,7 @@ namespace GINtool
 
             // set flag is data has changed       
             //if (InputHasChanged() || gOutput == null || gList == null)
-            if (InputHasChanged() || gList == null)
+            if (InputHasChanged() || gList == null || gList.Count==0)
             {
                 gNeedsUpdate = (byte)UPDATE_FLAGS.ALL;
             }
@@ -205,7 +206,7 @@ namespace GINtool
             // generate the results for outputting the data and summary
             try
             {
-                gFgseaHash.Clear();
+                //gFgseaHash.Clear();
                 //gDataSetStat_dict.Clear();
                 //gGSEADict.Clear();
                 gBSU_gene_dict.Clear();
@@ -222,7 +223,6 @@ namespace GINtool
                 // make sure that there are no duplicate keys ... not expected 
                 gCombinedDict = gRegulonDict.Concat(gCategoryDict).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                 CheckValues();
-
 
 
                 CalibrateES();
@@ -242,8 +242,9 @@ namespace GINtool
         private void CheckValues()
         {
             Dictionary<string, int> hashValues = new Dictionary<string, int>();
+            Dictionary<string, double> signature = gDataSetDict.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Sign(kvp.Value.FC) * -Math.Log10(kvp.Value.pval));
 
-            Dictionary<string, double> signature = gDataSetDict.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
+            //Dictionary<string, double> signature = gDataSetDict.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
 
             signature = signature.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
             //dict_rank map_signature = signature.MapRank();
@@ -297,15 +298,6 @@ namespace GINtool
         }
 
 
-        //private (double, double) calcES(string[] geneset)
-        //{
-        //    //string[] keys = result.Select(i => i.Key).ToArray();
-        //    double[] _allps = gGSEADict.Select(i => i.Value.pval).ToArray();
-        //    //stat_dict _tmp = gDataSetDict.ToDictionary(kvp => kvp.Key,kvp => Math.Abs(kvp.Value.FC));
-        //    S_GSEA _result = gsea_calc(gDataSetDict, geneset, gFgseaHash, _allps, min_size: 1);
-        //    return (_result.pval, _result.fdr);
-        //}
-
         private void CalibrateES()
         {
 
@@ -313,7 +305,7 @@ namespace GINtool
                 return;
 
             AddTask(TASKS.ES_CALIBRATION);                       
-            gsea_calibrate(gDataSetDict, gCombinedDict, ref gFgseaHash, min_size:1);            
+            gsea_calibrate(gDataSetDict, gCombinedDict, ref gFgseaHash);            
             RemoveTask(TASKS.ES_CALIBRATION);
 
             AddTask(TASKS.ES_CALCULATION);
@@ -327,7 +319,9 @@ namespace GINtool
 
         private void CopyStaticESParameters()
         {
-            gES_signature = gDataSetDict.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
+            //gES_signature = gDataSetDict.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.FC);
+            gES_signature = gDataSetDict.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Sign(kvp.Value.FC) * -Math.Log10(kvp.Value.pval));
+
             gES_signature_ordered = gES_signature.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
             gES_map_signature = gES_signature_ordered.MapRank();
             gES_signature_map = gES_signature_ordered.RankMap();
@@ -336,7 +330,12 @@ namespace GINtool
             gES_sigvalues = gES_signature_ordered.Values.ToArray();
             gES_sigvalues = gES_sigvalues.Plus(Pmult(normal.Generate(gES_sigvalues.Length), 1 / (gES_sigvalues.Average() * 10000)));
             gES_abs_signature = gES_sigvalues.Abs();
-            gES_key = gFgseaHash.Keys.Cast<string>().First();
+
+            Dictionary<string,double> signature_ordered = gES_signature.OrderBy(kvp => kvp.Value).ToDictionary(x => x.Key, x => x.Value);
+            int sighashK = signature_ordered.Keys.GetHashCodeValue();
+            int sighashV = signature_ordered.Values.GetHashCodeValue();
+            int sig_hash = sighashK + sighashV;
+            gES_key = sighashK + sighashV;
 
 
         }
@@ -344,7 +343,8 @@ namespace GINtool
         private (double,double) CalcES(IEnumerable<string> gene_set)
         {
             S_GSEA result = gsea_calc(gES_abs_signature, gES_signature_genes, gES_map_signature, gES_signature_map, gene_set, (S_ESPARAMS) gFgseaHash[gES_key], ref gGSEAHash, min_size: 1);
-            return (result.es, result.pval);
+            double pval = result.pval == 0 ? 1e-80 : result.pval;
+            return (result.es, pval);
         }
 
 
@@ -853,7 +853,7 @@ namespace GINtool
         /// </summary>
         /// <param name="info"></param>
         /// <returns></returns>
-        private List<element_rank> BubblePlotData(List<summaryInfo> info)
+        private List<element_rank> BubblePlotData(List<summaryInfo> info, bool volcanoPlot=false, int maxExtreme=-1)
         {
             List<element_rank> element_Ranks = new List<element_rank>();
 
@@ -863,67 +863,101 @@ namespace GINtool
             List<double> e1_fc = new List<double>(), e2_fc = new List<double>(), e3_fc = new List<double>(), e4_fc = new List<double>(), e5_fc = new List<double>();
             // Counts
             List<int> e1_n = new List<int>(), e2_n = new List<int>(), e3_n = new List<int>(), e4_n = new List<int>(), e5_n = new List<int>();
+            // p_values
+            List<double> e1_pv = new List<double>(), e2_pv = new List<double>(), e3_pv = new List<double>(), e4_pv = new List<double>(), e5_pv = new List<double>();
             // CATEGORY/REGULON NAMES
             List<string> e1_s = new List<string>(), e2_s = new List<string>(), e3_s = new List<string>(), e4_s = new List<string>(), e5_s = new List<string>();
             // BEST GENE PERCENTAGES
             List<double> e1_p = new List<double>(), e2_p = new List<double>(), e3_p = new List<double>(), e4_p = new List<double>(), e5_p = new List<double>();
 
 
+            double[] pvalues = info.Select(x=>x.p_fdr).OrderBy(x=>x).ToArray();
+            double[] q = new double[] { 10D, 20D, 33D, 50D };
+            double[] nn = percentiles(pvalues, q).OrderBy(x=>x).ToArray();
+
 
             foreach (summaryInfo sInfo in info)
             {
+
+                double pVal = sInfo.p_fdr;
+
+                bool check1 = pVal <= nn[0];
+                bool check2 = pVal > nn[0] && pVal <= nn[1];
+                bool check3 = pVal > nn[1] && pVal <= nn[2];
+                bool check4 = pVal > nn[2] && pVal <= nn[3];
+                bool check5 = pVal > nn[3];
+
+                if (volcanoPlot)
+                {
+                    check1 = sInfo.best_gene_percentage >= 90;
+                    check2 = sInfo.best_gene_percentage >= 80 && sInfo.best_gene_percentage < 90;
+                    check3 = sInfo.best_gene_percentage >= 75 && sInfo.best_gene_percentage < 80; 
+                    check4 = sInfo.best_gene_percentage >= 67 && sInfo.best_gene_percentage < 75;
+                    check5 = sInfo.best_gene_percentage >0  && sInfo.best_gene_percentage < 67;
+                }               
+
+
                 List<double> _workfc = null;
                 List<double> _workm = null;
                 List<int> _workn = null;
                 List<string> _works = null;
                 List<double> _workp = null;
+                List<double> _workpv = null;
 
-                double chkVal = -Math.Log10(sInfo.p_fdr);
 
-                if (chkVal > 6 && sInfo.genes[0] != "")
+                if (check1 && sInfo.genes[0] != "")
                 {
                     _workfc = e1_fc;
                     _workm = e1_m;
                     _workn = e1_n;
                     _works = e1_s;
                     _workp = e1_p;
+                    _workpv = e1_pv;
                 }
 
-                if (chkVal <= 6 && chkVal > 4 && sInfo.genes[0] != "")
+                if (check2 && sInfo.genes[0] != "")
                 {
                     _workfc = e2_fc;
                     _workm = e2_m;
                     _workn = e2_n;
                     _works = e2_s;
                     _workp = e2_p;
+                    _workpv = e2_pv;
+
                 }
 
 
-                if (chkVal <= 4 && chkVal>2 && sInfo.genes[0] != "")
+                if (check3 && sInfo.genes[0] != "")
                 {
                     _workfc = e3_fc;
                     _workm = e3_m;
                     _workn = e3_n;
                     _works = e3_s;
                     _workp = e3_p;
+                    _workpv = e3_pv;
+
                 }
-                if (chkVal<=2 && chkVal >1 && sInfo.genes[0] != "")
+                if (check4 && sInfo.genes[0] != "")
                 {
                     _workfc = e4_fc;
                     _workm = e4_m;
                     _workn = e4_n;
                     _works = e4_s;
                     _workp = e4_p;
+                    _workpv = e4_pv;
+
                 }
 
 
-                if (chkVal <=1 && sInfo.genes[0] != "")
+                if (check5 && sInfo.genes[0] != "")
                 {
                     _workfc = e5_fc;
                     _workm = e5_m;
                     _workn = e5_n;
                     _works = e5_s;
                     _workp = e5_p;
+                    _workpv = e5_pv;
+
                 }
 
                 if (_workfc != null)
@@ -932,16 +966,28 @@ namespace GINtool
                     _workfc.Add(sInfo.fc_average);
                     _workm.Add(sInfo.fc_mad);
                     _workn.Add(sInfo.p_values != null ? sInfo.p_values.Length : 0);
+                    double _pVal = -Math.Log10(sInfo.p_fdr);
+                    _workpv.Add( maxExtreme >0 ? (_pVal > maxExtreme ? maxExtreme : _pVal) : _pVal);
                     _works.Add(StripText(sInfo.catName));
                     _workp.Add(sInfo.best_gene_percentage);
                 }
 
             }
-
+            
+            string catLabel1 = "<=10%", catLabel2 = "10%-20%", catLabel3 = "20%-33%", catLabel4 = "33%-50%", catLabel5 = ">50%";
+            if (volcanoPlot)
+            {
+                catLabel1 = ">=90";
+                catLabel2 = ">=80";
+                catLabel3 = ">=75";
+                catLabel4 = ">=67";
+                catLabel5 = ">=50";
+            }
 
             element_rank e1 = new element_rank()
             {
-                catName = "p<10e-6",
+                catName = catLabel1,
+                p_fdr = e1_pv.ToArray(),
                 average_fc = e1_fc.ToArray(),
                 mad_fc = e1_m.ToArray(),
                 nr_genes = e1_n.ToArray(),
@@ -951,7 +997,8 @@ namespace GINtool
 
             element_rank e2 = new element_rank()
             {
-                catName = "10e-6>=p<10e-4",
+                catName = catLabel2,
+                p_fdr = e2_pv.ToArray(),
                 average_fc = e2_fc.ToArray(),
                 mad_fc = e2_m.ToArray(),
                 nr_genes = e2_n.ToArray(),
@@ -961,7 +1008,8 @@ namespace GINtool
 
             element_rank e3 = new element_rank()
             {
-                catName = "10e-4>=p<10e-2",
+                catName = catLabel3,
+                p_fdr = e3_pv.ToArray(),
                 average_fc = e3_fc.ToArray(),
                 mad_fc = e3_m.ToArray(),
                 nr_genes = e3_n.ToArray(),
@@ -971,7 +1019,8 @@ namespace GINtool
 
             element_rank e4 = new element_rank()
             {
-                catName = "10e-2>=p<10e-1",
+                catName = catLabel4,
+                p_fdr = e4_pv.ToArray(),
                 average_fc = e4_fc.ToArray(),
                 mad_fc = e4_m.ToArray(),
                 nr_genes = e4_n.ToArray(),
@@ -982,7 +1031,8 @@ namespace GINtool
 
             element_rank e5 = new element_rank()
             {
-                catName = "0.1>=p=<1",
+                catName = catLabel5,
+                p_fdr = e5_pv.ToArray(),
                 average_fc = e5_fc.ToArray(),
                 mad_fc = e5_m.ToArray(),
                 nr_genes = e5_n.ToArray(),
@@ -1094,6 +1144,22 @@ namespace GINtool
 
 
         }
+
+        private List<element_rank> CreateVolcanoPlotData(element_fc theElements, int maxExtreme=-1)
+        {
+
+            //List<summaryInfo> all_elements = SortedElements(theElements.All, mode: SORTMODE.CATNAME, descending: false);
+            //List<summaryInfo> pos_elements = SortedElements(theElements.Activated, mode: SORTMODE.CATNAME, descending: false);
+            //List<summaryInfo> neg_elements = SortedElements(theElements.Repressed, mode: SORTMODE.CATNAME, descending: false);
+            List<summaryInfo> best_elements = null;
+            (gBestTable, best_elements) = BestElementScore(theElements);
+
+            return BubblePlotData(best_elements,volcanoPlot:true, maxExtreme:maxExtreme);
+
+
+        }
+
+
 
         /// <summary>
         /// Create the tables for the observed 'best' ranking mode of operation of the regulon

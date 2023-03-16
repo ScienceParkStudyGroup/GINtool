@@ -81,10 +81,12 @@ namespace GINtool
         string[] gES_signature_genes = new string[] { };
         double[] gES_sigvalues = new double[] { };
         double[] gES_abs_signature = new double[] { };
-        string gES_key;
+        int gES_key;
         #endregion
         //readonly string gCategoryGeneColumn = "locus_tag"; // the fixed column name that refers to the genes inthe category csv file
         Excel.Application gApplication = null;
+
+        Excel.Workbook gActiveWorkbook = null;
 
         /// <value>the main list of all association types listed in the main regulon table</value>
         static List<string> gAvailItems = null;
@@ -388,7 +390,8 @@ namespace GINtool
 
             cbDescending.Checked = !Properties.Settings.Default.sortAscending;
             cbAscending.Checked = Properties.Settings.Default.sortAscending;
-
+            cbGSEAFC.Checked = Properties.Settings.Default.gseaFC;
+            cbGSEAP.Checked = !Properties.Settings.Default.gseaFC;
             cbGenesFileMapping.Checked = false; // Properties.Settings.Default.genesMappingVisible;
             cbRegulonMapping.Checked = false; // Properties.Settings.Default.regulonMappingVisible;
             cbCategoryMapping.Checked = false;
@@ -397,6 +400,7 @@ namespace GINtool
             //operonMappingVisible
 
             chkRegulon.Checked = Properties.Settings.Default.regPlot;
+            cbVolcano.Checked = Properties.Settings.Default.vcPlot;
             cbMapping.Checked = Properties.Settings.Default.tblMap;
             cbSummary.Checked = Properties.Settings.Default.tblSummary;
             cbCombined.Checked = Properties.Settings.Default.tblCombine;
@@ -498,6 +502,7 @@ namespace GINtool
             cbClustered.Enabled = enable;
             cbDistribution.Enabled = enable;
             chkRegulon.Enabled = enable;
+            cbVolcano.Enabled = enable;
 
             cbUseCategories.Enabled = enable && gCategoriesWB != null; //gCategoryFileSelected &&
             cbUseRegulons.Enabled = enable && (gRegulonWB != null && (gDownItems.Count > 0 | gUpItems.Count > 0)); //(gRegulonFileSelected 
@@ -1549,7 +1554,7 @@ namespace GINtool
 
         private void Button_Plot_Click(object sender, RibbonControlEventArgs e)
         {
-            if (!(Properties.Settings.Default.catPlot || Properties.Settings.Default.regPlot || Properties.Settings.Default.distPlot))
+            if (!(Properties.Settings.Default.catPlot || Properties.Settings.Default.regPlot || Properties.Settings.Default.distPlot || Properties.Settings.Default.vcPlot))
             {
                 MessageBox.Show("Please select at least one plot to generate");
                 return;
@@ -1570,9 +1575,9 @@ namespace GINtool
 
 
 
-            if ((Properties.Settings.Default.catPlot || Properties.Settings.Default.regPlot)) //& gNeedsUpdate.Check(UPDATE_FLAGS.PCat))
+            if ((Properties.Settings.Default.catPlot || Properties.Settings.Default.regPlot || Properties.Settings.Default.vcPlot)) //& gNeedsUpdate.Check(UPDATE_FLAGS.PCat))
             {
-                dlgTreeView dlg = new dlgTreeView(categoryView: cbUseCategories.Checked, spreadingOptions: Properties.Settings.Default.catPlot, rankingOptions: Properties.Settings.Default.regPlot);
+                dlgTreeView dlg = new dlgTreeView(categoryView: cbUseCategories.Checked, spreadingOptions: Properties.Settings.Default.catPlot, rankingOptions: Properties.Settings.Default.regPlot, volcanoOptions:Properties.Settings.Default.vcPlot);
 
                 if (gCategoriesWB != null && cbUseCategories.Checked)
                 {
@@ -1590,8 +1595,10 @@ namespace GINtool
                         RankingPlot(dlg.GetSelection(), UseCategoryData() ? gCategoryTable : gRegulonTable);
 
                     if (Properties.Settings.Default.catPlot && gList != null)
-                        SpreadingPlot(dlg.GetSelection(), topTenFC: dlg.getTopFC(), topTenP: dlg.getTopP(), outputTable: dlg.selectTableOutput());
+                        SpreadingPlot(dlg.GetSelection(), topTenFC: dlg.getTopFC(), outputTable: dlg.selectTableOutput());
 
+                    if (Properties.Settings.Default.vcPlot && gList != null)
+                        VolcanoPlot(dlg.GetSelection(), UseCategoryData() ? gCategoryTable : gRegulonTable, maxExtreme:dlg.getExtremeP());
 
                 }
             }
@@ -1712,7 +1719,7 @@ namespace GINtool
         /// <param name="topTenFC"></param>
         /// <param name="topTenP"></param>
         /// <returns></returns>
-        private element_fc CatElements2ElementsFC(SysData.DataView dataView, List<cat_elements> cat_Elements, int topTenFC = -1, int topTenP = -1)
+        private element_fc CatElements2ElementsFC(SysData.DataView dataView, List<cat_elements> cat_Elements, int topTenFC = -1)
         {
 
             //List<element_fc> element_Fcs = new List<element_fc>();
@@ -1948,37 +1955,13 @@ namespace GINtool
                 if (!Properties.Settings.Default.sortAscending)
                     element_Fcs.All.Reverse();
             }
-            else if (topTenP > 0) // do the same if top X p-value is selected. Because we are using -log(p) value the default order is descending
-            {
-                // only useful if top N selected is smaller then total number of items
-                if (topTenP < element_Fcs.All.Count)
-                {
-                    // assertion... it's -10 log(p) -> so the higher, the better
-                    //double[] __values = element_Fcs.All.Select(x => -Math.Log(x.p_average)).ToArray();
-                    double[] __values = element_Fcs.All.Select(x => -Math.Log(x.p_fdr)).ToArray();
-                    var sortedElements = __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
-                    List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
-                    element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).Where(x => x.fc_values.Length > 0).ToList();
-                    element_Fcs.All = element_Fcs.All.GetRange(0, topTenP);
-                }
-                // if selected, reverse the order
-                if (!Properties.Settings.Default.sortAscending)
-                    element_Fcs.All.Reverse();
-            }
+        
+            // finally, reverse order.. 
+            double[] ___values = element_Fcs.All.Select(x => x.fc_average).ToArray();
+            var sortedElementsFC = (!Properties.Settings.Default.sortAscending) ? ___values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : 
+                ___values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
 
-
-            // sort the values according to average FC and order in the preferred direction
-            //if (Properties.Settings.Default.useSort)
-            if(!(topTenP>0))
-            {
-                double[] __values = element_Fcs.All.Select(x => x.fc_average).ToArray();
-                var sortedElements = (!Properties.Settings.Default.sortAscending) ? __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
-
-                element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList();
-
-                //if (Properties.Settings.Default.sortAscending)
-                //    element_Fcs.All.Reverse();
-            }
+            element_Fcs.All = sortedElementsFC.Select(x => element_Fcs.All[x.Value]).ToList();                
 
             return element_Fcs;
         }
@@ -1992,7 +1975,7 @@ namespace GINtool
         /// <param name="topTenP"></param>        
         /// <returns></returns>
 
-        private element_fc Regulons2ElementsFC(SysData.DataView dataView, List<cat_elements> cat_Elements, int topTenFC = -1, int topTenP = -1)
+        private element_fc Regulons2ElementsFC(SysData.DataView dataView, List<cat_elements> cat_Elements, int topTenFC = -1)
         {
             element_fc element_Fcs = new element_fc();
 
@@ -2224,33 +2207,17 @@ namespace GINtool
                     element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList().Where(x => x.fc_values.Length > 0).ToList();
                     element_Fcs.All = element_Fcs.All.GetRange(0, topTenFC);
                 }
-            }
-            else if (topTenP > 0) // top X p-value is based on descending, because of -log10(p) transformation
-            {
-                // only useful if top N selected is smaller then total number of items
-                if (topTenP < element_Fcs.All.Count)
-                {
-                    // assertion... it's -10 log(p) -> so the higher, the better
-                    //double[] __values = element_Fcs.All.Select(x => -Math.Log(x.p_average)).ToArray();
-                    double[] __values = element_Fcs.All.Select(x => -Math.Log(x.p_fdr)).ToArray();
-                    var sortedElements = __values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
-                    //List<int> sortedIndex = sortedElements.Select(x => x.Value).ToList();
-                    // remove elements with no genes associated
-                    element_Fcs.All = sortedElements.Select(x => element_Fcs.All[x.Value]).ToList().Where(x => x.fc_values.Length > 0).ToList();
-                    element_Fcs.All = element_Fcs.All.GetRange(0, topTenP);
-                }
-            }
+            }           
             //
-            {
-                double[] ___values = element_Fcs.All.Select(x => x.fc_average).ToArray();
-                var _sortedElements = (!Properties.Settings.Default.sortAscending) ? ___values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : ___values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
+            
+            double[] ___values = element_Fcs.All.Select(x => x.fc_average).ToArray();
+            var _sortedElements = (!Properties.Settings.Default.sortAscending) ? ___values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderBy(x => x.Key).ToList() : ___values.Select((x, i) => new KeyValuePair<double, int>(x, i)).OrderByDescending(x => x.Key).ToList();
+            //List<int> _sortedIndex = _sortedElements.Select(x => x.Value).ToList();
+            element_Fcs.All = _sortedElements.Select(x => element_Fcs.All[x.Value]).ToList();
 
-                //List<int> _sortedIndex = _sortedElements.Select(x => x.Value).ToList();
-                element_Fcs.All = _sortedElements.Select(x => element_Fcs.All[x.Value]).ToList();
-
-                //if (!Properties.Settings.Default.sortAscending)
+            //if (!Properties.Settings.Default.sortAscending)
                 //    element_Fcs.All.Reverse();
-            }
+            
 
             return element_Fcs;
         }
@@ -2817,8 +2784,7 @@ namespace GINtool
             grpDta.Visible = !toggleButton1.Checked;
             grpFocus.Visible = !toggleButton1.Checked;
             grpFilter.Visible = !toggleButton1.Checked;
-            
-
+           
         }
 
         /// <summary>
@@ -2843,7 +2809,7 @@ namespace GINtool
 
             grpCutOff.Visible = show;
             grpDirection.Visible = show;
-
+            gbFGSEA.Visible = show;
 
             group2.Visible = show;
 
@@ -2863,6 +2829,7 @@ namespace GINtool
 
             grpCutOff.Visible = _bShowOther;
             grpDirection.Visible = _bShowOther;
+            gbFGSEA.Visible = _bShowOther;
 
         }
 
@@ -2908,13 +2875,15 @@ namespace GINtool
             /// <value>Enrichment score calibration</value>
             ES_CALIBRATION,
             /// <value>Calculate enrichment scores</value>
-            ES_CALCULATION
+            ES_CALCULATION,
+            /// <value>Generate volcano plot</value>
+            VOLCANO_PLOT,
         };
 
         public string[] taks_strings = new string[] { "Ready", "Load genes data","Load regulon data", "Load operon data", "Load category data",
         "Augmenting with gene data", "Augmenting with with regulon data", "Augmenting with category data", "Read sheet data", "Read sheet categorized data",
             "Update mapping table", "Update summary table", "Update combined table", "Update operon table", "Color cells", "Create category chart",
-            "Create regulon chart", "Calibrate enrichment scores", "Calculate enrichment scores"};
+            "Create regulon chart", "Calibrate enrichment scores", "Calculate enrichment scores","Create volcano plot"};
 
         private enum FOCUS_ITEMS : int
         {
@@ -3143,8 +3112,7 @@ namespace GINtool
 
 
         }
-
-
+       
         /// <summary>
         /// What to do when data is selected
         /// </summary>
@@ -3153,6 +3121,8 @@ namespace GINtool
         private void Button_Select_Click(object sender, RibbonControlEventArgs e)
         {
 
+            gActiveWorkbook = gApplication.ActiveWorkbook;
+            gActiveWorkbook.BeforeClose += GActiveWorkbook_BeforeClose;            
             Excel.Range theInputCells = GetActiveCell();
 
             dlgSelectData sd = new dlgSelectData(theInputCells)
@@ -3182,6 +3152,36 @@ namespace GINtool
 
         }
 
+        private void GActiveWorkbook_BeforeClose(ref bool Cancel)
+        {
+
+            EnableOutputOptions(false);
+            EnableFunctionButtons();
+
+            gBSU_gene_dict.Clear();
+            gDataSetDict.Clear();            
+            gGSEAHash.Clear();            
+            gES_signature.Clear();
+            gES_signature_ordered.Clear();
+            gES_map_signature.Clear();
+            gES_signature_map.Clear();
+            gES_signature_genes = new string[] { };
+            gES_sigvalues = new double[] { };
+            gES_abs_signature = new double[] { };
+            gES_key = 0;
+
+            if(!(gList is null))
+                gList.Clear();
+
+            if (!(gActiveWorkbook is null))
+            {
+                gActiveWorkbook.Close();
+                gActiveWorkbook = null;
+            }
+
+
+        }
+
         private void EnableFunctionButtons()
         {
             bool choiceTable = cbUseOperons.Checked || cbUseCategories.Checked || cbUseRegulons.Checked;
@@ -3194,6 +3194,7 @@ namespace GINtool
             // the plot option buttons
             cbClustered.Enabled = b;
             chkRegulon.Enabled = b;
+            cbVolcano.Enabled = b;
 
         }
 
@@ -3530,6 +3531,23 @@ namespace GINtool
         {
             AboutBox1 ab = new AboutBox1();
             ab.ShowDialog();
+        }
+
+        private void cbVolcano_Click(object sender, RibbonControlEventArgs e)
+        {
+            Properties.Settings.Default.vcPlot = cbVolcano.Checked;
+        }
+
+        private void cbGSEAFC_Click(object sender, RibbonControlEventArgs e)
+        {
+            cbGSEAP.Checked = !cbGSEAFC.Checked;
+            Properties.Settings.Default.gseaFC = cbGSEAFC.Checked;
+        }
+
+        private void cbGSEAP_Click(object sender, RibbonControlEventArgs e)
+        {
+            cbGSEAFC.Checked = !cbGSEAP.Checked;
+            Properties.Settings.Default.gseaFC = cbGSEAFC.Checked;
         }
     }
 
