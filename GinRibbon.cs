@@ -390,8 +390,11 @@ namespace GINtool
 
             cbDescending.Checked = !Properties.Settings.Default.sortAscending;
             cbAscending.Checked = Properties.Settings.Default.sortAscending;
-            cbGSEAFC.Checked = Properties.Settings.Default.gseaFC;
-            cbGSEAP.Checked = !Properties.Settings.Default.gseaFC;
+
+            cbGSEAFC.Checked = true; // Properties.Settings.Default.gseaFC;
+            cbGSEAP.Checked = false; // !Properties.Settings.Default.gseaFC;
+            
+
             cbGenesFileMapping.Checked = false; // Properties.Settings.Default.genesMappingVisible;
             cbRegulonMapping.Checked = false; // Properties.Settings.Default.regulonMappingVisible;
             cbCategoryMapping.Checked = false;
@@ -1345,11 +1348,7 @@ namespace GINtool
         /// </summary>
         private void ResetTables()
         {          
-            gList = null;
-            gOldRangeBSU = "";
-            gOldRangeFC = "";
-            gOldRangeP = "";
-
+         
             gRegulonTable = null;
             gCategoryTable = null;
 
@@ -1360,6 +1359,20 @@ namespace GINtool
 
             btLoad.Enabled = gGenesWB == null;
             btnSelect.Enabled = false;
+
+            ClearWorkbookVariables();
+
+        }
+
+        private void ClearWorkbookVariables()
+        {
+            gList = null;
+            gOldRangeBSU = "";
+            gOldRangeFC = "";
+            gOldRangeP = "";
+            ClearGSEAVariables();
+            EnableOutputOptions(false);
+
         }
 
 
@@ -2075,7 +2088,7 @@ namespace GINtool
                         }                       
 
                     }
-               
+              
                     __Act.fc_average = _fcsA.Count > 0 ? _fcsA.AbsAverage() : Double.NaN;
                     __Rep.fc_average = _fcsR.Count > 0 ? -_fcsR.AbsAverage() : Double.NaN;
                     __All.fc_average = _fcsT.Count > 0 ? _fcsT.Average() : Double.NaN;
@@ -2809,7 +2822,8 @@ namespace GINtool
 
             grpCutOff.Visible = show;
             grpDirection.Visible = show;
-            gbFGSEA.Visible = show;
+
+            gbFGSEA.Visible = false; // show;
 
             group2.Visible = show;
 
@@ -2829,7 +2843,7 @@ namespace GINtool
 
             grpCutOff.Visible = _bShowOther;
             grpDirection.Visible = _bShowOther;
-            gbFGSEA.Visible = _bShowOther;
+            gbFGSEA.Visible = false; // _bShowOther;
 
         }
 
@@ -3152,15 +3166,11 @@ namespace GINtool
 
         }
 
-        private void GActiveWorkbook_BeforeClose(ref bool Cancel)
+        private void ClearGSEAVariables()
         {
-
-            EnableOutputOptions(false);
-            EnableFunctionButtons();
-
             gBSU_gene_dict.Clear();
-            gDataSetDict.Clear();            
-            gGSEAHash.Clear();            
+            gDataSetDict.Clear();
+            gGSEAHash.Clear();
             gES_signature.Clear();
             gES_signature_ordered.Clear();
             gES_map_signature.Clear();
@@ -3170,16 +3180,24 @@ namespace GINtool
             gES_abs_signature = new double[] { };
             gES_key = 0;
 
-            if(!(gList is null))
+            if (!(gList is null))
                 gList.Clear();
+        
+        }
+
+        private void GActiveWorkbook_BeforeClose(ref bool Cancel)
+        {
+
+            EnableOutputOptions(false);
+            EnableFunctionButtons();
+
+            ClearGSEAVariables();
 
             if (!(gActiveWorkbook is null))
             {
                 gActiveWorkbook.Close();
                 gActiveWorkbook = null;
             }
-
-
         }
 
         private void EnableFunctionButtons()
@@ -3542,12 +3560,16 @@ namespace GINtool
         {
             cbGSEAP.Checked = !cbGSEAFC.Checked;
             Properties.Settings.Default.gseaFC = cbGSEAFC.Checked;
+
+            ClearWorkbookVariables();
         }
 
         private void cbGSEAP_Click(object sender, RibbonControlEventArgs e)
         {
             cbGSEAFC.Checked = !cbGSEAP.Checked;
             Properties.Settings.Default.gseaFC = cbGSEAFC.Checked;
+            ClearWorkbookVariables();
+
         }
     }
 

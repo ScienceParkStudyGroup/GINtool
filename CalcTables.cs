@@ -222,8 +222,9 @@ namespace GINtool
 
                 // make sure that there are no duplicate keys ... not expected 
                 gCombinedDict = gRegulonDict.Concat(gCategoryDict).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                CheckValues();
-
+                
+                
+                // CheckValues();
 
                 CalibrateES();
 
@@ -242,7 +243,8 @@ namespace GINtool
         private void CheckValues()
         {
             Dictionary<string, int> hashValues = new Dictionary<string, int>();
-            Dictionary<string, double> signature = gDataSetDict.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Sign(kvp.Value.FC) * -Math.Log10(kvp.Value.pval));
+            Dictionary<string, double> signature = getSignature(gDataSetDict, !Properties.Settings.Default.gseaFC); 
+            // gDataSetDict.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Sign(kvp.Value.FC) * -Math.Log10(kvp.Value.pval));
 
             //Dictionary<string, double> signature = gDataSetDict.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
 
@@ -305,11 +307,11 @@ namespace GINtool
                 return;
 
             AddTask(TASKS.ES_CALIBRATION);                       
-            gsea_calibrate(gDataSetDict, gCombinedDict, ref gFgseaHash);            
+            gsea_calibrate(gDataSetDict, gCombinedDict, ref gFgseaHash,pvalues:!Properties.Settings.Default.gseaFC);            
             RemoveTask(TASKS.ES_CALIBRATION);
 
             AddTask(TASKS.ES_CALCULATION);
-            gsea_enrich(gDataSetDict, gCombinedDict, gFgseaHash, ref gGSEAHash, min_size: 1);                        
+            gsea_enrich(gDataSetDict, gCombinedDict, gFgseaHash, ref gGSEAHash, min_size: 1, pvalues: !Properties.Settings.Default.gseaFC);                        
             RemoveTask(TASKS.ES_CALCULATION);
 
             CopyStaticESParameters();
@@ -319,8 +321,7 @@ namespace GINtool
 
         private void CopyStaticESParameters()
         {
-            //gES_signature = gDataSetDict.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.FC);
-            gES_signature = gDataSetDict.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Sign(kvp.Value.FC) * -Math.Log10(kvp.Value.pval));
+            gES_signature = getSignature(gDataSetDict,!Properties.Settings.Default.gseaFC);
 
             gES_signature_ordered = gES_signature.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
             gES_map_signature = gES_signature_ordered.MapRank();

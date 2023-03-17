@@ -278,7 +278,7 @@ namespace GINtool
         }
 
 
-        public static void gsea_calibrate(dataset_dict dataset, lib_dict library, ref Hashtable hashtable, int permutations = 2000, int anchors = 20, bool verbose = false, bool symmetric = true, int seed = 0)
+        public static void gsea_calibrate(dataset_dict dataset, lib_dict library, ref Hashtable hashtable, int permutations = 2000, int anchors = 20, bool verbose = false, bool symmetric = true, int seed = 0, bool pvalues=false)
         {
             if (permutations < 1000 && !symmetric)
             {
@@ -295,7 +295,10 @@ namespace GINtool
 
             //stat_dict signature = dataset.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
             //stat_dict signature = dataset.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.FC*-Math.Abs();
-            stat_dict signature = dataset.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Sign(kvp.Value.FC) * -Math.Log10(kvp.Value.pval));
+            stat_dict signature = getSignature(dataset, pvalues);
+
+
+            // dataset.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Sign(kvp.Value.FC) * -Math.Log10(kvp.Value.pval));
 
             // stat_dict signature = dataset.ToDictionary(kvp => kvp.Key, kvp => Math.Abs(kvp.Value.FC));
 
@@ -394,11 +397,21 @@ namespace GINtool
         }
 
 
+        public static stat_dict getSignature(dataset_dict dataset, bool pvalues = false)
+        {
+            if (pvalues)
+                return dataset.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Sign(kvp.Value.FC) * -Math.Log10(kvp.Value.pval));
+            else
+                return dataset.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.FC);
+
+        }
+
+
         // pre calculate expected genesets 
-        public static void gsea_enrich(dataset_dict dataset, lib_dict library, Hashtable hashtable, ref Hashtable hashgsea, int min_size = 5, int max_size = 25000)
+        public static void gsea_enrich(dataset_dict dataset, lib_dict library, Hashtable hashtable, ref Hashtable hashgsea, int min_size = 5, int max_size = 25000, bool pvalues=false)
         {
             //stat_dict signature = dataset.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.FC);
-            stat_dict signature = dataset.Where(kvp => kvp.Value.FC != 0).ToDictionary(kvp => kvp.Key, kvp => Math.Sign(kvp.Value.FC) * -Math.Log10(kvp.Value.pval));
+            stat_dict signature = getSignature(dataset,pvalues);
 
             // string sig_hash_str = getHashValue(signature);
             stat_dict signature_ordered = signature.OrderBy(kvp => kvp.Value).ToDictionary(x => x.Key, x => x.Value);
